@@ -9,14 +9,14 @@ class D3DSystem
 public:
 	D3DSystem();
 	~D3DSystem();
-	bool InitD3D(HWND hWnd, int Width, int Height);
+	bool InitD3D(HWND hWnd, int width, int height);
 	ID3D12Device* GetDevice();
 	DXGI_SWAP_CHAIN_DESC GetSwapChainDesc();
 	ID3D12GraphicsCommandList* GetCommandList();
 	bool Reset();
 	bool Execute();
 	bool ExecuteGraphics();
-	void UpdatePipelineAndClear(Vector3 Bg);
+	void UpdatePipelineAndClear(Vector3 bg);
 	void Wait();
 	bool PresentSimple();
 	template<typename T>
@@ -34,153 +34,149 @@ public:
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE GetFeatureData();
 private:
 
-	ID3D12Device * device;
-	IDXGISwapChain3* swapChain;
-	ID3D12CommandQueue* commandQueue;
-	ID3D12DescriptorHeap* rtvDescriptorHeap;
-	ID3D12Resource* renderTargets[FRAMEBUFFERCOUNT];
-	ID3D12CommandAllocator* commandAllocator[FRAMEBUFFERCOUNT];
-	ID3D12GraphicsCommandList* commandList;
-	ID3D12Fence* fence[FRAMEBUFFERCOUNT];
-	HANDLE fenceEvent;
-	UINT64 fenceValue[FRAMEBUFFERCOUNT];
-	int frameIndex;
-	int rtvDescriptorSize;
+	ID3D12Device * m_device;
+	IDXGISwapChain3* m_swapChain;
+	ID3D12CommandQueue* m_commandQueue;
+	ID3D12DescriptorHeap* m_rtvDescriptorHeap;
+	ID3D12Resource* m_renderTargets[FRAMEBUFFERCOUNT];
+	ID3D12CommandAllocator* m_commandAllocator[FRAMEBUFFERCOUNT];
+	ID3D12GraphicsCommandList* m_commandList;
+	ID3D12Fence* m_fence[FRAMEBUFFERCOUNT];
+	HANDLE m_fenceEvent;
+	UINT64 m_fenceValue[FRAMEBUFFERCOUNT];
+	int m_frameIndex;
+	int m_rtvDescriptorSize;
 
-	ID3D12Resource* depthStencilBuffer;
-	ID3D12DescriptorHeap* dsDescriptorHeap;
+	ID3D12Resource* m_depthStencilBuffer;
+	ID3D12DescriptorHeap* m_dsDescriptorHeap;
+
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE m_featureData;
+
+	HANDLE m_swapChainEvent;
 
 	bool WaitForPreviousFrame();
-
-	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData;
-
-	HANDLE swapChainEvent;
 };
 
 
 template<typename T>
-inline ID3D12Resource * D3DSystem::CreateDefaultBuffer(T * Data, int Size, D3D12_RESOURCE_STATES FinalState, D3D12_RESOURCE_DESC Desc, wstring Name)
+inline ID3D12Resource * D3DSystem::CreateDefaultBuffer(T * data, int size, D3D12_RESOURCE_STATES finalState, D3D12_RESOURCE_DESC desc, wstring name)
 {
-	ID3D12Resource * Buffer;
-	device->CreateCommittedResource(
+	ID3D12Resource * buffer;
+	m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), //A default heap
 		D3D12_HEAP_FLAG_NONE, //No flags
-		&Desc, //Size of buffer
+		&desc, //Size of buffer
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
-		IID_PPV_ARGS(&Buffer));
-	Buffer->SetName(Name.c_str());
+		IID_PPV_ARGS(&buffer));
+	buffer->SetName(Name.c_str());
 
-	ID3D12Resource* BufferUploadHeap;
-	device->CreateCommittedResource(
+	ID3D12Resource* bufferUploadHeap;
+	m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), //An upload heap
 		D3D12_HEAP_FLAG_NONE, //No flags
-		&CD3DX12_RESOURCE_DESC::Buffer(Size),
+		&CD3DX12_RESOURCE_DESC::Buffer(size),
 		D3D12_RESOURCE_STATE_GENERIC_READ, //GPU will read and copy content to the default heap
 		nullptr,
-		IID_PPV_ARGS(&BufferUploadHeap));
-	BufferUploadHeap->SetName(L"Buffer Upload Resource Heap");
-	D3D12_SUBRESOURCE_DATA SubResourceData = {};
-	SubResourceData.pData = reinterpret_cast<BYTE*>(Data); //Pointer to upload data
-	SubResourceData.RowPitch = Size;
-	SubResourceData.SlicePitch = Size;
+		IID_PPV_ARGS(&bufferUploadHeap));
+	bufferUploadHeap->SetName(L"Buffer Upload Resource Heap");
+	D3D12_SUBRESOURCE_DATA subResourceData = {};
+	subResourceData.pData = reinterpret_cast<BYTE*>(data); //Pointer to upload data
+	subResourceData.RowPitch = size;
+	subResourceData.SlicePitch = size;
 
-	int CurF = fence[frameIndex]->GetCompletedValue();
+	//m_commandList
 	Reset();
-	CurF = fence[frameIndex]->GetCompletedValue();
-	UpdateSubresources(commandList, Buffer, BufferUploadHeap, 0, 0, 1, &SubResourceData);
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(Buffer, D3D12_RESOURCE_STATE_COPY_DEST, FinalState));
-	commandList->Close();
-	//commandList
-	ID3D12CommandList* CommandLists[] = { commandList };
-	commandQueue->ExecuteCommandLists(_countof(CommandLists), CommandLists);
-	commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
-	CurF = fence[frameIndex]->GetCompletedValue();
-	if (fence[frameIndex]->GetCompletedValue() < fenceValue[frameIndex])
+	UpdateSubresources(m_commandList, buffer, bufferUploadHeap, 0, 0, 1, &subResourceData);
+	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer, D3D12_RESOURCE_STATE_COPY_DEST, finalState));
+	m_commandList->Close();
+	ID3D12CommandList* commandLists[] = { m_commandList };
+	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	m_commandQueue->Signal(m_fence[m_frameIndex], m_fenceValue[m_frameIndex]);
+	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
-		fence[frameIndex]->SetEventOnCompletion(fenceValue[frameIndex], fenceEvent);
-		WaitForSingleObject(fenceEvent, INFINITE);
+		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
+		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
-	CurF = fence[frameIndex]->GetCompletedValue();
-	BufferUploadHeap->Release();
-	return Buffer;
+	bufferUploadHeap->Release();
+	return buffer;
 }
 
 template<typename T>
-inline ID3D12Resource * D3DSystem::CreateVertexBuffer(T * Data, int Size, wstring Name)
+inline ID3D12Resource * D3DSystem::CreateVertexBuffer(T * data, int size, wstring name)
 {
-	D3D12_RESOURCE_DESC Desc = CD3DX12_RESOURCE_DESC::Buffer(Size);
-	return CreateDefaultBuffer(Data, Size, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, Desc, Name);
+	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, desc, name);
 }
 
 template<typename T>
-inline ID3D12Resource * D3DSystem::CreateStructuredBuffer(T * Data, int Size, wstring Name)
+inline ID3D12Resource * D3DSystem::CreateStructuredBuffer(T * data, int size, wstring name)
 {
 
-	D3D12_RESOURCE_DESC Desc = CD3DX12_RESOURCE_DESC::Buffer(Size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	//return CreateDefaultBuffer(Data, Size, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, Desc, Name);
-	return CreateDefaultBuffer(Data, Size, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, Desc, Name);
+	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, desc, name);
 }
 
 template<typename T>
-inline void D3DSystem::CopyDataFromGPU(ID3D12Resource * Src, T * Dst, int Size)
+inline void D3DSystem::CopyDataFromGPU(ID3D12Resource * src, T * dst, int size)
 {
-	ID3D12Resource * Buffer;
-	device->CreateCommittedResource(
+	ID3D12Resource * buffer;
+	m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK), //A readback heap
 		D3D12_HEAP_FLAG_NONE, //No flags
-		&CD3DX12_RESOURCE_DESC::Buffer(Size), //Size of buffer
+		&CD3DX12_RESOURCE_DESC::Buffer(size), //Size of buffer
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
-		IID_PPV_ARGS(&Buffer));
-	Buffer->SetName(L"Buffer Readback Resource Heap");
-	//commandList
+		IID_PPV_ARGS(&buffer));
+	buffer->SetName(L"Buffer Readback Resource Heap");
+	//m_commandList
 	Reset();
-	commandList->CopyResource(Buffer, Src);
-	commandList->Close();
-	ID3D12CommandList* CommandLists[] = { commandList };
-	commandQueue->ExecuteCommandLists(_countof(CommandLists), CommandLists);
-	commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
-	if (fence[frameIndex]->GetCompletedValue() < fenceValue[frameIndex])
+	m_commandList->CopyResource(buffer, src);
+	m_commandList->Close();
+	ID3D12CommandList* commandLists[] = { m_commandList };
+	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	m_commandQueue->Signal(m_fence[m_frameIndex], m_fenceValue[m_frameIndex]);
+	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
-		fence[frameIndex]->SetEventOnCompletion(fenceValue[frameIndex], fenceEvent);
-		WaitForSingleObject(fenceEvent, INFINITE);
+		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
+		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
-	T* pBuffData;
-	Buffer->Map(0, nullptr, reinterpret_cast<void**>(&pBuffData));
-	memcpy(Dst, pBuffData, Size);
-	Buffer->Unmap(0, nullptr);
-	Buffer->Release();
+	T* buffData;
+	buffer->Map(0, nullptr, reinterpret_cast<void**>(&buffData));
+	memcpy(dst, buffData, size);
+	buffer->Unmap(0, nullptr);
+	buffer->Release();
 }
 
 template<typename T>
-inline void D3DSystem::CopyDataToGPU(ID3D12Resource * Dst, T * Data, int Size)
+inline void D3DSystem::CopyDataToGPU(ID3D12Resource * dst, T * data, int size)
 {
 
-	ID3D12Resource* Buffer;
-	device->CreateCommittedResource(
+	ID3D12Resource* buffer;
+	m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), //An upload heap
 		D3D12_HEAP_FLAG_NONE, //No flags
-		&CD3DX12_RESOURCE_DESC::Buffer(Size),
+		&CD3DX12_RESOURCE_DESC::Buffer(size),
 		D3D12_RESOURCE_STATE_GENERIC_READ, //GPU will read and copy content to the default heap
 		nullptr,
 		IID_PPV_ARGS(&Buffer));
-	Buffer->SetName(L"Buffer for upload");
-	T* pBuffData;
-	Buffer->Map(0, nullptr, reinterpret_cast<void**>(&pBuffData));
-	memcpy(pBuffData, Data, Size);
-	Buffer->Unmap(0, nullptr);
-	//commandList
+	buffer->SetName(L"Buffer for upload");
+	T* buffData;
+	buffer->Map(0, nullptr, reinterpret_cast<void**>(&buffData));
+	memcpy(buffData, data, size);
+	buffer->Unmap(0, nullptr);
+	//m_commandList
 	Reset();
-	commandList->CopyResource(Dst, Buffer);
-	commandList->Close();
-	ID3D12CommandList* CommandLists[] = { commandList };
-	commandQueue->ExecuteCommandLists(_countof(CommandLists), CommandLists);
-	commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
-	if (fence[frameIndex]->GetCompletedValue() < fenceValue[frameIndex])
+	m_commandList->CopyResource(dst, buffer);
+	m_commandList->Close();
+	ID3D12CommandList* commandLists[] = { m_commandList };
+	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	m_commandQueue->Signal(m_fence[m_frameIndex], m_fenceValue[m_frameIndex]);
+	if (m_fence[m_frameIndex]->m_GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
-		fence[frameIndex]->SetEventOnCompletion(fenceValue[frameIndex], fenceEvent);
-		WaitForSingleObject(fenceEvent, INFINITE);
+		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
+		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
-	Buffer->Release();
+	buffer->Release();
 }
