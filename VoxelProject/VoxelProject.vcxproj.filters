@@ -60,6 +60,12 @@
     <ClInclude Include="Object.h">
       <Filter>Objects</Filter>
     </ClInclude>
+    <ClInclude Include="VoxelObject.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Block.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -84,6 +90,12 @@
       <Filter>Pipeline</Filter>
     </ClCompile>
     <ClCompile Include="Object.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="VoxelObject.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Block.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>

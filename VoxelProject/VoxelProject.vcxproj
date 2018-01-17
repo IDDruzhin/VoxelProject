@@ -148,6 +148,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Block.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="D3DSystem.h" />
     <ClInclude Include="d3dx12.h" />
@@ -157,10 +158,12 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Structures.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="VoxelObject.h" />
     <ClInclude Include="VoxelPipeline.h" />
     <ClInclude Include="VoxelProject.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Block.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="D3DSystem.cpp" />
     <ClCompile Include="GeneralModel.cpp" />
@@ -172,6 +175,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Structures.cpp" />
+    <ClCompile Include="VoxelObject.cpp" />
     <ClCompile Include="VoxelPipeline.cpp" />
     <ClCompile Include="VoxelProject.cpp" />
   </ItemGroup>
