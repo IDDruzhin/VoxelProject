@@ -5,45 +5,31 @@
 class GeneralModel
 {
 public:
-	GeneralModel();
+	GeneralModel(HWND hWnd, int width, int height);
 	~GeneralModel();
-	bool Init(HWND hWnd, int _width, int _height);
-	void LoadSample();
-	void Update();
 	void Render();
-	void ComputeBones();
-	void CleanUp();
-	void RotateCamera(float dYaw, float dPitch);
 	void RotateCamera(Vector3 dR);
 	void ZoomCamera(float dx);
-	void SetNextSegmentsSet();
-	void AddBone();
-	void InsertMirroredBone(Vector3 Axis);
-	void PickBone(float x, float y);
-	void SetCurBoneLength(float _length);
-	void RotateCurBone(Vector3 dR);
-	void TranslateCurSkeleton(Vector3 dT);
-	void RemoveBone();
 	void Save(ofstream* F);
 	void Load(ifstream* F);
 	void LoadAnatomicalAndSegmentedList(string Path);
-	void ChangeCurBoneActivity();
-	void SwitchRenderBones();
-	void SwitchRenderVoxels();
-	void SetSelectingMode(int _Mode, int4 _Rect);
-	int Test();
+	//void AddBone();
+	//void InsertMirroredBone(Vector3 Axis);
+	//void PickBone(float x, float y);
+	//void SetCurBoneLength(float _length);
+	//void RotateCurBone(Vector3 dR);
+	//void TranslateCurSkeleton(Vector3 dT);
+	//void RemoveBone();
 private:
 	Camera m_camera;
-	D3DSystem m_d3dSyst;
-	Vector3 background;
-	int SelectedObject;
-	int SelectedBoneID;
-	Bone* SelectedBone;
-	float Eps;
-	int width;
-	int height;
-	float CameraSens;
-	int SelectingMode;
-
+	Vector3 m_background;
+	float m_eps;
+	int m_width;
+	int m_height;
+	float m_cameraSens;
+	//D3DSystem m_d3dSyst;
+	//int SelectedObject;
+	//int SelectedBoneID;
+	//Bone* SelectedBone;
 };
 
