@@ -2,7 +2,7 @@
 #include "D3DSystem.h"
 
 
-D3DSystem::D3DSystem(HWND hWnd, int Width, int Height)
+D3DSystem::D3DSystem(HWND hWnd, int width, int height)
 {
 	///Device
 	UINT dxgiFactoryFlags = 0;
@@ -55,8 +55,8 @@ D3DSystem::D3DSystem(HWND hWnd, int Width, int Height)
 	///Swap chain
 
 	DXGI_MODE_DESC backBufferDesc = {};
-	backBufferDesc.Width = Width;
-	backBufferDesc.Height = Height;
+	backBufferDesc.Width = width;
+	backBufferDesc.Height = height;
 	backBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DXGI_SAMPLE_DESC sampleDesc = {};
 	sampleDesc.Count = 1; // multisample count
@@ -118,7 +118,7 @@ D3DSystem::D3DSystem(HWND hWnd, int Width, int Height)
 	ThrowIfFailed(m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, Width, Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+		&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		&depthOptimizedClearValue,
 		IID_PPV_ARGS(&m_depthStencilBuffer)

@@ -7,7 +7,7 @@
 class D3DSystem
 {
 public:
-	D3DSystem(HWND hWnd, int Width, int Height);
+	D3DSystem(HWND hWnd, int width, int height);
 	~D3DSystem();
 	ComPtr<ID3D12Device> GetDevice();
 	DXGI_SWAP_CHAIN_DESC GetSwapChainDesc();
@@ -19,15 +19,15 @@ public:
 	void Wait();
 	bool PresentSimple();
 	template<typename T>
-	ComPtr<ID3D12Resource> CreateDefaultBuffer(T* Data, int Size, D3D12_RESOURCE_STATES FinalState, D3D12_RESOURCE_DESC Desc, wstring Name = L"");
+	ComPtr<ID3D12Resource> CreateDefaultBuffer(T* data, int size, D3D12_RESOURCE_STATES finalState, D3D12_RESOURCE_DESC desc, wstring name = L"");
 	template<typename T>
-	ComPtr<ID3D12Resource> CreateVertexBuffer(T* Data, int Size, wstring Name = L"");
+	ComPtr<ID3D12Resource> CreateVertexBuffer(T* data, int size, wstring name = L"");
 	template<typename T>
-	ComPtr<ID3D12Resource> CreateStructuredBuffer(T* Data, int Size, wstring Name = L"");
+	ComPtr<ID3D12Resource> CreateStructuredBuffer(T* data, int size, wstring name = L"");
 	template<typename T>
-	void CopyDataFromGPU(ComPtr<ID3D12Resource> Src, T * Dst, int Size);
+	void CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
 	template<typename T>
-	void CopyDataToGPU(ComPtr<ID3D12Resource> Src, T * Dst, int Size);
+	void CopyDataToGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
 	int GetFrameIndex();
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE GetFeatureData();
 private:

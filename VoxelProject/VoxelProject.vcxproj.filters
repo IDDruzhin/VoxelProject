@@ -13,6 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="General">
+      <UniqueIdentifier>{0ac077ed-6af2-4739-92f4-14be2239ebcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipeline">
+      <UniqueIdentifier>{27c2a70c-6707-4571-88af-a6bedd88acaa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{59cd73b1-4961-4ffa-a006-db7c164cd77f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects">
+      <UniqueIdentifier>{d36238d9-aa46-4ae8-b5a7-1afe720126c7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -30,17 +42,23 @@
     <ClInclude Include="d3dx12.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="D3DSystem.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="Structures.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DSystem.h">
+      <Filter>General</Filter>
     </ClInclude>
     <ClInclude Include="GeneralModel.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="VoxelPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Objects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -50,17 +68,23 @@
     <ClCompile Include="VoxelProject.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="D3DSystem.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Structures.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="GeneralModel.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="D3DSystem.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="VoxelPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Objects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

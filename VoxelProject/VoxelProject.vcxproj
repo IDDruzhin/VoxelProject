@@ -152,16 +152,19 @@
     <ClInclude Include="D3DSystem.h" />
     <ClInclude Include="d3dx12.h" />
     <ClInclude Include="GeneralModel.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Structures.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="VoxelPipeline.h" />
     <ClInclude Include="VoxelProject.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="D3DSystem.cpp" />
     <ClCompile Include="GeneralModel.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -169,6 +172,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Structures.cpp" />
+    <ClCompile Include="VoxelPipeline.cpp" />
     <ClCompile Include="VoxelProject.cpp" />
   </ItemGroup>
   <ItemGroup>

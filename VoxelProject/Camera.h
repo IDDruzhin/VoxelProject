@@ -2,7 +2,7 @@
 class Camera
 {
 public:
-	Camera();
+	Camera(int width = 800, int height = 600, float near_ = 0.1f, float far_ = 1000.0f, float distance = 3.0f, Vector3 lookPosition = Vector3(0.0f, 0.0f, 0.0f));
 	~Camera();
 	void SetPerspective(int width, int height, float fovY);
 	Matrix GetView();
