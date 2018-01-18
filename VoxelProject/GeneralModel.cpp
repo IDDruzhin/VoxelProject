@@ -9,8 +9,9 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 	m_cameraSens = 0.08f;
 	m_width = width;
 	m_height = height;
+	m_camera = make_shared<Camera>(m_width, m_height);
 	shared_ptr<D3DSystem> d3dSyst = make_shared<D3DSystem>(hWnd, m_width, m_height);
-	m_camera.SetPerspective(m_width, m_height, XM_PI / 3.0f);
+	//m_camera->SetPerspective(m_width, m_height, XM_PI / 3.0f);
 	m_background = Vector3(0.5f, 0.7f, 1.0f);
 	m_voxPipeline = make_unique<VoxelPipeline>(d3dSyst);
 	m_voxObj = make_shared<VoxelObject>(m_voxPipeline.get());
@@ -48,26 +49,20 @@ bool GeneralModel::Init(HWND hWnd, int _width, int _height)
 
 void GeneralModel::Render()
 {
-	/*
-	d3dSyst.Reset();
-	d3dSyst.UpdatePipelineAndClear(background);
-	voxelPipeline.RenderObjectsFull(&d3dSyst, voxelObjects, camera, SelectedObject, SelectedBoneID);
-	d3dSyst.ExecuteGraphics();
-	d3dSyst.PresentSimple();
-	*/
+	m_voxPipeline->RenderObject(m_voxObj.get(),m_camera.get());
 }
 
 
 void GeneralModel::RotateCamera(Vector3 dR)
 {
-	m_camera.Rotate(dR*m_cameraSens);
-	m_camera.UpdateView();
+	m_camera->Rotate(dR*m_cameraSens);
+	m_camera->UpdateView();
 }
 
 void GeneralModel::ZoomCamera(float dx)
 {
-	m_camera.Zoom(dx);
-	m_camera.UpdateView();
+	m_camera->Zoom(dx);
+	m_camera->UpdateView();
 }
 /*
 void GeneralModel::AddBone()

@@ -35,8 +35,8 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		ComPtr<ID3DBlob> vertexShader;
 		ComPtr<ID3DBlob> pixelShader;
 		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-		ThrowIfFailed(D3DCompileFromFile(L"MeshVS", nullptr, nullptr, "main", "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
-		ThrowIfFailed(D3DCompileFromFile(L"MeshPS", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
+		ThrowIfFailed(D3DCompileFromFile(L"MeshVS.hlsl", nullptr, nullptr, "main", "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
+		ThrowIfFailed(D3DCompileFromFile(L"MeshPS.hlsl", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
 
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 		{
@@ -47,7 +47,10 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		CD3DX12_BLEND_DESC blendDesc(D3D12_DEFAULT);
 		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
 		CD3DX12_RASTERIZER_DESC rasterizerDesc(D3D12_DEFAULT);
-		rasterizerDesc.FrontCounterClockwise = FALSE;
+		//rasterizerDesc.FrontCounterClockwise = FALSE;
+		//rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
+		//rasterizerDesc.CullMode = D3D12_CULL_MODE_FRONT;
+		rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;	
 
 		// Describe and create the graphics pipeline state object (PSO).
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -86,7 +89,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 	}
 	int blockIndexes[] =
 	{
-		0,6,5,
+		0,6,4,
 		0,2,6,
 		0,3,2,
 		0,1,3,
@@ -109,7 +112,7 @@ VoxelPipeline::~VoxelPipeline()
 {
 }
 
-void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera camera)
+void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 {
 	if (voxObj != nullptr)
 	{
@@ -117,7 +120,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera camera)
 		int frameIndex = m_d3dSyst->GetFrameIndex();
 		m_d3dSyst->UpdatePipelineAndClear(Vector3(0, 0, 0));
 		ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
-		m_renderingCB.worldViewProj = (voxObj->GetWorld()*camera.GetView()*camera.GetProjection()).Transpose();
+		m_renderingCB.worldViewProj = (voxObj->GetWorld()*camera->GetView()*camera->GetProjection()).Transpose();
 		commandList->SetPipelineState(m_meshPipelineState.Get());
 		commandList->SetGraphicsRootSignature(m_meshRootSignature.Get());
 		commandList->RSSetViewports(1, &m_viewport);
@@ -126,8 +129,16 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera camera)
 		memcpy(m_cbvGPUAddress[frameIndex], &m_renderingCB, sizeof(m_renderingCB));
 		commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
 		commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVertexBufferView()));
+		//commandList->DrawInstanced(3, 1, 0, 0);
 		commandList->IASetIndexBuffer(&m_blockIndexBufferView);
-		commandList->DrawIndexedInstanced(12, 1, 0, 0, 0);
+		//commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
+		//commandList->DrawIndexedInstanced(36, 1, 0, 0, 36*100);
+		//commandList->DrawIndexedInstanced(36, voxObj->GetBlocksCount(), 0, 0, 8);
+		//commandList->DrawIndexedInstanced(36, voxObj->GetBlocksCount(), 0, 0, 8);
+		for (int i = 0; i < voxObj->GetBlocksCount(); i++)
+		{
+			commandList->DrawIndexedInstanced(36, 1, 0, 8*i, 0);
+		}
 		m_d3dSyst->ExecuteGraphics();
 		m_d3dSyst->PresentSimple();
 	}

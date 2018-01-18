@@ -16,13 +16,13 @@ VoxelObject::VoxelObject(VoxelPipeline* voxPipeline)
 	int y_blockDim = ceil(m_dim.y / m_blockDim);
 	int z_blockDim = ceil(m_dim.z / m_blockDim);
 	Vector3 blockIndex(0, 0, 0);
-	for (; blockIndex.x < x_blockDim; blockIndex.x++)
+	for (blockIndex.x=0; blockIndex.x < x_blockDim; blockIndex.x++)
 	{
-		for (; blockIndex.y < y_blockDim; blockIndex.y++)
+		for (blockIndex.y=0; blockIndex.y < y_blockDim; blockIndex.y++)
 		{
-			for (; blockIndex.z < z_blockDim; blockIndex.z++)
+			for (blockIndex.z=0; blockIndex.z < z_blockDim; blockIndex.z++)
 			{
-				m_blocks.emplace_back(m_dim, blockIndex, m_startPos, m_blockSize);
+				m_blocks.emplace_back(m_dim, blockIndex, m_startPos, m_blockDim, m_blockSize);
 				m_blocksInfo.emplace_back(blockIndex, m_blockDim);
 			}
 		}
@@ -30,7 +30,7 @@ VoxelObject::VoxelObject(VoxelPipeline* voxPipeline)
 	m_blocksRes = voxPipeline->CreateBlocksViews(&m_blocks[0], m_blocks.size());
 	m_blocksBufferView.BufferLocation = m_blocksRes->GetGPUVirtualAddress();
 	m_blocksBufferView.StrideInBytes = sizeof(Vertex);
-	m_blocksBufferView.SizeInBytes = sizeof(Vertex)*m_blocks.size();
+	m_blocksBufferView.SizeInBytes = sizeof(Vertex)*sizeof(Block)*m_blocks.size();
 }
 
 
@@ -46,5 +46,10 @@ ID3D12Resource * VoxelObject::GetBlocksRes()
 D3D12_VERTEX_BUFFER_VIEW VoxelObject::GetBlocksVertexBufferView()
 {
 	return m_blocksBufferView;
+}
+
+int VoxelObject::GetBlocksCount()
+{
+	return m_blocks.size();
 }
 

@@ -1,3 +1,8 @@
+cbuffer RenderingConstantBuffer : register(b0)
+{
+	float4x4 WorldViewProj;
+};
+
 struct VS_INPUT
 {
 	float4 pos : POSITION;
@@ -13,7 +18,7 @@ struct PS_INPUT
 PS_INPUT main(VS_INPUT input)
 {
 	PS_INPUT output;
-	output.pos = input.pos;
+	output.pos = mul(input.pos, WorldViewProj);
 	output.tex = input.tex;
 	return output;
 }

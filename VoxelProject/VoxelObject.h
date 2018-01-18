@@ -13,6 +13,7 @@ public:
 	~VoxelObject();
 	ID3D12Resource* GetBlocksRes();
 	D3D12_VERTEX_BUFFER_VIEW GetBlocksVertexBufferView();
+	int GetBlocksCount();
 private:
 	Vector3 m_dim;
 	Vector3 m_size;

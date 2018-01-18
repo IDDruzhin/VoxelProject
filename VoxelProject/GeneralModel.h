@@ -23,7 +23,7 @@ public:
 	//void TranslateCurSkeleton(Vector3 dT);
 	//void RemoveBone();
 private:
-	Camera m_camera;
+	shared_ptr<Camera> m_camera;
 	Vector3 m_background;
 	float m_eps;
 	int m_width;

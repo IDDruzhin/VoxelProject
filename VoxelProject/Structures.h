@@ -21,32 +21,55 @@ struct Voxel
 
 struct Block
 {
+	/*
 	Vertex v[8];
 	Block(Vector3 dim, Vector3 index, Vector3 startPos, float blockSize)
 	{
+		Vector3 p = Vector3(0.0f,0.0f,0.0f);
+		Vector3 t = Vector3(1,1,1);
+		v[0] = { p,t };
+		p = Vector3(0.0f, 0.0f, 1.0f);
+		v[1] = { p,t };
+		p = Vector3(0.0f, 1.0f, 0.0f);
+		v[2] = { p,t };
+		p = Vector3(0.0f, 1.0f, 1.0f);
+		v[3] = { p,t };
+		p = Vector3(1.0f, 0.0f, 0.0f);
+		v[4] = { p,t };
+		p = Vector3(1.0f, 0.0f, 1.0f);
+		v[5] = { p,t };
+		p = Vector3(1.0f, 1.0f, 0.0f);
+		v[6] = { p,t };
+		p = Vector3(1.0f, 1.0f, 1.0f);
+		v[7] = { p,t };
+	}
+	*/
+	Vertex v[8];
+	Block(Vector3 dim, Vector3 index, Vector3 startPos, int blockDim, float blockSize)
+	{
 		Vector3 p = startPos + Vector3(index.x, index.y, index.z) * blockSize;
-		Vector3 t = Vector3(index.x, index.y, index.z) / dim;
+		Vector3 t = Vector3(index.x, index.y, index.z)*blockDim / dim;
 		v[0] = { p,t };
 		p = startPos + Vector3(index.x, index.y, index.z+1) * blockSize;
-		t = Vector3(index.x, index.y, index.z+1) / dim;
+		t = Vector3(index.x, index.y, index.z+1)*blockDim / dim;
 		v[1] = { p,t };
 		p = startPos + Vector3(index.x, index.y+1, index.z) * blockSize;
-		t = Vector3(index.x, index.y+1, index.z) / dim;
+		t = Vector3(index.x, index.y+1, index.z)*blockDim / dim;
 		v[2] = { p,t };
 		p = startPos + Vector3(index.x, index.y+1, index.z + 1) * blockSize;
-		t = Vector3(index.x, index.y+1, index.z + 1) / dim;
+		t = Vector3(index.x, index.y+1, index.z + 1)*blockDim / dim;
 		v[3] = { p,t };
 		p = startPos + Vector3(index.x+1, index.y, index.z) * blockSize;
-		t = Vector3(index.x+1, index.y, index.z) / dim;
+		t = Vector3(index.x+1, index.y, index.z)*blockDim / dim;
 		v[4] = { p,t };
 		p = startPos + Vector3(index.x+1, index.y, index.z + 1) * blockSize;
-		t = Vector3(index.x+1, index.y, index.z + 1) / dim;
+		t = Vector3(index.x+1, index.y, index.z + 1)*blockDim / dim;
 		v[5] = { p,t };
 		p = startPos + Vector3(index.x+1, index.y+1, index.z) * blockSize;
-		t = Vector3(index.x+1, index.y+1, index.z) / dim;
+		t = Vector3(index.x+1, index.y+1, index.z)*blockDim / dim;
 		v[6] = { p,t };
 		p = startPos + Vector3(index.x+1, index.y+1, index.z + 1) * blockSize;
-		t = Vector3(index.x+1, index.y+1, index.z + 1) / dim;
+		t = Vector3(index.x+1, index.y+1, index.z + 1)*blockDim / dim;
 		v[7] = { p,t };
 	}
 };

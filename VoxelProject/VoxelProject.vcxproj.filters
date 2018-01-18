@@ -25,6 +25,9 @@
     <Filter Include="Objects">
       <UniqueIdentifier>{d36238d9-aa46-4ae8-b5a7-1afe720126c7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Misc">
+      <UniqueIdentifier>{11bbaf06-e2c4-4a83-b72e-9c8db45b09ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -40,9 +43,6 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="d3dx12.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Structures.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
@@ -63,15 +63,18 @@
     <ClInclude Include="VoxelObject.h">
       <Filter>Objects</Filter>
     </ClInclude>
+    <ClInclude Include="InputController.h">
+      <Filter>General</Filter>
+    </ClInclude>
+    <ClInclude Include="Structures.h">
+      <Filter>Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="VoxelProject.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Structures.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="GeneralModel.cpp">
@@ -91,6 +94,12 @@
     </ClCompile>
     <ClCompile Include="VoxelObject.cpp">
       <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="InputController.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="Structures.cpp">
+      <Filter>Misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

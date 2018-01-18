@@ -10,7 +10,7 @@ class VoxelPipeline
 public:
 	VoxelPipeline(shared_ptr<D3DSystem> d3dSyst);
 	~VoxelPipeline();
-	void RenderObject(VoxelObject* voxObj, Camera camera);
+	void RenderObject(VoxelObject* voxObj, Camera* camera);
 	template<typename T>
 	ComPtr<ID3D12Resource> Create3dTextureViews(T* data, int elementsCount);
 	template<typename T>
