@@ -12,6 +12,8 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 	shared_ptr<D3DSystem> d3dSyst = make_shared<D3DSystem>(hWnd, m_width, m_height);
 	m_camera.SetPerspective(m_width, m_height, XM_PI / 3.0f);
 	m_background = Vector3(0.5f, 0.7f, 1.0f);
+	m_voxPipeline = make_unique<VoxelPipeline>(d3dSyst);
+	m_voxObj = make_shared<VoxelObject>(m_voxPipeline.get());
 }
 
 

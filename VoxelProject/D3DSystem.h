@@ -23,6 +23,8 @@ public:
 	template<typename T>
 	ComPtr<ID3D12Resource> CreateVertexBuffer(T* data, int size, wstring name = L"");
 	template<typename T>
+	ComPtr<ID3D12Resource> CreateIndexBuffer(T* data, int size, wstring name = L"");
+	template<typename T>
 	ComPtr<ID3D12Resource> CreateStructuredBuffer(T* data, int size, wstring name = L"");
 	template<typename T>
 	void CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
@@ -68,7 +70,7 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateDefaultBuffer(T * data, int size,
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
 		IID_PPV_ARGS(&buffer));
-	buffer->SetName(Name.c_str());
+	buffer->SetName(name.c_str());
 
 	ComPtr<ID3D12Resource> bufferUploadHeap;
 	m_device->CreateCommittedResource(
@@ -87,11 +89,11 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateDefaultBuffer(T * data, int size,
 	//m_commandList
 	Reset();
 	UpdateSubresources(m_commandList.Get(), buffer.Get(), bufferUploadHeap.Get(), 0, 0, 1, &subResourceData);
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer, D3D12_RESOURCE_STATE_COPY_DEST, finalState));
+	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, finalState));
 	m_commandList->Close();
-	ID3D12CommandList* commandLists[] = { m_commandList };
+	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-	m_commandQueue->Signal(m_fence[m_frameIndex], m_fenceValue[m_frameIndex]);
+	m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
 	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
 		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
@@ -106,6 +108,13 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateVertexBuffer(T * data, int size, 
 {
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
 	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, desc, name);
+}
+
+template<typename T>
+inline ComPtr<ID3D12Resource> D3DSystem::CreateIndexBuffer(T * data, int size, wstring name)
+{
+	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_INDEX_BUFFER, desc, name);
 }
 
 template<typename T>

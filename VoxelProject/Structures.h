@@ -22,31 +22,31 @@ struct Voxel
 struct Block
 {
 	Vertex v[8];
-	Block(Vector3 size, Vector3 index, Vector3 startPos, float blockSize)
+	Block(Vector3 dim, Vector3 index, Vector3 startPos, float blockSize)
 	{
 		Vector3 p = startPos + Vector3(index.x, index.y, index.z) * blockSize;
-		Vector3 t = Vector3(index.x, index.y, index.z) / size;
+		Vector3 t = Vector3(index.x, index.y, index.z) / dim;
 		v[0] = { p,t };
 		p = startPos + Vector3(index.x, index.y, index.z+1) * blockSize;
-		t = Vector3(index.x, index.y, index.z+1) / size;
+		t = Vector3(index.x, index.y, index.z+1) / dim;
 		v[1] = { p,t };
 		p = startPos + Vector3(index.x, index.y+1, index.z) * blockSize;
-		t = Vector3(index.x, index.y+1, index.z) / size;
+		t = Vector3(index.x, index.y+1, index.z) / dim;
 		v[2] = { p,t };
 		p = startPos + Vector3(index.x, index.y+1, index.z + 1) * blockSize;
-		t = Vector3(index.x, index.y+1, index.z + 1) / size;
+		t = Vector3(index.x, index.y+1, index.z + 1) / dim;
 		v[3] = { p,t };
 		p = startPos + Vector3(index.x+1, index.y, index.z) * blockSize;
-		t = Vector3(index.x+1, index.y, index.z) / size;
+		t = Vector3(index.x+1, index.y, index.z) / dim;
 		v[4] = { p,t };
 		p = startPos + Vector3(index.x+1, index.y, index.z + 1) * blockSize;
-		t = Vector3(index.x+1, index.y, index.z + 1) / size;
+		t = Vector3(index.x+1, index.y, index.z + 1) / dim;
 		v[5] = { p,t };
 		p = startPos + Vector3(index.x+1, index.y+1, index.z) * blockSize;
-		t = Vector3(index.x+1, index.y+1, index.z) / size;
+		t = Vector3(index.x+1, index.y+1, index.z) / dim;
 		v[6] = { p,t };
 		p = startPos + Vector3(index.x+1, index.y+1, index.z + 1) * blockSize;
-		t = Vector3(index.x+1, index.y+1, index.z + 1) / size;
+		t = Vector3(index.x+1, index.y+1, index.z + 1) / dim;
 		v[7] = { p,t };
 	}
 };

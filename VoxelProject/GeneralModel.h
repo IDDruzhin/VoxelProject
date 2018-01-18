@@ -1,6 +1,8 @@
 #pragma once
 #include "D3DSystem.h"
 #include "Camera.h"
+#include "VoxelObject.h"
+#include "VoxelPipeline.h"
 
 class GeneralModel
 {
@@ -27,6 +29,8 @@ private:
 	int m_width;
 	int m_height;
 	float m_cameraSens;
+	shared_ptr<VoxelObject> m_voxObj;
+	unique_ptr<VoxelPipeline> m_voxPipeline;
 	//D3DSystem m_d3dSyst;
 	//int SelectedObject;
 	//int SelectedBoneID;

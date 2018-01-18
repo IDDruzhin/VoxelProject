@@ -68,8 +68,68 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 
 		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_meshPipelineState)));
 	}
+
+	///Constant buffer
+	ZeroMemory(&m_renderingCB, sizeof(m_renderingCB));
+	for (int i = 0; i < FRAMEBUFFERCOUNT; ++i)
+	{
+		ThrowIfFailed(d3dSyst->GetDevice()->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(1024 * 64), //Size. Must be a multiple of 64KB for constant buffers
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&m_constantBufferUploadHeaps[i])));
+		m_constantBufferUploadHeaps[i]->SetName(L"Constant Buffer Upload Resource Heap");
+		CD3DX12_RANGE readRange(0, 0);    //No reading on CPU
+		ThrowIfFailed(m_constantBufferUploadHeaps[i]->Map(0, &readRange, reinterpret_cast<void**>(&m_cbvGPUAddress[i])));
+	}
+	int blockIndexes[] =
+	{
+		0,6,5,
+		0,2,6,
+		0,3,2,
+		0,1,3,
+		2,7,6,
+		2,3,7,
+		4,6,7,
+		4,7,5,
+		0,4,5,
+		0,5,1,
+		1,5,7,
+		1,7,3
+	};
+	m_blockIndexBuffer = m_d3dSyst->CreateIndexBuffer(&blockIndexes[0], sizeof(blockIndexes), L"Blocks index buffer");
+	m_blockIndexBufferView.BufferLocation = m_blockIndexBuffer->GetGPUVirtualAddress();
+	m_blockIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	m_blockIndexBufferView.SizeInBytes = sizeof(blockIndexes);
 }
 
 VoxelPipeline::~VoxelPipeline()
 {
 }
+
+void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera camera)
+{
+	if (voxObj != nullptr)
+	{
+		m_d3dSyst->Reset();
+		int frameIndex = m_d3dSyst->GetFrameIndex();
+		m_d3dSyst->UpdatePipelineAndClear(Vector3(0, 0, 0));
+		ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
+		m_renderingCB.worldViewProj = (voxObj->GetWorld()*camera.GetView()*camera.GetProjection()).Transpose();
+		commandList->SetPipelineState(m_meshPipelineState.Get());
+		commandList->SetGraphicsRootSignature(m_meshRootSignature.Get());
+		commandList->RSSetViewports(1, &m_viewport);
+		commandList->RSSetScissorRects(1, &m_scissorRect);
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		memcpy(m_cbvGPUAddress[frameIndex], &m_renderingCB, sizeof(m_renderingCB));
+		commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
+		commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVertexBufferView()));
+		commandList->IASetIndexBuffer(&m_blockIndexBufferView);
+		commandList->DrawIndexedInstanced(12, 1, 0, 0, 0);
+		m_d3dSyst->ExecuteGraphics();
+		m_d3dSyst->PresentSimple();
+	}
+}
+
