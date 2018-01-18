@@ -1,10 +1,16 @@
 #pragma once
 
-
 struct Vertex
 {
 	Vector3 pos;
 	Vector3 tex;
+};
+
+struct Voxel
+{
+	UINT index;
+	BYTE color;
+	BYTE segment;
 };
 
 struct Block
