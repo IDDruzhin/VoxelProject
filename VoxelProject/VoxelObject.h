@@ -11,7 +11,7 @@ private:
 	int m_width;
 	int m_height;
 	int m_depth;
-	int m_blockSize;
+	float m_blockSize;
 	vector<Voxel> voxels;
 	vector<Block> m_blocks;
 	vector<BlockInfo> m_blocksInfo;
