@@ -12,12 +12,12 @@ public:
 	ComPtr<ID3D12Device> GetDevice();
 	DXGI_SWAP_CHAIN_DESC GetSwapChainDesc();
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList();
-	bool Reset();
+	void Reset();
 	bool Execute();
-	bool ExecuteGraphics();
+	void ExecuteGraphics();
 	void UpdatePipelineAndClear(Vector3 bg);
 	void Wait();
-	bool PresentSimple();
+	void PresentSimple();
 	template<typename T>
 	ComPtr<ID3D12Resource> CreateDefaultBuffer(T* data, int size, D3D12_RESOURCE_STATES finalState, D3D12_RESOURCE_DESC desc, wstring name = L"");
 	template<typename T>
@@ -54,7 +54,7 @@ private:
 
 	HANDLE m_swapChainEvent;
 
-	bool WaitForPreviousFrame();
+	void WaitForPreviousFrame();
 	void OnDestroy();
 };
 

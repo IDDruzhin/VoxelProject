@@ -27,6 +27,10 @@ private:
 
 	ComPtr<ID3D12Resource> m_blockIndexBuffer;
 	D3D12_INDEX_BUFFER_VIEW m_blockIndexBufferView;
+
+	ComPtr<ID3D12Resource> m_renderTextures[FRAMEBUFFERCOUNT];
+	ComPtr<ID3D12DescriptorHeap> m_srvUavHeapRender;
+	UINT m_srvUavDescriptorSize;
 };
 
 template<typename T>

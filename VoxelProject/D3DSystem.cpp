@@ -69,7 +69,7 @@ D3DSystem::D3DSystem(HWND hWnd, int width, int height)
 	swapChainDesc.OutputWindow = hWnd;
 	swapChainDesc.SampleDesc = sampleDesc;
 	swapChainDesc.Windowed = true;
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+	//swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 
 	IDXGISwapChain* tempSwapChain;
 	ThrowIfFailed(factory->CreateSwapChain(
@@ -173,23 +173,13 @@ ComPtr<ID3D12GraphicsCommandList> D3DSystem::GetCommandList()
 	return m_commandList;
 }
 
-bool D3DSystem::Reset()
+void D3DSystem::Reset()
 {
 	//WaitForSingleObjectEx(m_swapChainEvent, 100, FALSE);
 	WaitForPreviousFrame();
-	HRESULT hr;
-	hr = m_commandAllocator[m_frameIndex]->Reset();
-	if (FAILED(hr))
-	{
-		return false;
-	}
-	hr = m_commandList->Reset(m_commandAllocator[m_frameIndex].Get(), NULL);
-	if (FAILED(hr))
-	{
-		return false;
-	}
+	ThrowIfFailed(m_commandAllocator[m_frameIndex]->Reset());
+	ThrowIfFailed(m_commandList->Reset(m_commandAllocator[m_frameIndex].Get(), NULL));
 	//PIXBeginEvent(m_commandQueue, 0, L"Render");
-	return true;
 }
 
 bool D3DSystem::Execute()
@@ -205,18 +195,14 @@ bool D3DSystem::Execute()
 	return true;
 }
 
-bool D3DSystem::ExecuteGraphics()
+void D3DSystem::ExecuteGraphics()
 {
 	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	m_commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-	HRESULT hr = m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
-	if (FAILED(hr))
-	{
-		return false;
-	}
-	return true;
+
+	ThrowIfFailed(m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]));
 }
 
 void D3DSystem::UpdatePipelineAndClear(Vector3 Bg)
@@ -236,17 +222,11 @@ void D3DSystem::Wait()
 	HRESULT hr = m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
 }
 
-bool D3DSystem::PresentSimple()
+void D3DSystem::PresentSimple()
 {
-	HRESULT hr;
 	// present the current backbuffer
-	hr = m_swapChain->Present(0, 0);
+	ThrowIfFailed(m_swapChain->Present(0, 0));
 	//hr = m_swapChain->Present(1, 0);
-	if (FAILED(hr))
-	{
-		return false;
-	}
-	return true;
 }
 
 void D3DSystem::OnDestroy()
@@ -279,19 +259,13 @@ D3D12_FEATURE_DATA_ROOT_SIGNATURE D3DSystem::GetFeatureData()
 	return m_featureData;
 }
 
-bool D3DSystem::WaitForPreviousFrame()
+void D3DSystem::WaitForPreviousFrame()
 {
-	HRESULT hr;
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
-		hr = m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
-		if (FAILED(hr))
-		{
-			return false;
-		}
+		ThrowIfFailed(m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent));
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
 	m_fenceValue[m_frameIndex]++;
-	return true;
 }
