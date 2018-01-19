@@ -70,7 +70,7 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateDefaultBuffer(T * data, int size,
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
 		IID_PPV_ARGS(&buffer));
-	buffer->SetName(name.c_str());
+	//buffer->SetName(name.c_str());
 
 	ComPtr<ID3D12Resource> bufferUploadHeap;
 	m_device->CreateCommittedResource(
@@ -80,7 +80,7 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateDefaultBuffer(T * data, int size,
 		D3D12_RESOURCE_STATE_GENERIC_READ, //GPU will read and copy content to the default heap
 		nullptr,
 		IID_PPV_ARGS(&bufferUploadHeap));
-	bufferUploadHeap->SetName(L"Buffer Upload Resource Heap");
+	//bufferUploadHeap->SetName(L"Buffer Upload Resource Heap");
 	D3D12_SUBRESOURCE_DATA subResourceData = {};
 	subResourceData.pData = reinterpret_cast<BYTE*>(data); //Pointer to upload data
 	subResourceData.RowPitch = size;
@@ -93,6 +93,7 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateDefaultBuffer(T * data, int size,
 	m_commandList->Close();
 	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	//m_fenceValue[m_frameIndex]++;
 	m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
 	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
@@ -137,7 +138,7 @@ inline void D3DSystem::CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int 
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
 		IID_PPV_ARGS(&buffer));
-	buffer->SetName(L"Buffer Readback Resource Heap");
+	//buffer->SetName(L"Buffer Readback Resource Heap");
 	//m_commandList
 	Reset();
 	m_commandList->CopyResource(buffer.Get(), src.Get());
@@ -169,7 +170,7 @@ inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int s
 		D3D12_RESOURCE_STATE_GENERIC_READ, //GPU will read and copy content to the default heap
 		nullptr,
 		IID_PPV_ARGS(&Buffer));
-	buffer->SetName(L"Buffer for upload");
+	//buffer->SetName(L"Buffer for upload");
 	T* pBuffData;
 	buffer->Map(0, nullptr, reinterpret_cast<void**>(&buffData));
 	memcpy(pBuffData, data, size);

@@ -40,7 +40,12 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 
 		ComPtr<ID3DBlob> vertexShader;
 		ComPtr<ID3DBlob> pixelShader;
+#if defined(_DEBUG)
 		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+		UINT compileFlags = 0;
+#endif
+		//UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 		ThrowIfFailed(D3DCompileFromFile(L"MeshVS.hlsl", nullptr, nullptr, "main", "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
 		ThrowIfFailed(D3DCompileFromFile(L"MeshPS.hlsl", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
 
@@ -89,7 +94,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(&m_constantBufferUploadHeaps[i])));
-		m_constantBufferUploadHeaps[i]->SetName(L"Constant Buffer Upload Resource Heap");
+		//m_constantBufferUploadHeaps[i]->SetName(L"Constant Buffer Upload Resource Heap");
 		CD3DX12_RANGE readRange(0, 0);    //No reading on CPU
 		ThrowIfFailed(m_constantBufferUploadHeaps[i]->Map(0, &readRange, reinterpret_cast<void**>(&m_cbvGPUAddress[i])));
 	}
@@ -105,17 +110,14 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		DXGI_SWAP_CHAIN_DESC swapChainDesc = m_d3dSyst->GetSwapChainDesc();
 		CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(swapChainDesc.BufferDesc.Format, swapChainDesc.BufferDesc.Width, swapChainDesc.BufferDesc.Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
-		for (int i = 0; i < FRAMEBUFFERCOUNT; i++)
-		{
-			ThrowIfFailed(m_d3dSyst->GetDevice()->CreateCommittedResource(
-				&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), //A default heap
-				D3D12_HEAP_FLAG_NONE, //No flags
-				&textureDesc,
-				D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-				nullptr,
-				IID_PPV_ARGS(&m_renderTextures[i])));
-			m_renderTextures[i]->SetName(L"Render texture");
-		}
+		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), //A default heap
+			D3D12_HEAP_FLAG_NONE, //No flags
+			&textureDesc,
+			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+			nullptr,
+			IID_PPV_ARGS(&m_renderTexture)));
+		//m_renderTexture->SetName(L"Render texture");
 		m_srvUavDescriptorSize = m_d3dSyst->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -123,11 +125,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 		//uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_srvUavHeapRender->GetCPUDescriptorHandleForHeapStart());
-		for (int i = 0; i < FRAMEBUFFERCOUNT; i++)
-		{
-			m_d3dSyst->GetDevice()->CreateUnorderedAccessView(m_renderTextures[i].Get(), nullptr, &uavDesc, uavHandle);
-			uavHandle.Offset(1, m_srvUavDescriptorSize);
-		}
+		m_d3dSyst->GetDevice()->CreateUnorderedAccessView(m_renderTexture.Get(), nullptr, &uavDesc, uavHandle);
 	}
 
 	int blockIndexes[] =
@@ -161,7 +159,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 	{
 		m_d3dSyst->Reset();
 		int frameIndex = m_d3dSyst->GetFrameIndex();
-		m_d3dSyst->UpdatePipelineAndClear(Vector3(1.0f, 0, 0));
+		m_d3dSyst->UpdatePipelineAndClear(Vector3(1, 1, 0));
 		ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
 		m_renderingCB.worldViewProj = (voxObj->GetWorld()*camera->GetView()*camera->GetProjection()).Transpose();
 
@@ -175,8 +173,8 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		memcpy(m_cbvGPUAddress[frameIndex], &m_renderingCB, sizeof(m_renderingCB));
 		commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
-		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart(), frameIndex, m_srvUavDescriptorSize);
-		commandList->SetGraphicsRootDescriptorTable(1, srvHandle);
+		//CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
+		commandList->SetGraphicsRootDescriptorTable(1, m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
 		commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVertexBufferView()));
 		//commandList->DrawInstanced(3, 1, 0, 0);
 		commandList->IASetIndexBuffer(&m_blockIndexBufferView);
@@ -184,12 +182,13 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		//commandList->DrawIndexedInstanced(36, 1, 0, 0, 36*100);
 		//commandList->DrawIndexedInstanced(36, voxObj->GetBlocksCount(), 0, 0, 8);
 		//commandList->DrawIndexedInstanced(36, voxObj->GetBlocksCount(), 0, 0, 8);
-		commandList->DrawIndexedInstanced(36, 1, 0, 8 * 100, 0);
+		//commandList->DrawIndexedInstanced(36, 1, 0, 8 * 100, 0);
 		for (int i = 0; i < voxObj->GetBlocksCount(); i++)
 		{
-			//commandList->DrawIndexedInstanced(36, 1, 0, 8*i, 0);
+			commandList->DrawIndexedInstanced(36, 1, 0, 8*i, 0);
 		}
 		m_d3dSyst->ExecuteGraphics();
+		//m_d3dSyst->Reset();
 		m_d3dSyst->PresentSimple();
 	}
 }

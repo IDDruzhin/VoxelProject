@@ -6,12 +6,24 @@ D3DSystem::D3DSystem(HWND hWnd, int width, int height)
 {
 	///Device
 	UINT dxgiFactoryFlags = 0;
+	/*
 	ID3D12Debug *debugController;
 	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
 	{
 		debugController->EnableDebugLayer();
 		dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 	}
+	*/
+#if defined(_DEBUG)
+	{
+		ComPtr<ID3D12Debug> debugController;
+		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+		{
+			debugController->EnableDebugLayer();
+			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+		}
+	}
+#endif
 
 	ComPtr<IDXGIFactory4> factory;
 	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
@@ -81,7 +93,7 @@ D3DSystem::D3DSystem(HWND hWnd, int width, int height)
 	m_swapChain = static_cast<IDXGISwapChain3*>(tempSwapChain);
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-	m_swapChainEvent = m_swapChain->GetFrameLatencyWaitableObject();
+	//m_swapChainEvent = m_swapChain->GetFrameLatencyWaitableObject();
 
 	///Back buffers descriptor heap
 
@@ -123,7 +135,7 @@ D3DSystem::D3DSystem(HWND hWnd, int width, int height)
 		&depthOptimizedClearValue,
 		IID_PPV_ARGS(&m_depthStencilBuffer)
 	));
-	m_dsDescriptorHeap->SetName(L"Depth/Stencil Resource Heap");
+	//m_dsDescriptorHeap->SetName(L"Depth/Stencil Resource Heap");
 	m_device->CreateDepthStencilView(m_depthStencilBuffer.Get(), &depthStencilDesc, m_dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 
@@ -197,6 +209,11 @@ bool D3DSystem::Execute()
 
 void D3DSystem::ExecuteGraphics()
 {
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+	//float clearColor[4] = { 0, 1, 0, 1.0f };
+	//m_commandList->ClearRenderTargetView(rtvHandle, (float*)&C, 0, nullptr);
+	//m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
 	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	m_commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
@@ -211,22 +228,33 @@ void D3DSystem::UpdatePipelineAndClear(Vector3 Bg)
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-	const float clearColor[] = { Bg.x, Bg.y, Bg.z, 1.0f };
+	float clearColor[] = { Bg.x, Bg.y, Bg.z, 1.0f };
 	m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	m_commandList->ClearDepthStencilView(m_dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
+/*
 void D3DSystem::Wait()
 {
 	WaitForPreviousFrame();
 	HRESULT hr = m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
+}
+*/
+
+void D3DSystem::Wait()
+{
+	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+	m_fenceValue[m_frameIndex]++;
+	ThrowIfFailed(m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]));
+	ThrowIfFailed(m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent));
+	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 
 void D3DSystem::PresentSimple()
 {
 	// present the current backbuffer
 	ThrowIfFailed(m_swapChain->Present(0, 0));
-	//hr = m_swapChain->Present(1, 0);
+	//m_swapChain->Present(4, 0);
 }
 
 void D3DSystem::OnDestroy()
@@ -261,6 +289,7 @@ D3D12_FEATURE_DATA_ROOT_SIGNATURE D3DSystem::GetFeatureData()
 
 void D3DSystem::WaitForPreviousFrame()
 {
+	//m_fenceValue[m_frameIndex]++;
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
