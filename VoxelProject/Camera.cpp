@@ -2,7 +2,7 @@
 #include "Camera.h"
 
 
-Camera::Camera(int width, int height, float near_, float far_, float distance, Vector3 lookPosition) : m_width(width), m_height(height), m_near(near_), m_far(far_), m_distance(distance), m_lookPosition(lookPosition)
+Camera::Camera(int width, int height, float near_, float far_, float distance, Vector3 lookPosition, float fovY) : m_width(width), m_height(height), m_near(near_), m_far(far_), m_distance(distance), m_lookPosition(lookPosition), m_fovY(fovY)
 {
 	m_projection = XMMatrixPerspectiveFovLH(m_fovY, (float)m_width / m_height, m_near, m_far);
 	UpdateView();
