@@ -107,8 +107,14 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		srvUavHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_d3dSyst->GetDevice()->CreateDescriptorHeap(&srvUavHeapDesc, IID_PPV_ARGS(&m_srvUavHeapRender));
 
+		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+		rtvHeapDesc.NumDescriptors = 10;
+		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		m_d3dSyst->GetDevice()->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeapRender));
+
 		DXGI_SWAP_CHAIN_DESC swapChainDesc = m_d3dSyst->GetSwapChainDesc();
-		CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(swapChainDesc.BufferDesc.Format, swapChainDesc.BufferDesc.Width, swapChainDesc.BufferDesc.Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+		CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(swapChainDesc.BufferDesc.Format, swapChainDesc.BufferDesc.Width, swapChainDesc.BufferDesc.Height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 
 		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), //A default heap
@@ -124,8 +130,12 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		uavDesc.Format = textureDesc.Format;
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 		//uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
 		CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_srvUavHeapRender->GetCPUDescriptorHandleForHeapStart());
 		m_d3dSyst->GetDevice()->CreateUnorderedAccessView(m_renderTexture.Get(), nullptr, &uavDesc, uavHandle);
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE cpuWriteUavHandle(m_rtvHeapRender->GetCPUDescriptorHandleForHeapStart());
+		m_d3dSyst->GetDevice()->CreateUnorderedAccessView(m_renderTexture.Get(), nullptr, &uavDesc, cpuWriteUavHandle);
 	}
 
 	int blockIndexes[] =
@@ -176,10 +186,10 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		commandList->SetGraphicsRootDescriptorTable(1, m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
 		
 		const FLOAT clearVal[4] = { 0.0f,0.0f,0.0f,0.0f };
-		auto GpuH = m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart();
+		CD3DX12_GPU_DESCRIPTOR_HANDLE gpuH(m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
 		//auto CpuH = m_d3dSyst->GetRtvCPUHandle();
-		auto CpuH = m_srvUavHeapRender->GetCPUDescriptorHandleForHeapStart();
-		//commandList->ClearUnorderedAccessViewFloat(GpuH, CpuH, m_renderTexture.Get(), clearVal,1,nullptr);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE cpuH(m_rtvHeapRender->GetCPUDescriptorHandleForHeapStart());
+		commandList->ClearUnorderedAccessViewFloat(gpuH, cpuH, m_renderTexture.Get(), &clearVal[0],0,nullptr);
 		//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 		
 		commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVertexBufferView()));

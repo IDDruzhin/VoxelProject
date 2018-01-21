@@ -29,7 +29,8 @@ private:
 	D3D12_INDEX_BUFFER_VIEW m_blockIndexBufferView;
 
 	ComPtr<ID3D12Resource> m_renderTexture;
-	ComPtr<ID3D12DescriptorHeap> m_srvUavHeapRender;
+	ComPtr<ID3D12DescriptorHeap> m_srvUavHeapRender;  ///Cpu read only heap
+	ComPtr<ID3D12DescriptorHeap> m_rtvHeapRender;   ///Cpu read/write heap
 	UINT m_srvUavDescriptorSize;
 };
 
