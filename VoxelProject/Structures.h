@@ -44,6 +44,7 @@ struct Block
 		v[7] = { p,t };
 	}
 	*/
+	/*
 	Vertex v[8];
 	Block(Vector3 dim, Vector3 index, Vector3 startPos, int blockDim, float blockSize)
 	{
@@ -71,6 +72,27 @@ struct Block
 		p = startPos + Vector3(index.x+1, index.y+1, index.z + 1) * blockSize;
 		t = Vector3(index.x+1, index.y+1, index.z + 1)*blockDim / dim;
 		v[7] = { p,t };
+	}
+	*/
+	Vertex v[8];
+	Block(Vector3 dim, Vector3 index, Vector3 startPos, int blockDim, float blockSize)
+	{
+		Vector3 p = Vector3(index.x, index.y, index.z) * blockDim;
+		v[0] = { p, p/dim };
+		p = Vector3(index.x, index.y, index.z + 1)*blockDim;
+		v[1] = { p, p / dim };
+		p = Vector3(index.x, index.y + 1, index.z)*blockDim;
+		v[2] = { p, p / dim };
+		p = Vector3(index.x, index.y + 1, index.z + 1)*blockDim;
+		v[3] = { p, p / dim };
+		p = Vector3(index.x + 1, index.y, index.z)*blockDim;
+		v[4] = { p, p / dim };
+		p = Vector3(index.x + 1, index.y, index.z + 1)*blockDim;
+		v[5] = { p, p / dim };
+		p = Vector3(index.x + 1, index.y + 1, index.z)*blockDim;
+		v[6] = { p, p / dim };
+		p = Vector3(index.x + 1, index.y + 1, index.z + 1)*blockDim;
+		v[7] = { p, p / dim };
 	}
 };
 

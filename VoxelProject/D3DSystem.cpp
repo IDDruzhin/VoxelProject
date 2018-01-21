@@ -257,6 +257,18 @@ void D3DSystem::PresentSimple()
 	//m_swapChain->Present(4, 0);
 }
 
+ID3D12Resource * D3DSystem::GetRenderTarget()
+{
+	return m_renderTargets[m_frameIndex].Get();
+}
+
+CD3DX12_CPU_DESCRIPTOR_HANDLE D3DSystem::GetRtvCPUHandle()
+{
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	return rtvHandle;
+}
+
+
 void D3DSystem::OnDestroy()
 {
 	///Wait for completion

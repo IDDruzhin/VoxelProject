@@ -18,6 +18,8 @@ public:
 	void UpdatePipelineAndClear(Vector3 bg);
 	void Wait();
 	void PresentSimple();
+	ID3D12Resource* GetRenderTarget();
+	CD3DX12_CPU_DESCRIPTOR_HANDLE GetRtvCPUHandle();
 	template<typename T>
 	ComPtr<ID3D12Resource> CreateDefaultBuffer(T* data, int size, D3D12_RESOURCE_STATES finalState, D3D12_RESOURCE_DESC desc, wstring name = L"");
 	template<typename T>

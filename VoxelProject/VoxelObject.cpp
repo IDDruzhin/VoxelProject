@@ -8,9 +8,12 @@ VoxelObject::VoxelObject(VoxelPipeline* voxPipeline)
 	m_dim.y = 346;
 	m_dim.z = 1702;
 	float maxSide = max(max(m_dim.x, m_dim.y), m_dim.z);
+	m_s = Vector3(1 / maxSide);
+	m_t = -m_dim / (2.0f*maxSide);
 	m_size = m_dim / maxSide;
 	m_startPos = -m_size/2.0f;
 	m_blockDim = 32;
+	//m_blockDim = 64;
 	m_blockSize = m_blockDim/maxSide;
 	int x_blockDim = ceil(m_dim.x / m_blockDim);
 	int y_blockDim = ceil(m_dim.y / m_blockDim);
