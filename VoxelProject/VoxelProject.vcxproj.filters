@@ -28,6 +28,9 @@
     <Filter Include="Misc">
       <UniqueIdentifier>{11bbaf06-e2c4-4a83-b72e-9c8db45b09ce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CUDA">
+      <UniqueIdentifier>{c6d7f1bd-a0b7-4d78-8ade-7c6a17e318fd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -68,6 +71,9 @@
     </ClInclude>
     <ClInclude Include="Structures.h">
       <Filter>Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="CudaFunctions.cuh">
+      <Filter>CUDA</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -128,5 +134,10 @@
     <FxCompile Include="RayCastingPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="CudaFunctions.cu">
+      <Filter>CUDA</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

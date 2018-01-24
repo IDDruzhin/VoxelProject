@@ -116,3 +116,19 @@ struct BlockInfo
 		z_max = index.z*(blockDim + 1);
 	}
 };
+
+/*
+struct SegmentData
+{
+	uchar3 color;
+	UINT start;
+	UINT finish;
+};
+
+struct VoxelInfo
+{
+	UINT index;
+	uchar4 color;
+	UINT segmentIndex;
+};
+*/
