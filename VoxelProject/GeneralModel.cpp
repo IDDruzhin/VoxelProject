@@ -14,7 +14,9 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 	//m_camera->SetPerspective(m_width, m_height, XM_PI / 3.0f);
 	m_background = Vector3(0.5f, 0.7f, 1.0f);
 	m_voxPipeline = make_unique<VoxelPipeline>(d3dSyst);
-	m_voxObj = make_shared<VoxelObject>(m_voxPipeline.get());
+	//m_voxObj = make_shared<VoxelObject>(m_voxPipeline.get());
+	string path = "D:\\SomeData\\VoxelData\\(VKH)InputFile.txt";
+	m_voxObj = make_shared<VoxelObject>(path,VoxelObject::LOADING_MODE::LOADING_MODE_SLICES, m_voxPipeline.get());
 }
 
 
@@ -49,7 +51,7 @@ bool GeneralModel::Init(HWND hWnd, int _width, int _height)
 
 void GeneralModel::Render()
 {
-	m_voxPipeline->RenderObject(m_voxObj.get(),m_camera.get());
+	//m_voxPipeline->RenderObject(m_voxObj.get(),m_camera.get());
 }
 
 

@@ -2,6 +2,12 @@
 #include "Object.h"
 #include "Structures.h"
 #include "VoxelPipeline.h"
+#include <sstream>
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui/highgui.hpp"
+
+#include "CudaFunctions.cuh"
 
 class VoxelPipeline;
 
@@ -9,18 +15,30 @@ class VoxelObject :
 	public Object
 {
 public:
+typedef
+	enum LOADING_MODE
+{
+	LOADING_MODE_SLICES = 0,
+	LOADING_MODE_BIN = 1
+} 	LOADING_MODE;
 	VoxelObject(VoxelPipeline* voxPipeline);
+	VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline* voxPipeline);
 	~VoxelObject();
 	ID3D12Resource* GetBlocksRes();
 	D3D12_VERTEX_BUFFER_VIEW GetBlocksVertexBufferView();
 	int GetBlocksCount();
+	void CreateFromSlices(string path, VoxelPipeline* voxPipeline);
 private:
+	vector<Voxel> voxels;
+	//vector<SegmentData> segmentationTable;
+	vector<string> segmentationTableNames;
+
+	string m_name;
 	Vector3 m_dim;
 	Vector3 m_size;
 	int m_blockDim;
 	float m_blockSize;
 	Vector3 m_startPos;
-	vector<Voxel> voxels;
 	vector<Block> m_blocks;
 	vector<BlockInfo> m_blocksInfo;
 	vector<Vector3> m_palette;

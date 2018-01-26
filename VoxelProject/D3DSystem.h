@@ -1,8 +1,12 @@
 #pragma once
 
-#include "Structures.h"
-
 #define FRAMEBUFFERCOUNT 3
+
+#include "Structures.h"
+#include <wrl.h>
+#include <shellapi.h>
+
+using Microsoft::WRL::ComPtr;
 
 class D3DSystem
 {

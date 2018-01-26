@@ -117,7 +117,7 @@ struct BlockInfo
 	}
 };
 
-/*
+
 struct SegmentData
 {
 	uchar3 color;
@@ -131,4 +131,3 @@ struct VoxelInfo
 	uchar4 color;
 	UINT segmentIndex;
 };
-*/

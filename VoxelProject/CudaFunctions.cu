@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CudaFunctions.cuh"
 
-/*
+
 __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, int* segmentationTransferTable, int eps, VoxelInfo* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
 {
 	//unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
@@ -14,11 +14,11 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 	}
 	int curPos = (y*width + x) * 3;
 	int multipliedDepth = curDepth * depthMultiplier;
-	uchar4 pixel;
+	int4 pixel;
 	pixel.z = segmentedImage[curPos];
 	pixel.y = segmentedImage[curPos + 1];
 	pixel.x = segmentedImage[curPos + 2];
-	pixel.w = 255;
+	//pixel.w = 255;
 	if ((pixel.x == segmentationTable[0].color.x) && (pixel.y == segmentationTable[0].color.y) && (pixel.z == segmentationTable[0].color.z))
 	{
 		return;
@@ -37,10 +37,13 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 				//int index = width * height*curDepth + width * y + x;
 				//atomicOr(Mask + (Index / (sizeof(int) * 8)), (Index << Index % (sizeof(int) * 8)));
 				voxels[curCount].segmentIndex = segmentationTransferTable[i];
-				pixel.z = anatomicalImage[curPos];
-				pixel.y = anatomicalImage[curPos + 1];
-				pixel.x = anatomicalImage[curPos + 2];
-				voxels[curCount].color = pixel;
+				//pixel.z = anatomicalImage[curPos];
+				//pixel.y = anatomicalImage[curPos + 1];
+				//pixel.x = anatomicalImage[curPos + 2];
+				//voxels[curCount].color = pixel;
+				voxels[curCount].color.z = anatomicalImage[curPos];
+				voxels[curCount].color.y = anatomicalImage[curPos + 1];
+				voxels[curCount].color.x = anatomicalImage[curPos + 2];
 				voxels[curCount].index = width * height*curDepth + width * y + x;
 				return;
 			}
@@ -51,10 +54,13 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 		//int Index = width * Height*CurDepth + Width * y + x;
 		//atomicOr(Mask + (Index / (sizeof(int) * 8)), (Index << Index % (sizeof(int) * 8)));
 		voxels[curCount].segmentIndex = 1;
-		pixel.z = anatomicalImage[curPos];
-		pixel.y = anatomicalImage[curPos + 1];
-		pixel.x = anatomicalImage[curPos + 2];
-		voxels[curCount].color = pixel;
+		//pixel.z = anatomicalImage[curPos];
+		//pixel.y = anatomicalImage[curPos + 1];
+		//pixel.x = anatomicalImage[curPos + 2];
+		//voxels[curCount].color = pixel;
+		voxels[curCount].color.z = anatomicalImage[curPos];
+		voxels[curCount].color.y = anatomicalImage[curPos + 1];
+		voxels[curCount].color.x = anatomicalImage[curPos + 2];
 		voxels[curCount].index = width * height*curDepth + width * y + x;
 	}
 }
@@ -65,4 +71,3 @@ void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned ch
 	dim3 gridSize((width - 1) / blockSize.x + 1, (height - 1) / blockSize.y + 1);
 	GetVoxelsAnatomicalSegmentationKernel <<<gridSize, blockSize >>> (anatomicalImage, segmentedImage, segmentationTable, segmentsCount, segmentationTransferTable, eps, voxels, width, height, curDepth, depthMultiplier, count);
 }
-*/

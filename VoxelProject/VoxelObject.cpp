@@ -36,6 +36,14 @@ VoxelObject::VoxelObject(VoxelPipeline* voxPipeline)
 	m_blocksBufferView.SizeInBytes = sizeof(Vertex)*sizeof(Block)*m_blocks.size();
 }
 
+VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * voxPipeline)
+{
+	if (loadingMode == LOADING_MODE::LOADING_MODE_SLICES)
+	{
+		CreateFromSlices(path, voxPipeline);
+	}
+}
+
 
 VoxelObject::~VoxelObject()
 {
@@ -54,5 +62,105 @@ D3D12_VERTEX_BUFFER_VIEW VoxelObject::GetBlocksVertexBufferView()
 int VoxelObject::GetBlocksCount()
 {
 	return m_blocks.size();
+}
+
+void VoxelObject::CreateFromSlices(string path, VoxelPipeline * voxPipeline)
+{
+	ifstream file;
+	file.open(path);
+	if (file.is_open())
+	{
+		string anatomicalFolder;
+		string segmentedFolder;
+		string segmentationTablePath;
+		string segmentationTransferPath;
+		string segmentationNamesPath;
+		string s_depthMultiplier;
+		getline(file, m_name);
+		getline(file, anatomicalFolder);
+		getline(file, segmentedFolder);
+		getline(file, segmentationTablePath);
+		getline(file, segmentationTransferPath);
+		getline(file, segmentationNamesPath);
+		getline(file, s_depthMultiplier);
+		int depthMulptiplier = atoi(s_depthMultiplier.c_str());
+		vector<SegmentData> segmentationTable;
+		ifstream segmentationTableFile;
+		segmentationTableFile.open(segmentationTablePath);
+		if (segmentationTableFile.is_open())
+		{
+			SegmentData cur;
+			string line;
+			string word;
+			istringstream sS;
+			size_t sep;
+			while (getline(segmentationTableFile, line))
+			{
+				sep = line.find_first_of("0123456789");
+				//segmentationTableNames.push_back(line.substr(0, sep - 1));
+				line = line.substr(sep, line.length());
+				sS.str(line);
+				sS >> word;
+				//Cur.Color[0] = atoi(Word.c_str());
+				cur.color.x = atoi(word.c_str());
+				sS >> word;
+				cur.color.y = atoi(word.c_str());
+				sS >> word;
+				cur.color.z = atoi(word.c_str());
+				sS >> word;
+				cur.start = atoi(word.c_str());
+				sS >> word;
+				cur.finish = atoi(word.c_str());
+				segmentationTable.push_back(cur);
+				sS.clear();
+			}
+			segmentationTableFile.close();
+		}
+		else
+		{
+			throw std::exception("Can`t open segmentation table file");
+		}
+		vector<uchar> segmentationTransfer;
+		ifstream segmentationTransferFile;
+		segmentationTransferFile.open(segmentationTransferPath);
+		if (segmentationTransferFile.is_open())
+		{
+			string line;
+			uchar cur;
+			while (getline(segmentationTransferFile, line))
+			{
+				cur = atoi(line.c_str());
+				segmentationTransfer.push_back(cur);
+			}
+			segmentationTransferFile.close();
+		}
+		else
+		{
+			throw std::exception("Can`t open segmentation transfer file");
+		}
+		if (segmentationTable.size() != segmentationTransfer.size())
+		{
+			//throw std::exception("Incorrect segmentation transfer");
+		}
+		ifstream segmentationNamesFile;
+		segmentationNamesFile.open(segmentationNamesPath);
+		if (segmentationNamesFile.is_open())
+		{
+			string line;
+			while (getline(segmentationNamesFile, line))
+			{
+				segmentationTableNames.push_back(line);
+			}
+			segmentationNamesFile.close();
+		}
+		else
+		{
+			throw std::exception("Can`t open segmentation names file");
+		}
+	}
+	else
+	{
+		throw std::exception("Can`t open input file");
+	}
 }
 
