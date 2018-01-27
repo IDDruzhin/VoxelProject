@@ -125,7 +125,7 @@ struct SegmentData
 	UINT finish;
 };
 
-struct VoxelInfo
+struct RGBVoxel
 {
 	UINT index;
 	uchar4 color;

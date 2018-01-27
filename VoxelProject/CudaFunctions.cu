@@ -2,7 +2,7 @@
 #include "CudaFunctions.cuh"
 
 
-__global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, int* segmentationTransferTable, int eps, VoxelInfo* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
+__global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, unsigned char* segmentationTransferTable, int eps, RGBVoxel* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
 {
 	//unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	//unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -65,7 +65,7 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 	}
 }
 
-void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, int* segmentationTransferTable, int eps, VoxelInfo* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
+void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, unsigned char* segmentationTransferTable, int eps, RGBVoxel* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
 {
 	dim3 blockSize(32, 32);
 	dim3 gridSize((width - 1) / blockSize.x + 1, (height - 1) / blockSize.y + 1);

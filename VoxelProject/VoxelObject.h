@@ -9,6 +9,8 @@
 
 #include "CudaFunctions.cuh"
 
+using namespace cv;
+
 class VoxelPipeline;
 
 class VoxelObject :
@@ -29,12 +31,12 @@ typedef
 	int GetBlocksCount();
 	void CreateFromSlices(string path, VoxelPipeline* voxPipeline);
 private:
-	vector<Voxel> voxels;
+	vector<Voxel> m_voxels;
 	//vector<SegmentData> segmentationTable;
-	vector<string> segmentationTableNames;
+	vector<string> m_segmentationTableNames;
 
 	string m_name;
-	Vector3 m_dim;
+	uint3 m_dim;
 	Vector3 m_size;
 	int m_blockDim;
 	float m_blockSize;
