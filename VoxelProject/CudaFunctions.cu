@@ -71,3 +71,91 @@ void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned ch
 	dim3 gridSize((width - 1) / blockSize.x + 1, (height - 1) / blockSize.y + 1);
 	GetVoxelsAnatomicalSegmentationKernel <<<gridSize, blockSize >>> (anatomicalImage, segmentedImage, segmentationTable, segmentsCount, segmentationTransferTable, eps, voxels, width, height, curDepth, depthMultiplier, count);
 }
+
+void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int depthMulptiplier, int eps, uint3& dim, vector<Voxel>& voxels)
+{
+
+	HANDLE hA;
+	WIN32_FIND_DATAA fA;
+	HANDLE hS;
+	WIN32_FIND_DATAA fS;
+	vector<string> filesA;
+	vector<string> filesS;
+	bool moreFilesA = true;
+	bool moreFilesS = true;
+	bool moreFiles = true;
+	hA = FindFirstFileA((anatomicalFolder + "*").c_str(), &fA);  //Find "."
+	FindNextFileA(hA, &fA); //Find ".."
+	FindNextFileA(hA, &fA); //Find real filename
+	Mat img = imread(anatomicalFolder + fA.cFileName);
+	dim.x = img.size().width;
+	dim.y = img.size().height;
+	dim.z = 1;
+	while (FindNextFileA(hA, &fA))
+	{
+		dim.z++;
+	}
+	hA = FindFirstFileA((anatomicalFolder + "*").c_str(), &fA);  //Find "."
+	FindNextFileA(hA, &fA); //Find ".."
+	hS = FindFirstFileA((segmentedFolder + "*").c_str(), &fS);  //Find "."
+	FindNextFileA(hS, &fS); //Find ".."
+	int curDepth = 0;
+	unsigned char* hDataA;
+	unsigned char* hDataS;
+	unsigned char* gDataA;
+	unsigned char* gDataS;
+	SegmentData* gSegmentTable;
+	unsigned char* gSegmentationTransfer;
+	vector<RGBVoxel> hVoxels;
+	//thrust::device_vector<int> dVoxelsSlice(10);
+	//thrust::device_vector<RGBVoxel> dVoxelsSlice;
+	thrust::device_vector<RGBVoxel> dVoxelsSlice(dim.x*dim.y);
+	//dVoxelsSlice.resize(m_dim.x*m_dim.y);
+	thrust::device_vector<RGBVoxel> dVoxels;
+	//thrust::device_vector<RGBVoxel> dVoxels;
+	RGBVoxel* gVoxels;
+	int* gCount;
+	int hCount;
+	cudaMalloc((void**)&gDataA, sizeof(unsigned char)*(dim.x*dim.y) * 3);
+	cudaMalloc((void**)&gDataS, sizeof(unsigned char)*(dim.x*dim.y) * 3);
+	cudaMalloc((void**)&gSegmentTable, sizeof(SegmentData)*(segmentationTable.size()));
+	cudaMemcpy(gSegmentTable, &segmentationTable[0], sizeof(SegmentData)*(segmentationTable.size()), cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&gSegmentationTransfer, sizeof(SegmentData)*(segmentationTransfer.size()));
+	cudaMemcpy(gSegmentationTransfer, &segmentationTransfer[0], sizeof(SegmentData)*(segmentationTransfer.size()), cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&gVoxels, sizeof(RGBVoxel)*(dim.x*dim.y));
+	cudaMalloc((void**)&gCount, sizeof(int));
+	int Time = clock();
+	while (FindNextFileA(hA, &fA) && FindNextFileA(hS, &fS))
+	{
+		Mat mA = imread(anatomicalFolder + fA.cFileName);
+		Mat mS = imread(segmentedFolder + fS.cFileName);
+		cudaMemset(gCount, 0, sizeof(int));
+		hDataA = mA.data;
+		hDataS = mS.data;
+		cudaMemcpy(gDataA, hDataA, sizeof(unsigned char)*(dim.x*dim.y) * 3, cudaMemcpyHostToDevice);
+		cudaMemcpy(gDataS, hDataS, sizeof(unsigned char)*(dim.x*dim.y) * 3, cudaMemcpyHostToDevice);
+		GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, gVoxels, dim.x, dim.y, curDepth, depthMulptiplier, gCount);
+		//cudaDeviceSynchronize();
+		//GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, thrust::raw_pointer_cast(dVoxelsSlice.data()), m_dim.x, m_dim.y, curDepth, depthMulptiplier, gCount);
+		cudaMemcpy(&hCount, gCount, sizeof(int), cudaMemcpyDeviceToHost);
+		if (hCount > 0)
+		{
+			//int curSize = dVoxels.size();
+			//dVoxels.resize(curSize + hCount);
+			//thrust::copy(dVoxelsSlice.begin(), dVoxelsSlice.begin()+curSize, dVoxels.begin()+curSize);
+
+			int curSize = hVoxels.size();
+			hVoxels.resize(curSize + hCount);
+			cudaMemcpy(&hVoxels[curSize], gVoxels, sizeof(RGBVoxel)*hCount, cudaMemcpyDeviceToHost);
+			//sort(Voxels.begin() + CurSize, Voxels.end(), CompareVoxels);
+		}
+		curDepth++;
+	}
+	Time = clock() - Time;
+	cudaFree(gDataA);
+	cudaFree(gDataS);
+	cudaFree(gSegmentTable);
+	cudaFree(gSegmentationTransfer);
+	cudaFree(gVoxels);
+	cudaFree(gCount);
+}
