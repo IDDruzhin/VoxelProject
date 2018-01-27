@@ -192,6 +192,11 @@ void VoxelObject::CreateFromSlices(string path, VoxelPipeline * voxPipeline)
 		SegmentData* gSegmentTable;
 		unsigned char* gSegmentationTransfer;
 		vector<RGBVoxel> hVoxels;
+		thrust::device_vector<int> dVoxelsSlice(10);
+		//thrust::device_vector<RGBVoxel> dVoxelsSlice;
+		//dVoxelsSlice.resize(m_dim.x*m_dim.y);
+		thrust::device_vector<RGBVoxel> dVoxels;
+		//thrust::device_vector<RGBVoxel> dVoxels;
 		RGBVoxel* gVoxels;
 		int* gCount;
 		int hCount;
@@ -204,6 +209,7 @@ void VoxelObject::CreateFromSlices(string path, VoxelPipeline * voxPipeline)
 		cudaMalloc((void**)&gVoxels, sizeof(RGBVoxel)*(m_dim.x*m_dim.y));
 		cudaMalloc((void**)&gCount, sizeof(int));
 		int eps = 2;
+		int Time = clock();
 		while (FindNextFileA(hA, &fA) && FindNextFileA(hS, &fS))
 		{
 			Mat mA = imread(anatomicalFolder + fA.cFileName);
@@ -214,9 +220,14 @@ void VoxelObject::CreateFromSlices(string path, VoxelPipeline * voxPipeline)
 			cudaMemcpy(gDataA, hDataA, sizeof(unsigned char)*(m_dim.x*m_dim.y) * 3, cudaMemcpyHostToDevice);
 			cudaMemcpy(gDataS, hDataS, sizeof(unsigned char)*(m_dim.x*m_dim.y) * 3, cudaMemcpyHostToDevice);
 			GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps,gVoxels, m_dim.x, m_dim.y, curDepth,depthMulptiplier, gCount);
+			//GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, thrust::raw_pointer_cast(dVoxelsSlice.data()), m_dim.x, m_dim.y, curDepth, depthMulptiplier, gCount);
 			cudaMemcpy(&hCount, gCount, sizeof(int), cudaMemcpyDeviceToHost);
 			if (hCount > 0)
 			{
+				//int curSize = dVoxels.size();
+				//dVoxels.resize(curSize + hCount);
+				//thrust::copy(dVoxelsSlice.begin(), dVoxelsSlice.begin()+curSize, dVoxels.begin()+curSize);
+
 				int curSize = hVoxels.size();
 				hVoxels.resize(curSize + hCount);
 				cudaMemcpy(&hVoxels[curSize], gVoxels, sizeof(RGBVoxel)*hCount, cudaMemcpyDeviceToHost);
@@ -224,6 +235,7 @@ void VoxelObject::CreateFromSlices(string path, VoxelPipeline * voxPipeline)
 			}
 			curDepth++;
 		}
+		Time = clock() - Time;
 		cudaFree(gDataA);
 		cudaFree(gDataS);
 		cudaFree(gSegmentTable);

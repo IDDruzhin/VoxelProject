@@ -8,6 +8,9 @@
 #include "opencv2/highgui/highgui.hpp"
 
 #include "CudaFunctions.cuh"
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
+#include <thrust/copy.h>
 
 using namespace cv;
 
