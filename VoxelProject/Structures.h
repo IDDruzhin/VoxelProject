@@ -131,3 +131,53 @@ struct RGBVoxel
 	uchar4 color;
 	UINT segmentIndex;
 };
+
+bool CompareVoxelsRed(const RGBVoxel &a, const RGBVoxel &b);
+bool CompareVoxelsGreen(const RGBVoxel &a, const RGBVoxel &b);
+bool CompareVoxelsBlue(const RGBVoxel &a, const RGBVoxel &b);
+bool CompareColorsIntensity(const uchar4 &a, const uchar4 &b);
+
+struct PaletteElement
+{
+typedef
+	enum SORT_MODE
+{
+	SORT_MODE_RED = 0,
+	SORT_MODE_GREEN = 1,
+	SORT_MODE_BLUE = 2
+} 	SORT_MODE;
+
+	//UINT index;
+	int start;
+	int length;
+	int level;
+	uchar4 color;
+	SORT_MODE sortMode;
+	PaletteElement(int _length) : start(0), length(_length), level(0), sortMode(SORT_MODE_RED){}
+	PaletteElement(const PaletteElement &parent, bool isFirst)
+	{
+		if (isFirst)
+		{
+			start = parent.start;
+			length = parent.length / 2;
+		}
+		else
+		{
+			start = parent.start + parent.length / 2;
+			length = parent.length - parent.length / 2;
+		}
+		level = parent.level + 1;
+		switch (parent.sortMode)
+		{
+		case SORT_MODE_RED:
+			sortMode = SORT_MODE_GREEN;
+			break;
+		case SORT_MODE_GREEN:
+			sortMode = SORT_MODE_BLUE;
+			break;
+		case SORT_MODE_BLUE:
+			sortMode = SORT_MODE_RED;
+			break;
+		}
+	}
+};
