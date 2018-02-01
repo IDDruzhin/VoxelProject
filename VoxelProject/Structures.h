@@ -147,11 +147,9 @@ typedef
 	SORT_MODE_BLUE = 2
 } 	SORT_MODE;
 
-	//UINT index;
 	int start;
 	int length;
 	int level;
-	uchar4 color;
 	SORT_MODE sortMode;
 	PaletteElement(int _length) : start(0), length(_length), level(0), sortMode(SORT_MODE_RED){}
 	PaletteElement(const PaletteElement &parent, bool isFirst)
