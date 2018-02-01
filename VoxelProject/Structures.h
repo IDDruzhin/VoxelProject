@@ -14,10 +14,10 @@ struct Vertex
 
 struct Voxel
 {
-	uint index;
-	uchar color;
-	uchar segment;
-	Voxel(uint _index, uchar _color, uchar _segment) : index(_index), color(_color), segment(_segment) {};
+	UINT index;
+	BYTE color;
+	BYTE segment;
+	Voxel(UINT _index, BYTE _color, BYTE _segment) : index(_index), color(_color), segment(_segment) {};
 };
 
 struct Block
@@ -133,9 +133,11 @@ struct RGBVoxel
 	UINT segmentIndex;
 };
 
-bool CompareVoxelsRed(const RGBVoxel &a, const RGBVoxel &b);
-bool CompareVoxelsGreen(const RGBVoxel &a, const RGBVoxel &b);
-bool CompareVoxelsBlue(const RGBVoxel &a, const RGBVoxel &b);
+/*
+__host__ __device__ bool CompareVoxelsRed(const RGBVoxel &a, const RGBVoxel &b);
+__host__ __device__ bool CompareVoxelsGreen(const RGBVoxel &a, const RGBVoxel &b);
+__host__ __device__ bool CompareVoxelsBlue(const RGBVoxel &a, const RGBVoxel &b);
+*/
 bool CompareColorsIntensity(const uchar4 &a, const uchar4 &b);
 
 struct PaletteElement

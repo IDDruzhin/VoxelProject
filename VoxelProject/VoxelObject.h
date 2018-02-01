@@ -41,7 +41,7 @@ private:
 	Vector3 m_startPos;
 	vector<Block> m_blocks;
 	vector<BlockInfo> m_blocksInfo;
-	vector<Vector3> m_palette;
+	//vector<Vector3> m_palette;
 	vector<float> m_segmentsOpacity;
 	ComPtr<ID3D12Resource> m_tex3DRes;
 	ComPtr<ID3D12Resource> m_blocksRes;

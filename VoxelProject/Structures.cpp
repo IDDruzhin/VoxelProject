@@ -1,18 +1,20 @@
 #include "stdafx.h"
 #include "Structures.h"
 
-bool CompareVoxelsRed(const RGBVoxel &a, const RGBVoxel &b)
+/*
+__host__ __device__ bool CompareVoxelsRed(const RGBVoxel &a, const RGBVoxel &b)
 {
 	return (a.color.x < b.color.x);
 }
-bool CompareVoxelsGreen(const RGBVoxel &a, const RGBVoxel &b)
+__host__ __device__ bool CompareVoxelsGreen(const RGBVoxel &a, const RGBVoxel &b)
 {
 	return (a.color.y < b.color.y);
 }
-bool CompareVoxelsBlue(const RGBVoxel &a, const RGBVoxel &b)
+__host__ __device__ bool CompareVoxelsBlue(const RGBVoxel &a, const RGBVoxel &b)
 {
 	return (a.color.z < b.color.z);
 }
+*/
 
 bool CompareColorsIntensity(const uchar4 &a, const uchar4 &b)
 {

@@ -72,6 +72,23 @@ void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned ch
 	GetVoxelsAnatomicalSegmentationKernel <<<gridSize, blockSize >>> (anatomicalImage, segmentedImage, segmentationTable, segmentsCount, segmentationTransferTable, eps, voxels, width, height, curDepth, depthMultiplier, count);
 }
 
+/*
+__host__ __device__ bool CompareVoxelsRed(const RGBVoxel &a, const RGBVoxel &b)
+{
+	return (a.color.x < b.color.x);
+}
+__host__ __device__ bool CompareVoxelsGreen(const RGBVoxel &a, const RGBVoxel &b)
+{
+	return (a.color.y < b.color.y);
+}
+__host__ __device__ bool CompareVoxelsBlue(const RGBVoxel &a, const RGBVoxel &b)
+{
+	return (a.color.z < b.color.z);
+}
+*/
+
+__host__ __device__ bool operator<(const RGBVoxel &a, const RGBVoxel &b) { return (a.color.x < b.color.x);};
+
 void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int depthMulptiplier, int eps, uint3& dim, vector<Voxel>& voxels, vector<uchar4>& palette)
 {
 
@@ -167,21 +184,30 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	queue<PaletteElement> qPalette;
 	qPalette.emplace(dVoxels.size());
 	vector<PaletteElement> finalPaletteElements;
+	//thrust::sort(dVoxels.begin(), dVoxels.end());
+	//hVoxels.resize(dVoxels.size());
+	//cudaMemcpy(&hVoxels[0], thrust::raw_pointer_cast(dVoxels.data()), sizeof(RGBVoxel)*dVoxels.size(), cudaMemcpyDeviceToHost);
+
 	while (!qPalette.empty())
 	{
 		PaletteElement cur = qPalette.front();
+		thrust::sort(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length);
+		//thrust::sort(dVoxels.begin(), dVoxels.begin() + 100);
+		/*
 		switch (cur.sortMode)
 		{
 		case PaletteElement::SORT_MODE::SORT_MODE_RED:
-			thrust::sort(dVoxelsSlice.begin() + cur.start, dVoxelsSlice.begin() + cur.start + cur.length, CompareVoxelsRed);
+			thrust::sort(dVoxels.begin(), dVoxels.begin()+100, CompareVoxelsRed);
+			//thrust::sort(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsRed);
 			break;
 		case PaletteElement::SORT_MODE::SORT_MODE_GREEN:
-			thrust::sort(dVoxelsSlice.begin() + cur.start, dVoxelsSlice.begin() + cur.start + cur.length, CompareVoxelsGreen);
+			thrust::sort(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsGreen);
 			break;
 		case PaletteElement::SORT_MODE::SORT_MODE_BLUE:
-			thrust::sort(dVoxelsSlice.begin() + cur.start, dVoxelsSlice.begin() + cur.start + cur.length, CompareVoxelsBlue);
+			thrust::sort(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsBlue);
 			break;
 		}
+		*/
 		qPalette.pop();
 		if (cur.level == 8)
 		{
