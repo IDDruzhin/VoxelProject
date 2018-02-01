@@ -29,6 +29,7 @@ typedef
 	void CreateFromSlices(string path, VoxelPipeline* voxPipeline);
 private:
 	vector<Voxel> m_voxels;
+	vector<uchar4> m_palette;
 	//vector<SegmentData> segmentationTable;
 	vector<string> m_segmentationTableNames;
 

@@ -72,7 +72,7 @@ void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned ch
 	GetVoxelsAnatomicalSegmentationKernel <<<gridSize, blockSize >>> (anatomicalImage, segmentedImage, segmentationTable, segmentsCount, segmentationTransferTable, eps, voxels, width, height, curDepth, depthMultiplier, count);
 }
 
-void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int depthMulptiplier, int eps, uint3& dim, vector<Voxel>& voxels)
+void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int depthMulptiplier, int eps, uint3& dim, vector<Voxel>& voxels, vector<uchar4>& palette)
 {
 
 	HANDLE hA;
@@ -113,7 +113,7 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	//dVoxelsSlice.resize(m_dim.x*m_dim.y);
 	thrust::device_vector<RGBVoxel> dVoxels;
 	//thrust::device_vector<RGBVoxel> dVoxels;
-	RGBVoxel* gVoxels;
+	//RGBVoxel* gVoxels;
 	int* gCount;
 	int hCount;
 	cudaMalloc((void**)&gDataA, sizeof(unsigned char)*(dim.x*dim.y) * 3);
@@ -122,7 +122,7 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	cudaMemcpy(gSegmentTable, &segmentationTable[0], sizeof(SegmentData)*(segmentationTable.size()), cudaMemcpyHostToDevice);
 	cudaMalloc((void**)&gSegmentationTransfer, sizeof(SegmentData)*(segmentationTransfer.size()));
 	cudaMemcpy(gSegmentationTransfer, &segmentationTransfer[0], sizeof(SegmentData)*(segmentationTransfer.size()), cudaMemcpyHostToDevice);
-	cudaMalloc((void**)&gVoxels, sizeof(RGBVoxel)*(dim.x*dim.y));
+	//cudaMalloc((void**)&gVoxels, sizeof(RGBVoxel)*(dim.x*dim.y));
 	cudaMalloc((void**)&gCount, sizeof(int));
 	int Time = clock();
 	Mat mA;
@@ -138,9 +138,9 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 		hDataS = mS.data;
 		cudaMemcpy(gDataA, hDataA, sizeof(unsigned char)*(dim.x*dim.y) * 3, cudaMemcpyHostToDevice);
 		cudaMemcpy(gDataS, hDataS, sizeof(unsigned char)*(dim.x*dim.y) * 3, cudaMemcpyHostToDevice);
-		GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, gVoxels, dim.x, dim.y, curDepth, depthMulptiplier, gCount);
+		//GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, gVoxels, dim.x, dim.y, curDepth, depthMulptiplier, gCount);
 		//cudaDeviceSynchronize();
-		//GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, thrust::raw_pointer_cast(dVoxelsSlice.data()), m_dim.x, m_dim.y, curDepth, depthMulptiplier, gCount);
+		GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, thrust::raw_pointer_cast(dVoxelsSlice.data()), dim.x, dim.y, curDepth, depthMulptiplier, gCount);
 		cudaMemcpy(&hCount, gCount, sizeof(int), cudaMemcpyDeviceToHost);
 		if (hCount > 0)
 		{
@@ -148,9 +148,10 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 			//dVoxels.resize(curSize + hCount);
 			//thrust::copy(dVoxelsSlice.begin(), dVoxelsSlice.begin()+curSize, dVoxels.begin()+curSize);
 
-			int curSize = hVoxels.size();
-			hVoxels.resize(curSize + hCount);
-			cudaMemcpy(&hVoxels[curSize], gVoxels, sizeof(RGBVoxel)*hCount, cudaMemcpyDeviceToHost);
+			int curSize = dVoxels.size();
+			dVoxels.resize(curSize + hCount);
+			thrust::copy(dVoxelsSlice.begin(), dVoxelsSlice.begin()+hCount, dVoxels.begin()+ curSize);
+			//cudaMemcpy(&hVoxels[curSize], gVoxels, sizeof(RGBVoxel)*hCount, cudaMemcpyDeviceToHost);
 			//sort(hVoxels.begin() + curSize, hVoxels.end(), CompareVoxels);
 		}
 		curDepth++;
@@ -160,6 +161,68 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	cudaFree(gDataS);
 	cudaFree(gSegmentTable);
 	cudaFree(gSegmentationTransfer);
-	cudaFree(gVoxels);
+	//cudaFree(gVoxels);
 	cudaFree(gCount);
+
+	queue<PaletteElement> qPalette;
+	qPalette.emplace(dVoxels.size());
+	vector<PaletteElement> finalPaletteElements;
+	while (!qPalette.empty())
+	{
+		PaletteElement cur = qPalette.front();
+		switch (cur.sortMode)
+		{
+		case PaletteElement::SORT_MODE::SORT_MODE_RED:
+			thrust::sort(dVoxelsSlice.begin() + cur.start, dVoxelsSlice.begin() + cur.start + cur.length, CompareVoxelsRed);
+			break;
+		case PaletteElement::SORT_MODE::SORT_MODE_GREEN:
+			thrust::sort(dVoxelsSlice.begin() + cur.start, dVoxelsSlice.begin() + cur.start + cur.length, CompareVoxelsGreen);
+			break;
+		case PaletteElement::SORT_MODE::SORT_MODE_BLUE:
+			thrust::sort(dVoxelsSlice.begin() + cur.start, dVoxelsSlice.begin() + cur.start + cur.length, CompareVoxelsBlue);
+			break;
+		}
+		qPalette.pop();
+		if (cur.level == 8)
+		{
+			finalPaletteElements.push_back(cur);
+		}
+		else
+		{
+			qPalette.emplace(cur, true);
+			qPalette.emplace(cur, false);
+		}
+	}
+	hVoxels.resize(dVoxels.size());
+	cudaMemcpy(&hVoxels[0], thrust::raw_pointer_cast(dVoxels.data()), sizeof(RGBVoxel)*dVoxels.size(), cudaMemcpyDeviceToHost);
+	vector<pair<uchar4, int>> tmpPalette;
+	for (int i = 0; i < finalPaletteElements.size(); i++)
+	{
+		UINT64 r = 0;
+		UINT64 g = 0;
+		UINT64 b = 0;
+		int length = finalPaletteElements[i].length;
+		auto cur = hVoxels.begin() + finalPaletteElements[i].start;
+		auto finish = cur + length;
+		for (; cur != finish; cur++)
+		{
+			r += cur->color.x;
+			g += cur->color.y;
+			b += cur->color.z;
+		}
+		uchar4 color = { r / length,g / length,b / length,0 };
+		tmpPalette.emplace_back(color, i);
+	}
+	std::sort(tmpPalette.begin(), tmpPalette.end(), [](auto &a, auto&b) {return CompareColorsIntensity(a.first, b.first); });
+	for (int i = 0; i < tmpPalette.size(); i++)
+	{
+		palette.push_back(tmpPalette[i].first);
+		int length = finalPaletteElements[tmpPalette[i].second].length;
+		auto cur = hVoxels.begin() + finalPaletteElements[tmpPalette[i].second].start;
+		auto finish = cur + length;
+		for (; cur != finish; cur++)
+		{
+			voxels.emplace_back(cur->index, i, cur->segmentIndex);
+		}	
+	}
 }

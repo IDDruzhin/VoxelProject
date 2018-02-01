@@ -161,7 +161,7 @@ void VoxelObject::CreateFromSlices(string path, VoxelPipeline * voxPipeline)
 		}
 
 		int eps = 2;
-		CUDACreateFromSlices(anatomicalFolder, segmentedFolder, segmentationTable, segmentationTransfer, depthMulptiplier, eps, m_dim, m_voxels);
+		CUDACreateFromSlices(anatomicalFolder, segmentedFolder, segmentationTable, segmentationTransfer, depthMulptiplier, eps, m_dim, m_voxels, m_palette);
 	}
 	else
 	{

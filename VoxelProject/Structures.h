@@ -14,9 +14,10 @@ struct Vertex
 
 struct Voxel
 {
-	UINT index;
-	BYTE color;
-	BYTE segment;
+	uint index;
+	uchar color;
+	uchar segment;
+	Voxel(uint _index, uchar _color, uchar _segment) : index(_index), color(_color), segment(_segment) {};
 };
 
 struct Block
@@ -151,7 +152,7 @@ typedef
 	int length;
 	int level;
 	SORT_MODE sortMode;
-	PaletteElement(int _length) : start(0), length(_length), level(0), sortMode(SORT_MODE_RED){}
+	PaletteElement(int _length) : start(0), length(_length), level(0), sortMode(SORT_MODE_RED) {};
 	PaletteElement(const PaletteElement &parent, bool isFirst)
 	{
 		if (isFirst)
@@ -177,5 +178,5 @@ typedef
 			sortMode = SORT_MODE_RED;
 			break;
 		}
-	}
+	};
 };
