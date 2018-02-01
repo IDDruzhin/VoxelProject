@@ -142,7 +142,7 @@ void VoxelObject::CreateFromSlices(string path, VoxelPipeline * voxPipeline)
 		}
 		if (segmentationTable.size() != segmentationTransfer.size())
 		{
-			//throw std::exception("Incorrect segmentation transfer");
+			throw std::exception("Incorrect segmentation transfer");
 		}
 		ifstream segmentationNamesFile;
 		segmentationNamesFile.open(segmentationNamesPath);

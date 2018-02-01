@@ -125,10 +125,14 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	cudaMalloc((void**)&gVoxels, sizeof(RGBVoxel)*(dim.x*dim.y));
 	cudaMalloc((void**)&gCount, sizeof(int));
 	int Time = clock();
+	Mat mA;
+	Mat mS;
 	while (FindNextFileA(hA, &fA) && FindNextFileA(hS, &fS))
 	{
-		Mat mA = imread(anatomicalFolder + fA.cFileName);
-		Mat mS = imread(segmentedFolder + fS.cFileName);
+		//Mat mA = imread(anatomicalFolder + fA.cFileName);
+		//Mat mS = imread(segmentedFolder + fS.cFileName);
+		mA = imread(anatomicalFolder + fA.cFileName);
+		mS = imread(segmentedFolder + fS.cFileName);
 		cudaMemset(gCount, 0, sizeof(int));
 		hDataA = mA.data;
 		hDataS = mS.data;
@@ -147,7 +151,7 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 			int curSize = hVoxels.size();
 			hVoxels.resize(curSize + hCount);
 			cudaMemcpy(&hVoxels[curSize], gVoxels, sizeof(RGBVoxel)*hCount, cudaMemcpyDeviceToHost);
-			//sort(Voxels.begin() + CurSize, Voxels.end(), CompareVoxels);
+			//sort(hVoxels.begin() + curSize, hVoxels.end(), CompareVoxels);
 		}
 		curDepth++;
 	}
