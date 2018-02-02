@@ -102,12 +102,12 @@ struct CompareVoxelsBlue
 
 struct ReduceColors
 {
-	__host__ __device__ ulonglong4 operator()(const uchar4 &a, const uchar4 &b) 
+	__host__ __device__ ulonglong4 operator()(const RGBVoxel &a, const RGBVoxel &b)
 	{ 
 		ulonglong4 res;
-		res.x = a.x + b.x;
-		res.y = a.y + b.y;
-		res.z = a.z + b.z;
+		res.x = a.color.x + b.color.x;
+		res.y = a.color.y + b.color.y;
+		res.z = a.color.z + b.color.z;
 		return res; 
 	};
 };
@@ -253,8 +253,8 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 			qPalette.emplace(cur, false);
 		}
 	}
-	//hVoxels.resize(dVoxels.size());
-	//cudaMemcpy(&hVoxels[0], thrust::raw_pointer_cast(dVoxels.data()), sizeof(RGBVoxel)*dVoxels.size(), cudaMemcpyDeviceToHost);
+	hVoxels.resize(dVoxels.size());
+	cudaMemcpy(&hVoxels[0], thrust::raw_pointer_cast(dVoxels.data()), sizeof(RGBVoxel)*dVoxels.size(), cudaMemcpyDeviceToHost);
 	vector<pair<uchar4, int>> tmpPalette;
 	for (int i = 0; i < finalPaletteElements.size(); i++)
 	{
@@ -275,6 +275,7 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 		*/
 		if (finalPaletteElements[i].length > 0)
 		{
+			/*
 			ulonglong4 init = { 0,0,0,0 };
 			ulonglong4 lColor = thrust::reduce(dVoxels.begin() + finalPaletteElements[i].start, dVoxels.begin() + finalPaletteElements[i].start + finalPaletteElements[i].length,init, ReduceColors());
 			uchar4 color;
@@ -282,6 +283,28 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 			color.y = lColor.y / finalPaletteElements[i].length;
 			color.z = lColor.z / finalPaletteElements[i].length;
 			tmpPalette.emplace_back(color, i);
+			*/
+			/*
+			uchar4 color;
+			if (finalPaletteElements[i].length % 2 == 0)
+			{
+				auto median = dVoxels.begin() + finalPaletteElements[i].start + finalPaletteElements[i].length / 2;
+				uint4 tmpColor = { median->color.x, median->color.y, median->color.z, 0 };
+				median += 1;
+				tmpColor.x += median->color.x;
+				tmpColor.y += median->color.y;
+				tmpColor.z += median->color.z;
+				color.x = tmpColor.x / 2;
+				color.y = tmpColor.y / 2;
+				color.z = tmpColor.z / 2;
+			}
+			else
+			{
+				auto median = dVoxels.begin() + finalPaletteElements[i].start + finalPaletteElements[i].length / 2;
+				color = median->color;
+			}
+			tmpPalette.emplace_back(color, i);
+			*/
 		}
 		
 	}

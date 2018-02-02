@@ -6,6 +6,7 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 {
 	//SelectedObject = 0;
 	//SelectedBoneID = 0;
+	//int vSize = sizeof(Voxel);
 	m_cameraSens = 0.08f;
 	m_width = width;
 	m_height = height;
