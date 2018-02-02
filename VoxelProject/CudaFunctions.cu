@@ -36,11 +36,12 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 				int curCount = atomicAdd(count, 1);
 				//int index = width * height*curDepth + width * y + x;
 				//atomicOr(Mask + (Index / (sizeof(int) * 8)), (Index << Index % (sizeof(int) * 8)));
-				voxels[curCount].segment = segmentationTransferTable[i];
+				//voxels[curCount].segment = segmentationTransferTable[i];
 				//pixel.z = anatomicalImage[curPos];
 				//pixel.y = anatomicalImage[curPos + 1];
 				//pixel.x = anatomicalImage[curPos + 2];
 				//voxels[curCount].color = pixel;
+				voxels[curCount].color.w = segmentationTransferTable[i];
 				voxels[curCount].color.z = anatomicalImage[curPos];
 				voxels[curCount].color.y = anatomicalImage[curPos + 1];
 				voxels[curCount].color.x = anatomicalImage[curPos + 2];
@@ -53,7 +54,8 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 		int curCount = atomicAdd(count, 1);
 		//int Index = width * Height*CurDepth + Width * y + x;
 		//atomicOr(Mask + (Index / (sizeof(int) * 8)), (Index << Index % (sizeof(int) * 8)));
-		voxels[curCount].segment = 1;
+		//voxels[curCount].segment = 1;
+		voxels[curCount].color.w = 1;
 		//pixel.z = anatomicalImage[curPos];
 		//pixel.y = anatomicalImage[curPos + 1];
 		//pixel.x = anatomicalImage[curPos + 2];
@@ -100,6 +102,25 @@ struct CompareVoxelsBlue
 	__host__ __device__ bool operator()(const RGBVoxel &a, const RGBVoxel &b) { return (a.color.z < b.color.z); };
 };
 
+struct RGBToPalette
+{
+	int paletteIndex;
+	RGBToPalette(int _palettedIndex)
+	{
+		paletteIndex = _palettedIndex;
+	}
+	__host__ __device__ RGBVoxel operator()(const RGBVoxel &a)
+	{ 
+		RGBVoxel result;
+		result.index = a.index;
+		result.color.x = paletteIndex;
+		result.color.y = a.color.w;
+		result.color.z = 0;
+		result.color.w = 0;
+		return result;
+	};
+};
+
 struct ReduceColors
 {
 	__host__ __device__ ulonglong4 operator()(const RGBVoxel &a, const RGBVoxel &b)
@@ -111,14 +132,6 @@ struct ReduceColors
 		return res; 
 	};
 };
-
-/*
-//__host__ __device__ bool operator<(const RGBVoxel &a, const RGBVoxel &b) { return (a.color.x < b.color.x);};
-__host__ __device__ bool operator<(const RGBVoxel &a, const RGBVoxel &b)
-{
-	return (a.color.z < b.color.z); 
-}
-*/
 
 void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int depthMulptiplier, int eps, uint3& dim, vector<Voxel>& voxels, vector<uchar4>& palette)
 {
@@ -154,14 +167,8 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	unsigned char* gDataS;
 	SegmentData* gSegmentTable;
 	unsigned char* gSegmentationTransfer;
-	vector<RGBVoxel> hVoxels;
-	//thrust::device_vector<int> dVoxelsSlice(10);
-	//thrust::device_vector<RGBVoxel> dVoxelsSlice;
 	thrust::device_vector<RGBVoxel> dVoxelsSlice(dim.x*dim.y);
-	//dVoxelsSlice.resize(m_dim.x*m_dim.y);
 	thrust::device_vector<RGBVoxel> dVoxels;
-	//thrust::device_vector<RGBVoxel> dVoxels;
-	//RGBVoxel* gVoxels;
 	int* gCount;
 	int hCount;
 	cudaMalloc((void**)&gDataA, sizeof(unsigned char)*(dim.x*dim.y) * 3);
@@ -170,15 +177,12 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	cudaMemcpy(gSegmentTable, &segmentationTable[0], sizeof(SegmentData)*(segmentationTable.size()), cudaMemcpyHostToDevice);
 	cudaMalloc((void**)&gSegmentationTransfer, sizeof(SegmentData)*(segmentationTransfer.size()));
 	cudaMemcpy(gSegmentationTransfer, &segmentationTransfer[0], sizeof(SegmentData)*(segmentationTransfer.size()), cudaMemcpyHostToDevice);
-	//cudaMalloc((void**)&gVoxels, sizeof(RGBVoxel)*(dim.x*dim.y));
 	cudaMalloc((void**)&gCount, sizeof(int));
 	int Time = clock();
 	Mat mA;
 	Mat mS;
 	while (FindNextFileA(hA, &fA) && FindNextFileA(hS, &fS))
 	{
-		//Mat mA = imread(anatomicalFolder + fA.cFileName);
-		//Mat mS = imread(segmentedFolder + fS.cFileName);
 		mA = imread(anatomicalFolder + fA.cFileName);
 		mS = imread(segmentedFolder + fS.cFileName);
 		cudaMemset(gCount, 0, sizeof(int));
@@ -186,21 +190,13 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 		hDataS = mS.data;
 		cudaMemcpy(gDataA, hDataA, sizeof(unsigned char)*(dim.x*dim.y) * 3, cudaMemcpyHostToDevice);
 		cudaMemcpy(gDataS, hDataS, sizeof(unsigned char)*(dim.x*dim.y) * 3, cudaMemcpyHostToDevice);
-		//GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, gVoxels, dim.x, dim.y, curDepth, depthMulptiplier, gCount);
-		//cudaDeviceSynchronize();
 		GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, thrust::raw_pointer_cast(dVoxelsSlice.data()), dim.x, dim.y, curDepth, depthMulptiplier, gCount);
 		cudaMemcpy(&hCount, gCount, sizeof(int), cudaMemcpyDeviceToHost);
 		if (hCount > 0)
 		{
-			//int curSize = dVoxels.size();
-			//dVoxels.resize(curSize + hCount);
-			//thrust::copy(dVoxelsSlice.begin(), dVoxelsSlice.begin()+curSize, dVoxels.begin()+curSize);
-
 			int curSize = dVoxels.size();
 			dVoxels.resize(curSize + hCount);
 			thrust::copy(dVoxelsSlice.begin(), dVoxelsSlice.begin()+hCount, dVoxels.begin()+ curSize);
-			//cudaMemcpy(&hVoxels[curSize], gVoxels, sizeof(RGBVoxel)*hCount, cudaMemcpyDeviceToHost);
-			//sort(hVoxels.begin() + curSize, hVoxels.end(), CompareVoxels);
 		}
 		curDepth++;
 	}
@@ -209,31 +205,19 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	cudaFree(gDataS);
 	cudaFree(gSegmentTable);
 	cudaFree(gSegmentationTransfer);
-	//cudaFree(gVoxels);
 	cudaFree(gCount);
 
 	queue<PaletteElement> qPalette;
 	qPalette.emplace(dVoxels.size());
 	vector<PaletteElement> finalPaletteElements;
-	//thrust::sort(dVoxels.begin(), dVoxels.end());
-	//thrust::sort(dVoxels.begin(), dVoxels.end(), CompareVoxelsGreen);
-	//thrust::sort(dVoxels.begin(), dVoxels.end(), CompareVoxelsBlue());
-
-	//thrust::sort(dVoxels.begin()+qPalette.front().start, dVoxels.begin() + qPalette.front().start+qPalette.front().length, CompareVoxelsRed());
-	//hVoxels.resize(dVoxels.size());
-	//cudaMemcpy(&hVoxels[0], thrust::raw_pointer_cast(dVoxels.data()), sizeof(RGBVoxel)*dVoxels.size(), cudaMemcpyDeviceToHost);
 
 	while (!qPalette.empty())
 	{
 		PaletteElement cur = qPalette.front();
-		//thrust::sort(dVoxels.begin(), dVoxels.end());
-		//thrust::sort(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length);
-		//thrust::sort(dVoxels.begin(), dVoxels.begin() + 100);
 		switch (cur.sortMode)
 		{
 		case PaletteElement::SORT_MODE::SORT_MODE_RED:
-			thrust::sort(dVoxels.begin(), dVoxels.begin()+100, CompareVoxelsRed());
-			//thrust::sort(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsRed);
+			thrust::sort(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsRed());
 			break;
 		case PaletteElement::SORT_MODE::SORT_MODE_GREEN:
 			thrust::sort(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsGreen());
@@ -253,71 +237,31 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 			qPalette.emplace(cur, false);
 		}
 	}
-	hVoxels.resize(dVoxels.size());
-	cudaMemcpy(&hVoxels[0], thrust::raw_pointer_cast(dVoxels.data()), sizeof(RGBVoxel)*dVoxels.size(), cudaMemcpyDeviceToHost);
+	thrust::host_vector<RGBVoxel> hVoxels = dVoxels;
 	vector<pair<uchar4, int>> tmpPalette;
 	for (int i = 0; i < finalPaletteElements.size(); i++)
 	{
-		/*
 		UINT64 r = 0;
 		UINT64 g = 0;
 		UINT64 b = 0;
-		int length = finalPaletteElements[i].length;
-		auto cur = hVoxels.begin() + finalPaletteElements[i].start;
-		auto finish = cur + length;
-		for (; cur != finish; cur++)
+		for (int j = finalPaletteElements[i].start; j < finalPaletteElements[i].start + finalPaletteElements[i].length; j++)
 		{
-			r += cur->color.x;
-			g += cur->color.y;
-			b += cur->color.z;
+			r += hVoxels[j].color.x;
+			g += hVoxels[j].color.y;
+			b += hVoxels[j].color.z;
 		}
-		uchar4 color = { r / length,g / length,b / length,0 };
-		*/
-		if (finalPaletteElements[i].length > 0)
-		{
-			/*
-			ulonglong4 init = { 0,0,0,0 };
-			ulonglong4 lColor = thrust::reduce(dVoxels.begin() + finalPaletteElements[i].start, dVoxels.begin() + finalPaletteElements[i].start + finalPaletteElements[i].length,init, ReduceColors());
-			uchar4 color;
-			color.x = lColor.x / finalPaletteElements[i].length;
-			color.y = lColor.y / finalPaletteElements[i].length;
-			color.z = lColor.z / finalPaletteElements[i].length;
-			tmpPalette.emplace_back(color, i);
-			*/
-			/*
-			uchar4 color;
-			if (finalPaletteElements[i].length % 2 == 0)
-			{
-				auto median = dVoxels.begin() + finalPaletteElements[i].start + finalPaletteElements[i].length / 2;
-				uint4 tmpColor = { median->color.x, median->color.y, median->color.z, 0 };
-				median += 1;
-				tmpColor.x += median->color.x;
-				tmpColor.y += median->color.y;
-				tmpColor.z += median->color.z;
-				color.x = tmpColor.x / 2;
-				color.y = tmpColor.y / 2;
-				color.z = tmpColor.z / 2;
-			}
-			else
-			{
-				auto median = dVoxels.begin() + finalPaletteElements[i].start + finalPaletteElements[i].length / 2;
-				color = median->color;
-			}
-			tmpPalette.emplace_back(color, i);
-			*/
-		}
-		
+		uchar4 color = { r / finalPaletteElements[i].length,g / finalPaletteElements[i].length,b / finalPaletteElements[i].length,0 };
+		tmpPalette.emplace_back(color, i);		
 	}
+	hVoxels.clear();
+	hVoxels.shrink_to_fit();
 	std::sort(tmpPalette.begin(), tmpPalette.end(), [](auto &a, auto&b) {return CompareColorsIntensity(a.first, b.first); });
 	for (int i = 0; i < tmpPalette.size(); i++)
 	{
 		palette.push_back(tmpPalette[i].first);
-		int length = finalPaletteElements[tmpPalette[i].second].length;
-		auto cur = hVoxels.begin() + finalPaletteElements[tmpPalette[i].second].start;
-		auto finish = cur + length;
-		for (; cur != finish; cur++)
-		{
-			voxels.emplace_back(cur->index, i, cur->segment);
-		}	
+		RGBToPalette curTransform(i);
+		thrust::transform(dVoxels.begin() + finalPaletteElements[tmpPalette[i].second].start, dVoxels.begin() + finalPaletteElements[tmpPalette[i].second].start + finalPaletteElements[tmpPalette[i].second].length, dVoxels.begin() + finalPaletteElements[tmpPalette[i].second].start, curTransform);
 	}
+	voxels.resize(dVoxels.size());
+	cudaMemcpy(&voxels[0], thrust::raw_pointer_cast(dVoxels.data()), sizeof(Voxel)*voxels.size(), cudaMemcpyDeviceToHost);
 }

@@ -18,5 +18,13 @@ __host__ __device__ bool CompareVoxelsBlue(const RGBVoxel &a, const RGBVoxel &b)
 
 bool CompareColorsIntensity(const uchar4 &a, const uchar4 &b)
 {
-	return ((a.x + a.y + a.z) < (b.x + b.y + b.z));
+	int aIntens = 0;
+	aIntens += a.x;
+	aIntens += a.y;
+	aIntens += a.z;
+	int bIntens = 0;
+	aIntens += b.x;
+	aIntens += b.y;
+	aIntens += b.z;
+	return (aIntens < bIntens);
 }
