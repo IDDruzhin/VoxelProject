@@ -130,8 +130,9 @@ struct RGBVoxel
 {
 	UINT index;
 	uchar4 color;
-	UINT segmentIndex;
+	UINT segment;
 };
+
 
 /*
 __host__ __device__ bool CompareVoxelsRed(const RGBVoxel &a, const RGBVoxel &b);
