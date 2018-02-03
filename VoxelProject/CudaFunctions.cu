@@ -89,6 +89,10 @@ struct CompareVoxelsBlue
 {
 	__host__ __device__ bool operator()(const RGBVoxel &a, const RGBVoxel &b) { return (a.color.z < b.color.z); };
 };
+struct CompareVoxelsIndex
+{
+	__host__ __device__ bool operator()(const RGBVoxel &a, const RGBVoxel &b) { return (a.index < b.index); };
+};
 
 struct RGBToPalette
 {
@@ -130,9 +134,6 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	WIN32_FIND_DATAA fS;
 	vector<string> filesA;
 	vector<string> filesS;
-	bool moreFilesA = true;
-	bool moreFilesS = true;
-	bool moreFiles = true;
 	hA = FindFirstFileA((anatomicalFolder + "*").c_str(), &fA);  //Find "."
 	FindNextFileA(hA, &fA); //Find ".."
 	FindNextFileA(hA, &fA); //Find real filename
@@ -250,6 +251,7 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 		RGBToPalette curTransform(i);
 		thrust::transform(dVoxels.begin() + finalPaletteElements[tmpPalette[i].second].start, dVoxels.begin() + finalPaletteElements[tmpPalette[i].second].start + finalPaletteElements[tmpPalette[i].second].length, dVoxels.begin() + finalPaletteElements[tmpPalette[i].second].start, curTransform);
 	}
+	thrust::sort(dVoxels.begin(), dVoxels.end(), CompareVoxelsIndex());
 	voxels.resize(dVoxels.size());
 	cudaMemcpy(&voxels[0], thrust::raw_pointer_cast(dVoxels.data()), sizeof(Voxel)*voxels.size(), cudaMemcpyDeviceToHost);
 }

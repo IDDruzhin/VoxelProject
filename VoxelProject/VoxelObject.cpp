@@ -183,10 +183,10 @@ void VoxelObject::SaveBin(string path, string name)
 		f.write((char*)(&m_dim), sizeof(uint3));
 		count = m_palette.size();
 		f.write((char*)(&count), sizeof(int));
-		f.write((char*)(&m_palette), sizeof(uchar4)*count);
+		f.write((char*)(&m_palette[0]), sizeof(uchar4)*count);
 		count = m_voxels.size();
 		f.write((char*)(&count), sizeof(int));
-		f.write((char*)(&m_voxels), sizeof(Voxel)*count);
+		f.write((char*)(&m_voxels[0]), sizeof(Voxel)*count);
 		count = m_segmentationTableNames.size();
 		f.write((char*)(&count), sizeof(int));
 		int stringSize;
@@ -216,10 +216,10 @@ void VoxelObject::LoadBin(string path)
 		f.read((char*)(&m_dim), sizeof(uint3));
 		f.read((char*)(&count), sizeof(int));
 		m_palette.resize(count);
-		f.read((char*)(&m_palette), sizeof(uchar4)*count);
+		f.read((char*)(&m_palette[0]), sizeof(uchar4)*count);
 		f.read((char*)(&count), sizeof(int));
 		m_voxels.resize(count);
-		f.read((char*)(&m_voxels), sizeof(Voxel)*count);
+		f.read((char*)(&m_voxels[0]), sizeof(Voxel)*count);
 		f.read((char*)(&count), sizeof(int));
 		int stringSize;
 		string tmp;

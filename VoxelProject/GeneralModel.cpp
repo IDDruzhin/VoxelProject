@@ -16,8 +16,19 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 	m_background = Vector3(0.5f, 0.7f, 1.0f);
 	m_voxPipeline = make_unique<VoxelPipeline>(d3dSyst);
 	//m_voxObj = make_shared<VoxelObject>(m_voxPipeline.get());
+
+	/*
 	string path = "D:\\SomeData\\VoxelData\\(VKH)InputFile.txt";
 	m_voxObj = make_shared<VoxelObject>(path,VoxelObject::LOADING_MODE::LOADING_MODE_SLICES, m_voxPipeline.get());
+	string savePath = "D:\\SomeData\\VoxelData\\SavedVoxels\\";
+	string saveName = "VKH_palette";
+	m_voxObj->SaveBin(savePath, saveName);
+	*/
+	
+	
+	string loadPath = "D:\\SomeData\\VoxelData\\SavedVoxels\\VKH_palette.bin";
+	m_voxObj = make_shared<VoxelObject>(loadPath, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
+	
 }
 
 
