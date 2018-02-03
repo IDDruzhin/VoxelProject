@@ -169,3 +169,68 @@ void VoxelObject::CreateFromSlices(string path, VoxelPipeline * voxPipeline)
 	}
 }
 
+void VoxelObject::SaveBin(string path, string name)
+{
+	ofstream f;
+	f.open((path + name + ".bin").c_str(), ios::binary);
+	if (f.is_open())
+	{
+		int count;
+		f.write((char*)(&m_dim), sizeof(uint3));
+		count = m_palette.size();
+		f.write((char*)(&count), sizeof(int));
+		f.write((char*)(&m_palette), sizeof(uchar4)*count);
+		count = m_voxels.size();
+		f.write((char*)(&count), sizeof(int));
+		f.write((char*)(&m_voxels), sizeof(Voxel)*count);
+		count = m_segmentationTableNames.size();
+		f.write((char*)(&count), sizeof(int));
+		int stringSize;
+		string tmp;
+		for (int i = 0; i < count; i++)
+		{
+			stringSize = m_segmentationTableNames[i].size();
+			f.write((char*)(&stringSize), sizeof(int));
+			tmp = m_segmentationTableNames[i];
+			f.write((char*)(&tmp[0]), stringSize);
+		}
+		f.close();
+	}
+	else
+	{
+		throw std::exception("Can`t open file");
+	}
+}
+
+void VoxelObject::LoadBin(string path)
+{
+	ifstream f;
+	f.open(path.c_str(), ios::binary);
+	if (f.is_open())
+	{
+		int count;
+		f.read((char*)(&m_dim), sizeof(uint3));
+		f.read((char*)(&count), sizeof(int));
+		m_palette.resize(count);
+		f.read((char*)(&m_palette), sizeof(uchar4)*count);
+		f.read((char*)(&count), sizeof(int));
+		m_voxels.resize(count);
+		f.read((char*)(&m_voxels), sizeof(Voxel)*count);
+		f.read((char*)(&count), sizeof(int));
+		int stringSize;
+		string tmp;
+		for (int i = 0; i < count; i++)
+		{
+			f.read((char*)(&stringSize), sizeof(int));
+			tmp.resize(stringSize);
+			f.read((char*)(&tmp[0]), stringSize);
+			m_segmentationTableNames.push_back(tmp);
+		}
+		f.close();
+	}
+	else
+	{
+		throw std::exception("Can`t open file");
+	}
+}
+

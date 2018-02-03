@@ -27,6 +27,8 @@ typedef
 	D3D12_VERTEX_BUFFER_VIEW GetBlocksVertexBufferView();
 	int GetBlocksCount();
 	void CreateFromSlices(string path, VoxelPipeline* voxPipeline);
+	void SaveBin(string path, string name);
+	void LoadBin(string path);
 private:
 	vector<Voxel> m_voxels;
 	vector<uchar4> m_palette;
