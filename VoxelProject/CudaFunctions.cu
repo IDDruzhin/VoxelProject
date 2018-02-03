@@ -34,13 +34,6 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 					return;
 				}
 				int curCount = atomicAdd(count, 1);
-				//int index = width * height*curDepth + width * y + x;
-				//atomicOr(Mask + (Index / (sizeof(int) * 8)), (Index << Index % (sizeof(int) * 8)));
-				//voxels[curCount].segment = segmentationTransferTable[i];
-				//pixel.z = anatomicalImage[curPos];
-				//pixel.y = anatomicalImage[curPos + 1];
-				//pixel.x = anatomicalImage[curPos + 2];
-				//voxels[curCount].color = pixel;
 				voxels[curCount].color.w = segmentationTransferTable[i];
 				voxels[curCount].color.z = anatomicalImage[curPos];
 				voxels[curCount].color.y = anatomicalImage[curPos + 1];
@@ -50,21 +43,16 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 			}
 		}
 	}
+	/*
 	{
 		int curCount = atomicAdd(count, 1);
-		//int Index = width * Height*CurDepth + Width * y + x;
-		//atomicOr(Mask + (Index / (sizeof(int) * 8)), (Index << Index % (sizeof(int) * 8)));
-		//voxels[curCount].segment = 1;
 		voxels[curCount].color.w = 1;
-		//pixel.z = anatomicalImage[curPos];
-		//pixel.y = anatomicalImage[curPos + 1];
-		//pixel.x = anatomicalImage[curPos + 2];
-		//voxels[curCount].color = pixel;
 		voxels[curCount].color.z = anatomicalImage[curPos];
 		voxels[curCount].color.y = anatomicalImage[curPos + 1];
 		voxels[curCount].color.x = anatomicalImage[curPos + 2];
 		voxels[curCount].index = width * height*curDepth + width * y + x;
 	}
+	*/
 }
 
 void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, unsigned char* segmentationTransferTable, int eps, RGBVoxel* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
