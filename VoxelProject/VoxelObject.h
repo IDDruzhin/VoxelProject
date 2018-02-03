@@ -26,7 +26,7 @@ typedef
 	ID3D12Resource* GetBlocksRes();
 	D3D12_VERTEX_BUFFER_VIEW GetBlocksVertexBufferView();
 	int GetBlocksCount();
-	void CreateFromSlices(string path, VoxelPipeline* voxPipeline);
+	void CreateFromSlices(string path);
 	void SaveBin(string path, string name);
 	void LoadBin(string path);
 private:

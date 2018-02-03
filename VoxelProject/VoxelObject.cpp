@@ -42,7 +42,11 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 {
 	if (loadingMode == LOADING_MODE::LOADING_MODE_SLICES)
 	{
-		CreateFromSlices(path, voxPipeline);
+		CreateFromSlices(path);
+	}
+	if (loadingMode == LOADING_MODE::LOADING_MODE_BIN)
+	{
+		LoadBin(path);
 	}
 }
 
@@ -66,7 +70,7 @@ int VoxelObject::GetBlocksCount()
 	return m_blocks.size();
 }
 
-void VoxelObject::CreateFromSlices(string path, VoxelPipeline * voxPipeline)
+void VoxelObject::CreateFromSlices(string path)
 {
 	ifstream file;
 	file.open(path);
