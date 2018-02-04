@@ -35,6 +35,9 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_srvUavHeapRender;  ///Cpu read only heap
 	ComPtr<ID3D12DescriptorHeap> m_rtvHeapRender;   ///Cpu read/write heap
 	UINT m_srvUavDescriptorSize;
+
+	ComPtr<ID3D12RootSignature> m_blocksDetectionRootSignature;
+	ComPtr<ID3D12PipelineState> m_blocksDetectionPipelineState;
 };
 
 /*
