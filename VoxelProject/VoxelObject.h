@@ -23,31 +23,32 @@ typedef
 	VoxelObject(VoxelPipeline* voxPipeline);
 	VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline* voxPipeline);
 	~VoxelObject();
-	ID3D12Resource* GetBlocksRes();
-	D3D12_VERTEX_BUFFER_VIEW GetBlocksVertexBufferView();
-	int GetBlocksCount();
 	void CreateFromSlices(string path);
 	void SaveBin(string path, string name);
 	void LoadBin(string path);
 private:
+	string m_name;
+	uint3 m_dim;
 	vector<Voxel> m_voxels;
 	vector<uchar4> m_palette;
 	//vector<SegmentData> segmentationTable;
 	vector<string> m_segmentationTableNames;
-
-	string m_name;
-	uint3 m_dim;
-	Vector3 m_size;
-	int m_blockDim;
-	float m_blockSize;
-	Vector3 m_startPos;
-	vector<Block> m_blocks;
-	vector<BlockInfo> m_blocksInfo;
-	//vector<Vector3> m_palette;
 	vector<float> m_segmentsOpacity;
-	ComPtr<ID3D12Resource> m_tex3DRes;
-	ComPtr<ID3D12Resource> m_blocksRes;
-	D3D12_VERTEX_BUFFER_VIEW m_blocksBufferView;
-	ComPtr<ID3D12Resource> m_blocksInfoRes;
+	int m_blockDim;
+
+	
+	
+	//Vector3 m_size;
+	
+	//float m_blockSize;
+	//Vector3 m_startPos;
+	//vector<Block> m_blocks;
+	//vector<BlockInfo> m_blocksInfo;
+	//vector<Vector3> m_palette;
+	
+	//ComPtr<ID3D12Resource> m_tex3DRes;
+	//ComPtr<ID3D12Resource> m_blocksRes;
+	//D3D12_VERTEX_BUFFER_VIEW m_blocksBufferView;
+	//ComPtr<ID3D12Resource> m_blocksInfoRes;
 };
 
