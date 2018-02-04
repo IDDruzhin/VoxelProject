@@ -6,6 +6,17 @@ struct RenderingCB
 };
 const int RenderingCBAlignedSize = (sizeof(RenderingCB) + 255) & ~255;
 
+struct ComputeBlocksCB
+{
+	int3 min;
+	int3 max;
+	int3 dim;
+	int3 dimBlocks;
+	int blockSize;
+	int computeBlocksCount;
+};
+const int ComputeBlocksCBAlignedSize = (sizeof(ComputeBlocksCB) + 255) & ~255;
+
 struct Vertex
 {
 	Vector3 pos;

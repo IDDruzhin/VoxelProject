@@ -188,7 +188,8 @@ ComPtr<ID3D12GraphicsCommandList> D3DSystem::GetCommandList()
 void D3DSystem::Reset()
 {
 	//WaitForSingleObjectEx(m_swapChainEvent, 100, FALSE);
-	WaitForPreviousFrame();
+	//WaitForPreviousFrame();
+	Wait();
 	ThrowIfFailed(m_commandAllocator[m_frameIndex]->Reset());
 	ThrowIfFailed(m_commandList->Reset(m_commandAllocator[m_frameIndex].Get(), NULL));
 	//PIXBeginEvent(m_commandQueue, 0, L"Render");
@@ -241,6 +242,7 @@ void D3DSystem::Wait()
 }
 */
 
+/*
 void D3DSystem::Wait()
 {
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -249,6 +251,7 @@ void D3DSystem::Wait()
 	ThrowIfFailed(m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent));
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
+*/
 
 void D3DSystem::PresentSimple()
 {
@@ -299,7 +302,8 @@ D3D12_FEATURE_DATA_ROOT_SIGNATURE D3DSystem::GetFeatureData()
 	return m_featureData;
 }
 
-void D3DSystem::WaitForPreviousFrame()
+//void D3DSystem::WaitForPreviousFrame()
+void D3DSystem::Wait()
 {
 	//m_fenceValue[m_frameIndex]++;
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();

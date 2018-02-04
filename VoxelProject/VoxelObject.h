@@ -29,7 +29,7 @@ typedef
 	void BlocksDecomposition(int blockSize, int3 min, int3 max, VoxelPipeline* voxPipeline);
 private:
 	string m_name;
-	uint3 m_dim;
+	int3 m_dim;
 	vector<Voxel> m_voxels;
 	vector<uchar4> m_palette;
 	//vector<SegmentData> segmentationTable;

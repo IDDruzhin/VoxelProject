@@ -209,6 +209,7 @@ void VoxelObject::BlocksDecomposition(int blockSize, int3 min, int3 max, VoxelPi
 			}
 		}
 	}
+	ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(m_voxels);
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
 }
 

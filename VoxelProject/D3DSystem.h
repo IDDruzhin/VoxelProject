@@ -62,7 +62,7 @@ private:
 
 	HANDLE m_swapChainEvent;
 
-	void WaitForPreviousFrame();
+	//void WaitForPreviousFrame();
 	void OnDestroy();
 };
 

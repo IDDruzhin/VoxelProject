@@ -125,7 +125,7 @@ struct ReduceColors
 	};
 };
 
-void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int depthMulptiplier, int eps, uint3& dim, vector<Voxel>& voxels, vector<uchar4>& palette)
+void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int depthMulptiplier, int eps, int3& dim, vector<Voxel>& voxels, vector<uchar4>& palette)
 {
 
 	HANDLE hA;

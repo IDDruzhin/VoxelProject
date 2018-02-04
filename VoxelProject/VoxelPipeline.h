@@ -18,6 +18,8 @@ public:
 	ComPtr<ID3D12Resource> CreateBlocksViews(T* data, int elementsCount);
 	*/
 	ComPtr<ID3D12Resource> RegisterBlocksInfo(vector<BlockInfo>& blocksInfo);
+	ComPtr<ID3D12Resource> RegisterVoxels(vector<Voxel>& voxels);
+	void ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes);
 private:
 	shared_ptr<D3DSystem> m_d3dSyst;
 	ComPtr<ID3D12RootSignature> m_meshRootSignature;
@@ -36,8 +38,11 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_rtvHeapRender;   ///Cpu read/write heap
 	UINT m_srvUavDescriptorSize;
 
+	//ComPtr<ID3D12Resource> m_constantBufferUploadHeapCompute;
 	ComPtr<ID3D12RootSignature> m_blocksDetectionRootSignature;
 	ComPtr<ID3D12PipelineState> m_blocksDetectionPipelineState;
+	ComPtr<ID3D12DescriptorHeap> m_blocksDetectionSrvUavHeap;
+	
 };
 
 /*
