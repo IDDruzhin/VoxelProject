@@ -165,6 +165,7 @@ VoxelPipeline::~VoxelPipeline()
 
 void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 {
+	/*
 	if (voxObj != nullptr)
 	{
 		m_d3dSyst->Reset();
@@ -212,5 +213,11 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		//m_d3dSyst->Reset();
 		m_d3dSyst->PresentSimple();
 	}
+	*/
+}
+
+ComPtr<ID3D12Resource> VoxelPipeline::RegisterBlocksInfo(vector<BlockInfo>& blocksInfo)
+{
+	ComPtr<ID3D12Resource> blocksInfoRes = m_d3dSyst->CreateStructuredBuffer(&blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size(), L"Blocks info");
 }
 

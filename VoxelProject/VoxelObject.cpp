@@ -193,3 +193,22 @@ void VoxelObject::LoadBin(string path)
 	}
 }
 
+void VoxelObject::BlocksDecomposition(int blockSize, int3 min, int3 max, VoxelPipeline* voxPipeline)
+{
+	m_blockSize = blockSize;
+	vector<BlockInfo> blocksInfo;
+	uint3 dimBlocks = {ceil((float)(max.x-min.x)/blockSize), ceil((float)(max.y - min.y) / blockSize), ceil((float)(max.y - min.y) / blockSize) };
+	for (int k = 0; k < dimBlocks.z; k++)
+	{
+		for (int j = 0; j < dimBlocks.y; j++)
+		{
+			for (int i = 0; i < dimBlocks.x; i++)
+			{
+				BlockInfo cur = { { i*blockSize, j*blockSize, k*blockSize },{ (i + 1)*blockSize, (j + 1)*blockSize, (k + 1)*blockSize } };
+				blocksInfo.push_back(cur);
+			}
+		}
+	}
+	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
+}
+

@@ -11,10 +11,13 @@ public:
 	VoxelPipeline(shared_ptr<D3DSystem> d3dSyst);
 	~VoxelPipeline();
 	void RenderObject(VoxelObject* voxObj, Camera* camera);
+	/*
 	template<typename T>
 	ComPtr<ID3D12Resource> Create3dTextureViews(T* data, int elementsCount);
 	template<typename T>
 	ComPtr<ID3D12Resource> CreateBlocksViews(T* data, int elementsCount);
+	*/
+	ComPtr<ID3D12Resource> RegisterBlocksInfo(vector<BlockInfo>& blocksInfo);
 private:
 	shared_ptr<D3DSystem> m_d3dSyst;
 	ComPtr<ID3D12RootSignature> m_meshRootSignature;
@@ -34,6 +37,7 @@ private:
 	UINT m_srvUavDescriptorSize;
 };
 
+/*
 template<typename T>
 inline ComPtr<ID3D12Resource> VoxelPipeline::Create3dTextureViews(T * data, int elementsCount)
 {
@@ -47,3 +51,4 @@ inline ComPtr<ID3D12Resource> VoxelPipeline::CreateBlocksViews(T * data, int ele
 	ComPtr<ID3D12Resource> buffer = m_d3dSyst->CreateVertexBuffer(data, elementsCount*sizeof(T), L"Blocks vertex buffer");
 	return buffer;
 }
+*/

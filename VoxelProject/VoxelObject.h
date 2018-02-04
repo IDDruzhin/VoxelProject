@@ -26,6 +26,7 @@ typedef
 	void CreateFromSlices(string path);
 	void SaveBin(string path, string name);
 	void LoadBin(string path);
+	void BlocksDecomposition(int blockSize, int3 min, int3 max, VoxelPipeline* voxPipeline);
 private:
 	string m_name;
 	uint3 m_dim;
@@ -34,7 +35,7 @@ private:
 	//vector<SegmentData> segmentationTable;
 	vector<string> m_segmentationTableNames;
 	vector<float> m_segmentsOpacity;
-	int m_blockDim;
+	int m_blockSize;
 
 	
 	

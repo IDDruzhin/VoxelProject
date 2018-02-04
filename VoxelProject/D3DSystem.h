@@ -33,6 +33,8 @@ public:
 	template<typename T>
 	ComPtr<ID3D12Resource> CreateStructuredBuffer(T* data, int size, wstring name = L"");
 	template<typename T>
+	ComPtr<ID3D12Resource> CreateRWStructuredBuffer(T* data, int size, wstring name = L"");
+	template<typename T>
 	void CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
 	template<typename T>
 	void CopyDataToGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
@@ -131,6 +133,15 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateStructuredBuffer(T * data, int si
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	//return CreateDefaultBuffer(Data, Size, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, Desc, Name);
 	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, desc, name);
+}
+
+template<typename T>
+inline ComPtr<ID3D12Resource> D3DSystem::CreateRWStructuredBuffer(T * data, int size, wstring name)
+{
+
+	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, desc, name);
+	//return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, desc, name);
 }
 
 template<typename T>
