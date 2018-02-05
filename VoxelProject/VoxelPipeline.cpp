@@ -306,10 +306,10 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	//CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeapComputeActivity->GetGPUDescriptorHandleForHeapStart(), 0, m_srvUavDescriptorSize);
 	//CD3DX12_GPU_DESCRIPTOR_HANDLE uavHandle(m_srvHeapComputeActivity->GetGPUDescriptorHandleForHeapStart(), 2, m_srvUavDescriptorSize);
 	ComputeBlocksCB computeConstantBuffer;
-	computeConstantBuffer.min = min;
-	computeConstantBuffer.max = max;
-	computeConstantBuffer.dim = dim;
-	computeConstantBuffer.dimBlocks = dimBlocks;
+	computeConstantBuffer.min = { min.x, min.y, min.z, 0 };
+	computeConstantBuffer.max = { max.x, max.y, max.z, 0 };
+	computeConstantBuffer.dim = { dim.x, dim.y, dim.z, 0 };
+	computeConstantBuffer.dimBlocks = { dimBlocks.x, dimBlocks.y, dimBlocks.z, 0 };
 	computeConstantBuffer.blockSize = blockSize;
 	int computeBlocksCount = ceil(sqrt(voxelsCount));
 	computeBlocksCount = ceil(computeBlocksCount / 32.0);
@@ -333,7 +333,11 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	//commandList->Dispatch(static_cast<int>(ceil(1000 / 256.0f)), 1, 1);
 	//commandList->Dispatch(static_cast<int>(ceil(voxelObjects[SelectedObject].GetTotalVoxelsCount() / 256.0f)), 1, 1);
 	commandList->Dispatch(computeBlocksCount, computeBlocksCount, 1);
+	//commandList->Dispatch(1, 1, 1);
 	//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pUavResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+	//m_d3dSyst->UpdatePipelineAndClear(Vector3(0, 0, 0));
+	//m_d3dSyst->ExecuteGraphics();
+	//m_d3dSyst->PresentSimple();
 	m_d3dSyst->Execute();
 	m_d3dSyst->Wait();
 	m_d3dSyst->CopyDataFromGPU(blocksInfoRes, &blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size());

@@ -8,10 +8,10 @@ const int RenderingCBAlignedSize = (sizeof(RenderingCB) + 255) & ~255;
 
 struct ComputeBlocksCB
 {
-	int3 min;
-	int3 max;
-	int3 dim;
-	int3 dimBlocks;
+	int4 min;
+	int4 max;
+	int4 dim;
+	int4 dimBlocks;
 	int blockSize;
 	int computeBlocksCount;
 };

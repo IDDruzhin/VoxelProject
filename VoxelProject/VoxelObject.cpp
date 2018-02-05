@@ -201,7 +201,7 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	}
 	m_blockSize = blockSize;
 	vector<BlockInfo> blocksInfo;
-	int3 dimBlocks = {ceil((float)(max.x-min.x)/blockSize), ceil((float)(max.y - min.y) / blockSize), ceil((float)(max.y - min.y) / blockSize) };
+	int3 dimBlocks = {ceil((float)(max.x-min.x)/blockSize), ceil((float)(max.y - min.y) / blockSize), ceil((float)(max.z - min.z) / blockSize) };
 	for (int k = 0; k < dimBlocks.z; k++)
 	{
 		for (int j = 0; j < dimBlocks.y; j++)
@@ -214,16 +214,30 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 			}
 		}
 	}
+	//vector<Voxel> tmp(m_voxels.begin(), m_voxels.begin() + 100);
 	ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(m_voxels);
+	//ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(tmp);
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
 	voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
 	int blocksCount = 0;
 	for (int i = 0; i < blocksInfo.size(); i++)
 	{
+		
 		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
 		{
 			blocksCount++;
 		}
+		
+		/*
+		if ((blocksInfo[i].max.z >= blocksInfo[i].min.z))
+		{
+			blocksCount++;
+			uint2 test = { blocksInfo[i].min.x, blocksInfo[i].min.y };
+			Voxel* testVox = reinterpret_cast<Voxel*>(&test);
+			int keq;
+			keq = 84;
+		}
+		*/
 	}
 	int kh;
 	kh = 4892;
