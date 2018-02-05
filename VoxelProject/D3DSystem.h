@@ -17,7 +17,7 @@ public:
 	DXGI_SWAP_CHAIN_DESC GetSwapChainDesc();
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList();
 	void Reset();
-	bool Execute();
+	void Execute();
 	void ExecuteGraphics();
 	void UpdatePipelineAndClear(Vector3 bg);
 	void Wait();
@@ -101,7 +101,7 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateDefaultBuffer(T * data, int size,
 	m_commandList->Close();
 	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-	//m_fenceValue[m_frameIndex]++;
+	m_fenceValue[m_frameIndex]++;
 	m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
 	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
@@ -160,17 +160,18 @@ inline void D3DSystem::CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int 
 	Reset();
 	m_commandList->CopyResource(buffer.Get(), src.Get());
 	m_commandList->Close();
-	ID3D12CommandList* commandLists[] = { m_commandList };
+	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-	m_commandQueue->Signal(m_fence[m_frameIndex], m_fenceValue[m_frameIndex]);
+	m_fenceValue[m_frameIndex]++;
+	m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
 	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
 		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
-	T* pBuffData;
-	buffer->Map(0, nullptr, reinterpret_cast<void**>(&pBuffData));
-	memcpy(dst, pBuffData, size);
+	T* buffData;
+	buffer->Map(0, nullptr, reinterpret_cast<void**>(&buffData));
+	memcpy(dst, buffData, size);
 	buffer->Unmap(0, nullptr);
 	//buffer->Release();
 }
@@ -196,9 +197,10 @@ inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int s
 	Reset();
 	m_commandList->CopyResource(dst.Get(), buffer.Get());
 	m_commandList->Close();
-	ID3D12CommandList* commandLists[] = { m_commandList };
+	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-	m_commandQueue->Signal(m_fence[m_frameIndex], m_fenceValue[m_frameIndex]);
+	m_fenceValue[m_frameIndex]++;
+	m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
 	if (m_fence[m_frameIndex]->m_GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
 		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);

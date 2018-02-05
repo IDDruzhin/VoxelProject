@@ -193,23 +193,39 @@ void VoxelObject::LoadBin(string path)
 	}
 }
 
-void VoxelObject::BlocksDecomposition(int blockSize, int3 min, int3 max, VoxelPipeline* voxPipeline)
+void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int3 min, int3 max)
 {
+	if (max.x == 0 && max.y == 0 && max.z == 0)
+	{
+		max = m_dim;
+	}
 	m_blockSize = blockSize;
 	vector<BlockInfo> blocksInfo;
-	uint3 dimBlocks = {ceil((float)(max.x-min.x)/blockSize), ceil((float)(max.y - min.y) / blockSize), ceil((float)(max.y - min.y) / blockSize) };
+	int3 dimBlocks = {ceil((float)(max.x-min.x)/blockSize), ceil((float)(max.y - min.y) / blockSize), ceil((float)(max.y - min.y) / blockSize) };
 	for (int k = 0; k < dimBlocks.z; k++)
 	{
 		for (int j = 0; j < dimBlocks.y; j++)
 		{
 			for (int i = 0; i < dimBlocks.x; i++)
 			{
-				BlockInfo cur = { { i*blockSize, j*blockSize, k*blockSize },{ (i + 1)*blockSize, (j + 1)*blockSize, (k + 1)*blockSize } };
+				//BlockInfo cur = { { i*blockSize, j*blockSize, k*blockSize },{ (i + 1)*blockSize, (j + 1)*blockSize, (k + 1)*blockSize } };
+				BlockInfo cur = { { (i + 1)*blockSize, (j + 1)*blockSize, (k + 1)*blockSize }, { i*blockSize, j*blockSize, k*blockSize } };
 				blocksInfo.push_back(cur);
 			}
 		}
 	}
 	ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(m_voxels);
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
+	voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
+	int blocksCount = 0;
+	for (int i = 0; i < blocksInfo.size(); i++)
+	{
+		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
+		{
+			blocksCount++;
+		}
+	}
+	int kh;
+	kh = 4892;
 }
 

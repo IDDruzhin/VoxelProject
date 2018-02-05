@@ -28,6 +28,7 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 	
 	string loadPath = "D:\\SomeData\\VoxelData\\SavedVoxels\\VKH_palette.bin";
 	m_voxObj = make_shared<VoxelObject>(loadPath, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
+	m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 64);
 	
 }
 

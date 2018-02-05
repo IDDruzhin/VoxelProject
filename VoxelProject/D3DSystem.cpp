@@ -195,17 +195,14 @@ void D3DSystem::Reset()
 	//PIXBeginEvent(m_commandQueue, 0, L"Render");
 }
 
-bool D3DSystem::Execute()
+void D3DSystem::Execute()
 {
 	m_commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-	HRESULT hr = m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
-	if (FAILED(hr))
-	{
-		return false;
-	}
-	return true;
+
+	m_fenceValue[m_frameIndex]++;
+	ThrowIfFailed(m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]));
 }
 
 void D3DSystem::ExecuteGraphics()
@@ -220,6 +217,7 @@ void D3DSystem::ExecuteGraphics()
 	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
+	m_fenceValue[m_frameIndex]++;
 	ThrowIfFailed(m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]));
 }
 
@@ -312,5 +310,5 @@ void D3DSystem::Wait()
 		ThrowIfFailed(m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent));
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
-	m_fenceValue[m_frameIndex]++;
+	//m_fenceValue[m_frameIndex]++;
 }

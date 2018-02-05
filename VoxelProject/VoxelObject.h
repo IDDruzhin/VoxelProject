@@ -26,7 +26,7 @@ typedef
 	void CreateFromSlices(string path);
 	void SaveBin(string path, string name);
 	void LoadBin(string path);
-	void BlocksDecomposition(int blockSize, int3 min, int3 max, VoxelPipeline* voxPipeline);
+	void BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int3 min = { 0,0,0 }, int3 max = { 0,0,0 });
 private:
 	string m_name;
 	int3 m_dim;
