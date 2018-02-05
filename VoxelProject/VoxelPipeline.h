@@ -8,6 +8,25 @@ class VoxelObject;
 class VoxelPipeline
 {
 public:
+typedef
+	enum GRAPHICS_DESCRIPTORS
+	{
+		POSITION_TEXTURE_UAV = 0,
+		RENDER_TEXTURE_UAV = 1,
+		PALETTE_SRV = 2,
+		SEGMENTS_OPACITY_SRV = 3,
+		TEXTURES_3D_SRV_ARRAY = 4
+	} 	GRAPHICS_DESCRIPTORS;
+typedef
+	enum COMPUTE_DESCRIPTORS
+	{
+		VOXELS_SRV = 0,
+		BLOCKS_INFO_SRV = 1,
+		BLOCKS_INDEXES_SRV = 2,
+		BLOCKS_INFO_UAV = 3,
+		TEXTURES_3D_UAV_ARRAY = 4
+	} 	COMPUTE_DESCRIPTORS;
+
 	VoxelPipeline(shared_ptr<D3DSystem> d3dSyst);
 	~VoxelPipeline();
 	void RenderObject(VoxelObject* voxObj, Camera* camera);
@@ -20,6 +39,7 @@ public:
 	ComPtr<ID3D12Resource> RegisterBlocksInfo(vector<BlockInfo>& blocksInfo);
 	ComPtr<ID3D12Resource> RegisterVoxels(vector<Voxel>& voxels);
 	void ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes);
+	void RegisterBlocks(int overlay, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& m_texturesRes, vector<int>& blocksIndexes, ComPtr<ID3D12Resource>& blocksIndexesRes);
 private:
 	shared_ptr<D3DSystem> m_d3dSyst;
 	ComPtr<ID3D12RootSignature> m_meshRootSignature;
@@ -39,9 +59,10 @@ private:
 	UINT m_srvUavDescriptorSize;
 
 	//ComPtr<ID3D12Resource> m_constantBufferUploadHeapCompute;
-	ComPtr<ID3D12RootSignature> m_blocksDetectionRootSignature;
+	ComPtr<ID3D12RootSignature> m_blocksComputeRootSignature;
 	ComPtr<ID3D12PipelineState> m_blocksDetectionPipelineState;
-	ComPtr<ID3D12DescriptorHeap> m_blocksDetectionSrvUavHeap;
+	ComPtr<ID3D12PipelineState> m_blocksFillingPipelineState;
+	ComPtr<ID3D12DescriptorHeap> m_blocksComputeSrvUavHeap;
 	
 };
 

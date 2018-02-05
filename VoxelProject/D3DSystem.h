@@ -38,6 +38,7 @@ public:
 	void CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
 	template<typename T>
 	void CopyDataToGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
+	ComPtr<ID3D12Resource> CreateRWTexture3D(int3 dim, DXGI_FORMAT format, wstring name);
 	int GetFrameIndex();
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE GetFeatureData();
 private:
@@ -142,6 +143,20 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateRWStructuredBuffer(T * data, int 
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, desc, name);
 	//return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, desc, name);
+}
+
+inline ComPtr<ID3D12Resource> D3DSystem::CreateRWTexture3D(int3 dim, DXGI_FORMAT format, wstring name)
+{
+	CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex3D(format, dim.x, dim.y, dim.z, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+	ComPtr<ID3D12Resource> buffer;
+	m_device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), //A default heap
+		D3D12_HEAP_FLAG_NONE, //No flags
+		&textureDesc,
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+		nullptr,
+		IID_PPV_ARGS(&buffer));
+	return buffer;
 }
 
 template<typename T>

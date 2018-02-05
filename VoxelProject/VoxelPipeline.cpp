@@ -21,14 +21,15 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 
 	/// Mesh rendering pipeline
 	{
-		CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
 		//ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
-		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, -1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
 
 		CD3DX12_ROOT_PARAMETER1 rootParameters[2];
 		rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_VERTEX);
 		//rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-		rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParameters[1].InitAsDescriptorTable(2, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 		rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -83,17 +84,17 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_meshPipelineState)));
 	}
 
-	/// Blocks detection compute pipeline
+	/// Blocks detection and filling compute pipeline
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC srvUavHeapDesc = {};
-		srvUavHeapDesc.NumDescriptors = 2;
+		srvUavHeapDesc.NumDescriptors = 10000;
 		srvUavHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		srvUavHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		d3dSyst->GetDevice()->CreateDescriptorHeap(&srvUavHeapDesc, IID_PPV_ARGS(&m_blocksDetectionSrvUavHeap));
+		d3dSyst->GetDevice()->CreateDescriptorHeap(&srvUavHeapDesc, IID_PPV_ARGS(&m_blocksComputeSrvUavHeap));
 
 		CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
-		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE); //t0
-		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE); //u1
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE); //t0-t2
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE); //u1-...
 
 		CD3DX12_ROOT_PARAMETER1 rootParameters[2];
 		rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);
@@ -106,7 +107,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		ID3DBlob *signature;
 		ID3DBlob *error;
 		ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, m_d3dSyst->GetFeatureData().HighestVersion, &signature, &error));
-		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_blocksDetectionRootSignature)));
+		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_blocksComputeRootSignature)));
 
 		ComPtr<ID3DBlob> computeShader;
 #if defined(_DEBUG)
@@ -117,10 +118,15 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		//UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 		ThrowIfFailed(D3DCompileFromFile(L"BlocksDetectionCS.hlsl", nullptr, nullptr, "main", "cs_5_1", compileFlags, 0, &computeShader, nullptr));
 		D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
-		computePsoDesc.pRootSignature = m_blocksDetectionRootSignature.Get();
+		computePsoDesc.pRootSignature = m_blocksComputeRootSignature.Get();
 		computePsoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
-
 		ThrowIfFailed(d3dSyst->GetDevice()->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_blocksDetectionPipelineState)));
+
+		ThrowIfFailed(D3DCompileFromFile(L"BlocksFillingCS.hlsl", nullptr, nullptr, "main", "cs_5_1", compileFlags, 0, &computeShader, nullptr));
+		//D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
+		computePsoDesc.pRootSignature = m_blocksComputeRootSignature.Get();
+		computePsoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
+		ThrowIfFailed(d3dSyst->GetDevice()->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_blocksFillingPipelineState)));
 	}
 
 	///Constant buffer
@@ -142,7 +148,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 	///Render texture
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC srvUavHeapDesc = {};
-		srvUavHeapDesc.NumDescriptors = 10;
+		srvUavHeapDesc.NumDescriptors = 10000;
 		srvUavHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		srvUavHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_d3dSyst->GetDevice()->CreateDescriptorHeap(&srvUavHeapDesc, IID_PPV_ARGS(&m_srvUavHeapRender));
@@ -268,7 +274,7 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterBlocksInfo(vector<BlockInfo>& bloc
 	uavDesc.Buffer.CounterOffsetInBytes = 0;
 	uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandleComputeBorder(m_blocksDetectionSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandleComputeBorder(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize);
 	m_d3dSyst->GetDevice()->CreateUnorderedAccessView(blocksInfoRes.Get(), nullptr, &uavDesc, uavHandleComputeBorder);
 	return blocksInfoRes;
 }
@@ -285,7 +291,7 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterVoxels(vector<Voxel>& voxels)
 	srvDesc.Buffer.StructureByteStride = sizeof(Voxel);
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandleGraphic(m_blocksDetectionSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvUavDescriptorSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandleGraphic(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvUavDescriptorSize);
 	m_d3dSyst->GetDevice()->CreateShaderResourceView(voxelsRes.Get(), &srvDesc, srvHandleGraphic);
 	return voxelsRes;
 }
@@ -296,8 +302,8 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	int frameIndex = m_d3dSyst->GetFrameIndex();
 	ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
 	commandList->SetPipelineState(m_blocksDetectionPipelineState.Get());
-	commandList->SetComputeRootSignature(m_blocksDetectionRootSignature.Get());
-	ID3D12DescriptorHeap* heaps[] = { m_blocksDetectionSrvUavHeap.Get() };
+	commandList->SetComputeRootSignature(m_blocksComputeRootSignature.Get());
+	ID3D12DescriptorHeap* heaps[] = { m_blocksComputeSrvUavHeap.Get() };
 	commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 	//ID3D12Resource *pUavResource = voxelObjects[SelectedObject].GetBorderMaskRes();
 	//ID3D12Resource *pUavResource = voxelObjects[SelectedObject].GetActivityMaskRes();
@@ -317,7 +323,7 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	//int MaxObjectCount = 1;
 	memcpy(m_cbvGPUAddress[frameIndex], &computeConstantBuffer, sizeof(computeConstantBuffer));
 	commandList->SetComputeRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
-	commandList->SetComputeRootDescriptorTable(1, m_blocksDetectionSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
+	commandList->SetComputeRootDescriptorTable(1, m_blocksComputeSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
 	//commandList->SetComputeRootDescriptorTable(1, uavHandle);
 	//commandList->SetComputeRootDescriptorTable(1)
 	//commandList->SetComputeRootShaderResourceView(0, voxelObjects[SelectedObject].GetVoxelDataGPUAddress());
@@ -341,5 +347,52 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	m_d3dSyst->Execute();
 	m_d3dSyst->Wait();
 	m_d3dSyst->CopyDataFromGPU(blocksInfoRes, &blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size());
+}
+
+void VoxelPipeline::RegisterBlocks(int overlay, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, vector<int>& blocksIndexes, ComPtr<ID3D12Resource>& blocksIndexesRes)
+{
+	texturesRes.clear();
+	blocksIndexes.clear();
+	vector<Block> blocks;
+	DXGI_FORMAT format = DXGI_FORMAT_R8G8_UINT;
+
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = format;
+	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+	//srvDesc.Buffer.FirstElement = 0;
+	//srvDesc.Buffer.NumElements = ElementsCount;
+	//srvDesc.Buffer.StructureByteStride = sizeof(T);
+	//srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuWriteUavHandle(m_rtvHeapRender->GetCPUDescriptorHandleForHeapStart());
+	m_d3dSyst->GetDevice()->CreateUnorderedAccessView(m_renderTexture.Get(), nullptr, &uavDesc, cpuWriteUavHandle);
+	for (int i = 0; i < blocksInfo.size(); i++)
+	{
+		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
+		{
+			blocksIndexes.push_back(blocks.size());
+			blocks.emplace_back(blocksInfo[i].min, blocksInfo[i].max,overlay);
+			int3 dim = { (blocksInfo[i].max.x - blocksInfo[i].min.x + 2 * overlay), (blocksInfo[i].max.y - blocksInfo[i].min.y + 2 * overlay), (blocksInfo[i].max.z - blocksInfo[i].min.z + 2 * overlay) };
+			ComPtr<ID3D12Resource> textureRes = m_d3dSyst->CreateRWTexture3D(dim, format, L"3D texture");
+
+			CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::TEXTURES_3D_UAV_ARRAY + texturesRes.size(), m_srvUavDescriptorSize);
+			m_d3dSyst->GetDevice()->CreateUnorderedAccessView(textureRes.Get(), nullptr, &uavDesc, uavHandle);
+
+			CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), GRAPHICS_DESCRIPTORS::TEXTURES_3D_SRV_ARRAY + texturesRes.size(), m_srvUavDescriptorSize);
+			m_d3dSyst->GetDevice()->CreateShaderResourceView(textureRes.Get(), &srvDesc, srvHandle);
+
+			texturesRes.push_back(textureRes);
+		}
+		else
+		{
+			blocksIndexes.push_back(-1);
+		}
+	}
+	blocksIndexesRes = m_d3dSyst->CreateVertexBuffer(&blocksIndexes[0], sizeof(int)*blocksIndexes.size(), L"Blocks indexes");
 }
 

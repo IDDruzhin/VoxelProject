@@ -37,6 +37,13 @@ private:
 	vector<float> m_segmentsOpacity;
 	int m_blockSize;
 
+	vector<ComPtr<ID3D12Resource>> m_texturesRes;
+	vector<int> m_blocksIndexes;
+	ComPtr<ID3D12Resource> m_blocksIndexesRes;
+	ComPtr<ID3D12Resource> m_blocksRes;
+	ComPtr<ID3D12Resource> m_paletteRes;
+	ComPtr<ID3D12Resource> m_segmentsOpacityRes;
+
 	
 	
 	//Vector3 m_size;

@@ -4,7 +4,7 @@ struct PS_INPUT
 	float3 tex : TEXCOORD;
 };
 
-RWTexture2D<float4> renderTexture : register(u1);
+RWTexture2D<float4> positionTexture : register(u1);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {

@@ -137,6 +137,9 @@
     <FxCompile Include="BlocksDetectionCS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="BlocksFillingCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CudaFunctions.cu">

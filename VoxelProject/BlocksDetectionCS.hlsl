@@ -25,6 +25,7 @@ cbuffer ComputeBlocksCB : register(b0)
 	int4 dimBlocks;
 	int blockSize;
 	int computeBlocksCount;
+	int overlap;
 };
 
 StructuredBuffer<Voxel> voxels : register(t0);

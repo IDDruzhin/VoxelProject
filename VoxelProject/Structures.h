@@ -14,6 +14,7 @@ struct ComputeBlocksCB
 	int4 dimBlocks;
 	int blockSize;
 	int computeBlocksCount;
+	int overlap;
 };
 const int ComputeBlocksCBAlignedSize = (sizeof(ComputeBlocksCB) + 255) & ~255;
 
@@ -59,6 +60,42 @@ struct Block
 	}
 };
 */
+
+struct Block
+{
+	Vertex v[8];
+	Block() {};
+	Block(int3 min, int3 max, int overlap)
+	{
+		Vector3 tex_min = { min.x - overlap, min.y - overlap, min.z - overlap };
+		Vector3 tex_max = { max.x + 1 + overlap, max.y + 1 + overlap, max.z + 1 + overlap };
+		Vector3 tex_dim = { tex_max.x - tex_min.x, tex_max.y - tex_min.y, tex_max.z - tex_min.z };
+		Vector3 p = Vector3(min.x, min.y, min.z);
+		Vector3 t = (p - tex_min) / tex_dim;
+		v[0] = { p, t };
+		p = Vector3(min.x, min.y, max.z + 1);
+		t = (p - tex_min) / tex_dim;
+		v[1] = { p, t };
+		p = Vector3(min.x, max.y + 1, min.z);
+		t = (p - tex_min) / tex_dim;
+		v[2] = { p, t };
+		p = Vector3(min.x, max.y + 1, max.z + 1);
+		t = (p - tex_min) / tex_dim;
+		v[3] = { p, t };
+		p = Vector3(max.x + 1, min.y, min.z);
+		t = (p - tex_min) / tex_dim;
+		v[4] = { p, t };
+		p = Vector3(max.x + 1, min.y, max.z + 1);
+		t = (p - tex_min) / tex_dim;
+		v[5] = { p, t };
+		p = Vector3(max.x + 1, max.y + 1, min.z);
+		t = (p - tex_min) / tex_dim;
+		v[6] = { p, t };
+		p = Vector3(max.x + 1, max.y + 1, max.z + 1);
+		t = (p - tex_min) / tex_dim;
+		v[7] = { p, t };
+	};
+};
 
 struct BlockInfo
 {
