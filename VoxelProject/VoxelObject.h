@@ -27,7 +27,8 @@ typedef
 	void SaveBin(string path, string name);
 	void LoadBin(string path);
 	void BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlay = 0, int3 min = { 0,0,0 }, int3 max = { 0,0,0 });
-	vector<BlockPositionInfo> ClaculatePriorities(Vector3 cameraPos);
+	vector<BlockPositionInfo> CalculatePriorities(Vector3 cameraPos);
+	D3D12_VERTEX_BUFFER_VIEW GetBlocksVBV();
 private:
 	string m_name;
 	int3 m_dim;

@@ -239,7 +239,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		commandList->ClearUnorderedAccessViewFloat(gpuH, cpuH, m_renderTexture.Get(), &clearVal[0],0,nullptr);
 		//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 		
-		commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVertexBufferView()));
+		commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVBV()));
 		//commandList->DrawInstanced(3, 1, 0, 0);
 		commandList->IASetIndexBuffer(&m_blockIndexBufferView);
 		//commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
@@ -247,6 +247,13 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		//commandList->DrawIndexedInstanced(36, voxObj->GetBlocksCount(), 0, 0, 8);
 		//commandList->DrawIndexedInstanced(36, voxObj->GetBlocksCount(), 0, 0, 8);
 		//commandList->DrawIndexedInstanced(36, 1, 0, 8 * 100, 0);
+		vector<BlockPositionInfo> blocksOrder = voxObj->CalculatePriorities(Vector3(0, 0, 0));
+		for (int i = 0; i < blocksOrder.size(); i++)
+		{
+			commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
+			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
+		}
+		/*
 		for (int i = 0; i < voxObj->GetBlocksCount(); i++)
 		{
 			//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
@@ -254,6 +261,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 			//ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 		}
+		*/
 		commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_renderTexture.Get());
 		m_d3dSyst->ExecuteGraphics();
 		//m_d3dSyst->Reset();

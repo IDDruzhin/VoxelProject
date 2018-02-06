@@ -220,10 +220,15 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
 	voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
 	voxPipeline->RegisterBlocks(overlap, dimBlocks, blocksInfo, m_blocksRes, m_texturesRes, m_blocksIndexesRes, m_blocksPosInfo);
+
+	m_blocksBufferView.BufferLocation = m_blocksRes->GetGPUVirtualAddress();
+	m_blocksBufferView.StrideInBytes = sizeof(Vertex);
+	m_blocksBufferView.SizeInBytes = sizeof(Block)*m_blocksPosInfo.size();
+
 	voxPipeline->ComputeFillBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes);
 }
 
-vector<BlockPositionInfo> VoxelObject::ClaculatePriorities(Vector3 cameraPos)
+vector<BlockPositionInfo> VoxelObject::CalculatePriorities(Vector3 cameraPos)
 {
 	for (int i = 0; i < m_blocksPosInfo.size(); i++)
 	{
@@ -231,5 +236,10 @@ vector<BlockPositionInfo> VoxelObject::ClaculatePriorities(Vector3 cameraPos)
 	}
 	sort(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
 	return m_blocksPosInfo;
+}
+
+D3D12_VERTEX_BUFFER_VIEW VoxelObject::GetBlocksVBV()
+{
+	return m_blocksBufferView;
 }
 

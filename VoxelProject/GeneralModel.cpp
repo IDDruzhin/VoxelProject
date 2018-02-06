@@ -64,7 +64,7 @@ bool GeneralModel::Init(HWND hWnd, int _width, int _height)
 
 void GeneralModel::Render()
 {
-	//m_voxPipeline->RenderObject(m_voxObj.get(),m_camera.get());
+	m_voxPipeline->RenderObject(m_voxObj.get(),m_camera.get());
 }
 
 
