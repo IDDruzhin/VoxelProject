@@ -104,6 +104,15 @@ struct BlockInfo
 	int3 max;
 };
 
+struct BlockPositionInfo
+{
+	int blockIndex;
+	int3 block3dIndex;
+	Vector3 position;
+	float distance;
+	int priority;
+};
+
 
 struct SegmentData
 {

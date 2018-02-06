@@ -27,6 +27,7 @@ typedef
 	void SaveBin(string path, string name);
 	void LoadBin(string path);
 	void BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlay = 0, int3 min = { 0,0,0 }, int3 max = { 0,0,0 });
+	vector<BlockPositionInfo> ClaculatePriorities(Vector3 cameraPos);
 private:
 	string m_name;
 	int3 m_dim;
@@ -36,13 +37,17 @@ private:
 	vector<string> m_segmentationTableNames;
 	vector<float> m_segmentsOpacity;
 	int m_blockSize;
+	
 
 	vector<ComPtr<ID3D12Resource>> m_texturesRes;
-	vector<int> m_blocksIndexes;
-	vector<int3> m_blocks3dIndexes;
-	vector<Vector3> m_blocksPositions;
+	vector<BlockPositionInfo> m_blocksPosInfo;
+	//vector<int> m_blocksIndexes;
+	//vector<int3> m_blocks3dIndexes;
+	//vector<Vector3> m_blocksPositions;
+	//vector<pair<int, int>> m_blocksOrder; // first - block index, second - priority
 	ComPtr<ID3D12Resource> m_blocksIndexesRes;
 	ComPtr<ID3D12Resource> m_blocksRes;
+	D3D12_VERTEX_BUFFER_VIEW m_blocksBufferView;
 	ComPtr<ID3D12Resource> m_paletteRes;
 	ComPtr<ID3D12Resource> m_segmentsOpacityRes;
 

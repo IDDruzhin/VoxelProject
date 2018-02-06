@@ -39,7 +39,7 @@ typedef
 	ComPtr<ID3D12Resource> RegisterBlocksInfo(vector<BlockInfo>& blocksInfo);
 	ComPtr<ID3D12Resource> RegisterVoxels(vector<Voxel>& voxels);
 	void ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes);
-	void RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, vector<int>& blocksIndexes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<int3>& blocks3dIndexes, vector<Vector3>& blocksPositions);
+	void RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo);
 	void ComputeFillBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes);
 private:
 	shared_ptr<D3DSystem> m_d3dSyst;

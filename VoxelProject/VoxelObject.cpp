@@ -193,7 +193,7 @@ void VoxelObject::LoadBin(string path)
 	}
 }
 
-void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlay, int3 min, int3 max)
+void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlap, int3 min, int3 max)
 {
 	if (max.x == 0 && max.y == 0 && max.z == 0)
 	{
@@ -219,6 +219,17 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	//ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(tmp);
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
 	voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
-	voxPipeline->RegisterBlocks(overlay, blocksInfo, m_blocksRes, m_texturesRes, m_blocksIndexes, m_blocksIndexesRes);
+	voxPipeline->RegisterBlocks(overlap, dimBlocks, blocksInfo, m_blocksRes, m_texturesRes, m_blocksIndexesRes, m_blocksPosInfo);
+	voxPipeline->ComputeFillBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes);
+}
+
+vector<BlockPositionInfo> VoxelObject::ClaculatePriorities(Vector3 cameraPos)
+{
+	for (int i = 0; i < m_blocksPosInfo.size(); i++)
+	{
+		m_blocksPosInfo[i].distance = Vector3::DistanceSquared(m_blocksPosInfo[i].position, cameraPos);
+	}
+	sort(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
+	return m_blocksPosInfo;
 }
 

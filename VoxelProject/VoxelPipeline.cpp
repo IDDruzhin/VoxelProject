@@ -211,7 +211,7 @@ VoxelPipeline::~VoxelPipeline()
 
 void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 {
-	/*
+	
 	if (voxObj != nullptr)
 	{
 		m_d3dSyst->Reset();
@@ -219,8 +219,8 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		m_d3dSyst->UpdatePipelineAndClear(Vector3(0, 0, 0));
 		ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
 		m_renderingCB.worldViewProj = (voxObj->GetWorld()*camera->GetView()*camera->GetProjection()).Transpose();
-		ID3D12DescriptorHeap* ppHeaps[] = { m_srvUavHeapRender.Get() };
-		commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+		ID3D12DescriptorHeap* heaps[] = { m_srvUavHeapRender.Get() };
+		commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 
 		commandList->SetPipelineState(m_meshPipelineState.Get());
 		commandList->SetGraphicsRootSignature(m_meshRootSignature.Get());
@@ -259,7 +259,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		//m_d3dSyst->Reset();
 		m_d3dSyst->PresentSimple();
 	}
-	*/
+	
 }
 
 ComPtr<ID3D12Resource> VoxelPipeline::RegisterBlocksInfo(vector<BlockInfo>& blocksInfo)
@@ -350,11 +350,12 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	m_d3dSyst->CopyDataFromGPU(blocksInfoRes, &blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size());
 }
 
-void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, vector<int>& blocksIndexes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<int3>& blocks3dIndexes, vector<Vector3>& blocksPositions)
+void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo)
 {
 	texturesRes.clear();
-	blocksIndexes.clear();
+	blocksPosInfo.clear();
 	vector<Block> blocks;
+	vector<int> blocksIndexes;
 	DXGI_FORMAT format = DXGI_FORMAT_R8G8_UINT;
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -394,8 +395,15 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo
 			int tmp = i % (dimBlocks.x * dimBlocks.y);
 			block3dIndex.y = tmp / dimBlocks.x;
 			block3dIndex.x = tmp % dimBlocks.x;
-			blocks3dIndexes.push_back(block3dIndex);
-			blocksPositions.emplace_back(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f);
+			//blocks3dIndexes.push_back(block3dIndex);
+			//blocksPositions.emplace_back(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f);
+			BlockPositionInfo blockPositionInfo;
+			blockPositionInfo.block3dIndex = block3dIndex;
+			blockPositionInfo.blockIndex = blocksPosInfo.size();
+			blockPositionInfo.distance = 0;
+			blockPositionInfo.position = Vector3(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f);
+			blockPositionInfo.priority = 0;
+			blocksPosInfo.push_back(blockPositionInfo);
 		}
 		else
 		{
