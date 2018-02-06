@@ -350,7 +350,7 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	m_d3dSyst->CopyDataFromGPU(blocksInfoRes, &blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size());
 }
 
-void VoxelPipeline::RegisterBlocks(int overlap, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, vector<int>& blocksIndexes, ComPtr<ID3D12Resource>& blocksIndexesRes)
+void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, vector<int>& blocksIndexes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<int3>& blocks3dIndexes, vector<Vector3>& blocksPositions)
 {
 	texturesRes.clear();
 	blocksIndexes.clear();
@@ -388,6 +388,14 @@ void VoxelPipeline::RegisterBlocks(int overlap, vector<BlockInfo>& blocksInfo, C
 			m_d3dSyst->GetDevice()->CreateShaderResourceView(textureRes.Get(), &srvDesc, srvHandle);
 
 			texturesRes.push_back(textureRes);
+
+			int3 block3dIndex;
+			block3dIndex.z = i / (dimBlocks.x * dimBlocks.y);
+			int tmp = i % (dimBlocks.x * dimBlocks.y);
+			block3dIndex.y = tmp / dimBlocks.x;
+			block3dIndex.x = tmp % dimBlocks.x;
+			blocks3dIndexes.push_back(block3dIndex);
+			blocksPositions.emplace_back(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f);
 		}
 		else
 		{

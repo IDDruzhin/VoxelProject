@@ -39,6 +39,8 @@ private:
 
 	vector<ComPtr<ID3D12Resource>> m_texturesRes;
 	vector<int> m_blocksIndexes;
+	vector<int3> m_blocks3dIndexes;
+	vector<Vector3> m_blocksPositions;
 	ComPtr<ID3D12Resource> m_blocksIndexesRes;
 	ComPtr<ID3D12Resource> m_blocksRes;
 	ComPtr<ID3D12Resource> m_paletteRes;
