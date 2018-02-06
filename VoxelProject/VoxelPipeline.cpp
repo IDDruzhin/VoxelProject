@@ -42,7 +42,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		ComPtr<ID3DBlob> vertexShader;
 		ComPtr<ID3DBlob> pixelShader;
 #if defined(_DEBUG)
-		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
 #else
 		UINT compileFlags = 0;
 #endif
@@ -111,7 +111,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 
 		ComPtr<ID3DBlob> computeShader;
 #if defined(_DEBUG)
-		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
 #else
 		UINT compileFlags = 0;
 #endif
@@ -122,6 +122,12 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		computePsoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
 		ThrowIfFailed(d3dSyst->GetDevice()->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_blocksDetectionPipelineState)));
 
+		/*
+		ID3DBlob* err;
+		char* chErr;
+		D3DCompileFromFile(L"BlocksFillingCS.hlsl", nullptr, nullptr, "main", "cs_5_1", compileFlags, 0, &computeShader, &err);
+		chErr = (char*)err->GetBufferPointer();
+		*/
 		ThrowIfFailed(D3DCompileFromFile(L"BlocksFillingCS.hlsl", nullptr, nullptr, "main", "cs_5_1", compileFlags, 0, &computeShader, nullptr));
 		//D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
 		computePsoDesc.pRootSignature = m_blocksComputeRootSignature.Get();

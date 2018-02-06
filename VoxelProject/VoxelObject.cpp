@@ -219,6 +219,14 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	//ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(tmp);
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
 	voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
+	int count = 0;
+	for (int i = 0; i < blocksInfo.size(); i++)
+	{
+		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
+		{
+			count++;
+		}		
+	}
 	voxPipeline->RegisterBlocks(overlap, dimBlocks, blocksInfo, m_blocksRes, m_texturesRes, m_blocksIndexesRes, m_blocksPosInfo);
 
 	m_blocksBufferView.BufferLocation = m_blocksRes->GetGPUVirtualAddress();
