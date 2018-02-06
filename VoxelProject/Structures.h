@@ -68,9 +68,9 @@ struct Block
 	Block() {};
 	Block(int3 min, int3 max, int overlap)
 	{
-		Vector3 tex_min = { min.x - overlap, min.y - overlap, min.z - overlap };
-		Vector3 tex_max = { max.x + 1 + overlap, max.y + 1 + overlap, max.z + 1 + overlap };
-		Vector3 tex_dim = { tex_max.x - tex_min.x, tex_max.y - tex_min.y, tex_max.z - tex_min.z };
+		Vector3 tex_min(min.x - overlap, min.y - overlap, min.z - overlap) ;
+		Vector3 tex_max(max.x + 1 + overlap, max.y + 1 + overlap, max.z + 1 + overlap);
+		Vector3 tex_dim(tex_max.x - tex_min.x, tex_max.y - tex_min.y, tex_max.z - tex_min.z);
 		Vector3 p = Vector3(min.x, min.y, min.z);
 		Vector3 t = (p - tex_min) / tex_dim;
 		v[0] = { p, t };
