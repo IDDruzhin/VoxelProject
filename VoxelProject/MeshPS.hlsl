@@ -8,7 +8,7 @@ RWTexture2D<float4> positionTexture : register(u1);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-	renderTexture[input.pos.xy] = float4(input.tex, 1.0f);
+	positionTexture[input.pos.xy] = float4(input.tex, 1.0f);
 	//discard;
 	return float4(0.0f,0.0f,0.0f,0.0f);
 	//return renderTexture[input.pos.xy];

@@ -43,20 +43,22 @@ cbuffer ComputeBlocksCB : register(b0)
 StructuredBuffer<Voxel> voxels : register(t0);
 StructuredBuffer<BlockInfo> blocksInfo : register(t1);
 StructuredBuffer<int> blocksIndexes : register(t2);
-RWTexture3D<int2> textures[] : register(u2);
+RWTexture3D<uint2> textures[] : register(u2);
 
 void FillElement(int3 pos, int color, int segment, int3 block3dIndex)
 {
 	int blockIndex = block3dIndex.x + block3dIndex.y * dimBlocks.x + block3dIndex.z * dimBlocks.x * dimBlocks.y;
-	int textureIndex = blocksIndexes[blocksIndex];
+	int textureIndex = blocksIndexes[blockIndex];
 	if (textureIndex > -1)
 	{
 		BlockInfo blockInfo = blocksInfo[blockIndex];
 		if ((pos.x >= blockInfo.min.x - overlap) && (pos.x <= blockInfo.max.x + overlap) && (pos.y >= blockInfo.min.y - overlap) && (pos.y <= blockInfo.max.y + overlap) && (pos.z >= blockInfo.min.z - overlap) && (pos.z <= blockInfo.max.z + overlap))
 		{
 			uint3 texturePos = uint3(pos.x - blockInfo.min.x + overlap, pos.y - blockInfo.min.y + overlap, pos.z - blockInfo.min.z + overlap);
-			textures[textureIndex][texturePos].x = color;
-			textures[textureIndex][texturePos].y = segment;
+			//textures[textureIndex][texturePos].x = color;
+			//textures[textureIndex][texturePos].y = segment;
+			uint2 element = uint2(color, segment);
+			textures[textureIndex][texturePos] = element;
 		}		
 	}
 }
