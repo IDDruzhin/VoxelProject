@@ -233,7 +233,7 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	m_blocksBufferView.StrideInBytes = sizeof(Vertex);
 	m_blocksBufferView.SizeInBytes = sizeof(Block)*m_blocksPosInfo.size();
 
-	voxPipeline->ComputeFillBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes);
+	voxPipeline->ComputeFillBlocks(m_voxels.size(), m_blocksPosInfo.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes);
 }
 
 vector<BlockPositionInfo> VoxelObject::CalculatePriorities(Vector3 cameraPos)

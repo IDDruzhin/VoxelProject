@@ -72,23 +72,23 @@ template<typename T>
 inline ComPtr<ID3D12Resource> D3DSystem::CreateDefaultBuffer(T * data, int size, D3D12_RESOURCE_STATES finalState, D3D12_RESOURCE_DESC desc, wstring name)
 {
 	ComPtr<ID3D12Resource> buffer;
-	m_device->CreateCommittedResource(
+	ThrowIfFailed(m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), //A default heap
 		D3D12_HEAP_FLAG_NONE, //No flags
 		&desc, //Size of buffer
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
-		IID_PPV_ARGS(&buffer));
+		IID_PPV_ARGS(&buffer)));
 	//buffer->SetName(name.c_str());
 
 	ComPtr<ID3D12Resource> bufferUploadHeap;
-	m_device->CreateCommittedResource(
+	ThrowIfFailed(m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), //An upload heap
 		D3D12_HEAP_FLAG_NONE, //No flags
 		&CD3DX12_RESOURCE_DESC::Buffer(size),
 		D3D12_RESOURCE_STATE_GENERIC_READ, //GPU will read and copy content to the default heap
 		nullptr,
-		IID_PPV_ARGS(&bufferUploadHeap));
+		IID_PPV_ARGS(&bufferUploadHeap)));
 	//bufferUploadHeap->SetName(L"Buffer Upload Resource Heap");
 	D3D12_SUBRESOURCE_DATA subResourceData = {};
 	subResourceData.pData = reinterpret_cast<BYTE*>(data); //Pointer to upload data
@@ -117,6 +117,7 @@ template<typename T>
 inline ComPtr<ID3D12Resource> D3DSystem::CreateVertexBuffer(T * data, int size, wstring name)
 {
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+	//D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, desc, name);
 }
 
@@ -149,13 +150,13 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateRWTexture3D(int3 dim, DXGI_FORMAT
 {
 	CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex3D(format, dim.x, dim.y, dim.z, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	ComPtr<ID3D12Resource> buffer;
-	m_device->CreateCommittedResource(
+	ThrowIfFailed(m_device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), //A default heap
 		D3D12_HEAP_FLAG_NONE, //No flags
 		&textureDesc,
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 		nullptr,
-		IID_PPV_ARGS(&buffer));
+		IID_PPV_ARGS(&buffer)));
 	return buffer;
 }
 

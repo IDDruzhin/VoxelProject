@@ -288,8 +288,21 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterBlocksInfo(vector<BlockInfo>& bloc
 	uavDesc.Buffer.CounterOffsetInBytes = 0;
 	uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandleComputeBorder(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvUavDescriptorSize);
-	m_d3dSyst->GetDevice()->CreateUnorderedAccessView(blocksInfoRes.Get(), nullptr, &uavDesc, uavHandleComputeBorder);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::BLOCKS_INFO_UAV, m_srvUavDescriptorSize);
+	m_d3dSyst->GetDevice()->CreateUnorderedAccessView(blocksInfoRes.Get(), nullptr, &uavDesc, uavHandle);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	srvDesc.Buffer.FirstElement = 0;
+	srvDesc.Buffer.NumElements = blocksInfo.size();
+	srvDesc.Buffer.StructureByteStride = sizeof(BlockInfo);
+	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::BLOCKS_INFO_SRV, m_srvUavDescriptorSize);
+	m_d3dSyst->GetDevice()->CreateShaderResourceView(blocksInfoRes.Get(), &srvDesc, srvHandle);
+
 	return blocksInfoRes;
 }
 
@@ -305,8 +318,8 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterVoxels(vector<Voxel>& voxels)
 	srvDesc.Buffer.StructureByteStride = sizeof(Voxel);
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandleGraphic(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvUavDescriptorSize);
-	m_d3dSyst->GetDevice()->CreateShaderResourceView(voxelsRes.Get(), &srvDesc, srvHandleGraphic);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::VOXELS_SRV, m_srvUavDescriptorSize);
+	m_d3dSyst->GetDevice()->CreateShaderResourceView(voxelsRes.Get(), &srvDesc, srvHandle);
 	return voxelsRes;
 }
 
@@ -385,24 +398,29 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo
 	//srvDesc.Buffer.StructureByteStride = sizeof(T);
 	//srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuWriteUavHandle(m_rtvHeapRender->GetCPUDescriptorHandleForHeapStart());
-	m_d3dSyst->GetDevice()->CreateUnorderedAccessView(m_renderTexture.Get(), nullptr, &uavDesc, cpuWriteUavHandle);
+	//CD3DX12_CPU_DESCRIPTOR_HANDLE cpuWriteUavHandle(m_rtvHeapRender->GetCPUDescriptorHandleForHeapStart());
+	//m_d3dSyst->GetDevice()->CreateUnorderedAccessView(m_renderTexture.Get(), nullptr, &uavDesc, cpuWriteUavHandle);
 	for (int i = 0; i < blocksInfo.size(); i++)
 	{
 		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
 		{
 			blocksIndexes.push_back(blocks.size());
 			blocks.emplace_back(blocksInfo[i].min, blocksInfo[i].max, overlap);
-			int3 dim = { (blocksInfo[i].max.x - blocksInfo[i].min.x + 2 * overlap), (blocksInfo[i].max.y - blocksInfo[i].min.y + 2 * overlap), (blocksInfo[i].max.z - blocksInfo[i].min.z + 2 * overlap) };
+			
+			int3 dim = { 1 + (blocksInfo[i].max.x - blocksInfo[i].min.x + 2 * overlap), 1 + (blocksInfo[i].max.y - blocksInfo[i].min.y + 2 * overlap), 1 + (blocksInfo[i].max.z - blocksInfo[i].min.z + 2 * overlap) };
+			
 			ComPtr<ID3D12Resource> textureRes = m_d3dSyst->CreateRWTexture3D(dim, format, L"3D texture");
-
+			/*
 			CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::TEXTURES_3D_UAV_ARRAY + texturesRes.size(), m_srvUavDescriptorSize);
 			m_d3dSyst->GetDevice()->CreateUnorderedAccessView(textureRes.Get(), nullptr, &uavDesc, uavHandle);
-
-			CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), GRAPHICS_DESCRIPTORS::TEXTURES_3D_SRV_ARRAY + texturesRes.size(), m_srvUavDescriptorSize);
+			
+			CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvUavHeapRender->GetCPUDescriptorHandleForHeapStart(), GRAPHICS_DESCRIPTORS::TEXTURES_3D_SRV_ARRAY + texturesRes.size(), m_srvUavDescriptorSize);
 			m_d3dSyst->GetDevice()->CreateShaderResourceView(textureRes.Get(), &srvDesc, srvHandle);
+			*/
+			
 
 			texturesRes.push_back(textureRes);
+			
 
 			int3 block3dIndex;
 			block3dIndex.z = i / (dimBlocks.x * dimBlocks.y);
@@ -418,16 +436,32 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo
 			blockPositionInfo.position = Vector3(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f);
 			blockPositionInfo.priority = 0;
 			blocksPosInfo.push_back(blockPositionInfo);
+			
 		}
 		else
 		{
 			blocksIndexes.push_back(-1);
 		}
 	}
-	blocksIndexesRes = m_d3dSyst->CreateVertexBuffer(&blocksIndexes[0], sizeof(int)*blocksIndexes.size(), L"Blocks indexes");
+	blocksRes = m_d3dSyst->CreateVertexBuffer(&blocks[0], sizeof(Block)*blocks.size(), L"Blocks vertex buffer");
+	//blocksRes = m_d3dSyst->CreateVertexBuffer(&blocks[0], sizeof(int)*blocks.size(), L"Blocks vertex buffer");
+	blocksIndexesRes = m_d3dSyst->CreateStructuredBuffer(&blocksIndexes[0], sizeof(int)*blocksIndexes.size(), L"Blocks indexes");
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvIndexesDesc = {};
+	srvIndexesDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvIndexesDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvIndexesDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	srvIndexesDesc.Buffer.FirstElement = 0;
+	srvIndexesDesc.Buffer.NumElements = blocksIndexes.size();
+	srvIndexesDesc.Buffer.StructureByteStride = sizeof(int);
+	srvIndexesDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::BLOCKS_INDEXES_SRV, m_srvUavDescriptorSize);
+	m_d3dSyst->GetDevice()->CreateShaderResourceView(blocksIndexesRes.Get(), &srvDesc, srvHandle);
+	//blocksIndexesRes = m_d3dSyst->CreateVertexBuffer(&blocksIndexes[0], sizeof(int)*blocksIndexes.size(), L"Blocks indexes");
 }
 
-void VoxelPipeline::ComputeFillBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes)
+void VoxelPipeline::ComputeFillBlocks(int voxelsCount, int texturesCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes)
 {
 	m_d3dSyst->Reset();
 	int frameIndex = m_d3dSyst->GetFrameIndex();
@@ -454,11 +488,11 @@ void VoxelPipeline::ComputeFillBlocks(int voxelsCount, int3 dim, int blockSize, 
 	commandList->SetComputeRootDescriptorTable(1, m_blocksComputeSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
 	commandList->Dispatch(computeBlocksCount, computeBlocksCount, 1);
 	vector<CD3DX12_RESOURCE_BARRIER> transitions;
-	for (int i = 0; i < texturesRes.size(); i++)
+	for (int i = 0; i < texturesCount; i++)
 	{
 		transitions.push_back(CD3DX12_RESOURCE_BARRIER::Transition(texturesRes[i].Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 	}
-	commandList->ResourceBarrier(transitions.size(), &transitions[0]);
+	commandList->ResourceBarrier(texturesCount, &transitions[0]);
 	m_d3dSyst->Execute();
 	m_d3dSyst->Wait();
 }
