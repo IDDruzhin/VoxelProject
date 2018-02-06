@@ -316,6 +316,7 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	computeConstantBuffer.max = { max.x, max.y, max.z, 0 };
 	computeConstantBuffer.dim = { dim.x, dim.y, dim.z, 0 };
 	computeConstantBuffer.dimBlocks = { dimBlocks.x, dimBlocks.y, dimBlocks.z, 0 };
+	computeConstantBuffer.voxelsCount = voxelsCount;
 	computeConstantBuffer.blockSize = blockSize;
 	int computeBlocksCount = ceil(sqrt(voxelsCount));
 	computeBlocksCount = ceil(computeBlocksCount / 32.0);
@@ -340,7 +341,7 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	//commandList->Dispatch(static_cast<int>(ceil(voxelObjects[SelectedObject].GetTotalVoxelsCount() / 256.0f)), 1, 1);
 	commandList->Dispatch(computeBlocksCount, computeBlocksCount, 1);
 	//commandList->Dispatch(1, 1, 1);
-	//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pUavResource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(blocksInfoRes.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 	//m_d3dSyst->UpdatePipelineAndClear(Vector3(0, 0, 0));
 	//m_d3dSyst->ExecuteGraphics();
 	//m_d3dSyst->PresentSimple();
@@ -349,7 +350,7 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	m_d3dSyst->CopyDataFromGPU(blocksInfoRes, &blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size());
 }
 
-void VoxelPipeline::RegisterBlocks(int overlay, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, vector<int>& blocksIndexes, ComPtr<ID3D12Resource>& blocksIndexesRes)
+void VoxelPipeline::RegisterBlocks(int overlap, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, vector<int>& blocksIndexes, ComPtr<ID3D12Resource>& blocksIndexesRes)
 {
 	texturesRes.clear();
 	blocksIndexes.clear();
@@ -376,8 +377,8 @@ void VoxelPipeline::RegisterBlocks(int overlay, vector<BlockInfo>& blocksInfo, C
 		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
 		{
 			blocksIndexes.push_back(blocks.size());
-			blocks.emplace_back(blocksInfo[i].min, blocksInfo[i].max,overlay);
-			int3 dim = { (blocksInfo[i].max.x - blocksInfo[i].min.x + 2 * overlay), (blocksInfo[i].max.y - blocksInfo[i].min.y + 2 * overlay), (blocksInfo[i].max.z - blocksInfo[i].min.z + 2 * overlay) };
+			blocks.emplace_back(blocksInfo[i].min, blocksInfo[i].max, overlap);
+			int3 dim = { (blocksInfo[i].max.x - blocksInfo[i].min.x + 2 * overlap), (blocksInfo[i].max.y - blocksInfo[i].min.y + 2 * overlap), (blocksInfo[i].max.z - blocksInfo[i].min.z + 2 * overlap) };
 			ComPtr<ID3D12Resource> textureRes = m_d3dSyst->CreateRWTexture3D(dim, format, L"3D texture");
 
 			CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::TEXTURES_3D_UAV_ARRAY + texturesRes.size(), m_srvUavDescriptorSize);
@@ -394,5 +395,41 @@ void VoxelPipeline::RegisterBlocks(int overlay, vector<BlockInfo>& blocksInfo, C
 		}
 	}
 	blocksIndexesRes = m_d3dSyst->CreateVertexBuffer(&blocksIndexes[0], sizeof(int)*blocksIndexes.size(), L"Blocks indexes");
+}
+
+void VoxelPipeline::ComputeFillBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes)
+{
+	m_d3dSyst->Reset();
+	int frameIndex = m_d3dSyst->GetFrameIndex();
+	ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
+	commandList->SetPipelineState(m_blocksDetectionPipelineState.Get());
+	commandList->SetComputeRootSignature(m_blocksComputeRootSignature.Get());
+	ID3D12DescriptorHeap* heaps[] = { m_blocksComputeSrvUavHeap.Get() };
+	commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+	int computeBlocksCount = ceil(sqrt(voxelsCount));
+	computeBlocksCount = ceil(computeBlocksCount / 32.0);
+
+	ComputeBlocksCB computeConstantBuffer;
+	computeConstantBuffer.min = { min.x, min.y, min.z, 0 };
+	computeConstantBuffer.max = { max.x, max.y, max.z, 0 };
+	computeConstantBuffer.dim = { dim.x, dim.y, dim.z, 0 };
+	computeConstantBuffer.dimBlocks = { dimBlocks.x, dimBlocks.y, dimBlocks.z, 0 };
+	computeConstantBuffer.voxelsCount = voxelsCount;
+	computeConstantBuffer.blockSize = blockSize;
+	computeConstantBuffer.computeBlocksCount = computeBlocksCount;
+	computeConstantBuffer.overlap = overlap;
+	memcpy(m_cbvGPUAddress[frameIndex], &computeConstantBuffer, sizeof(computeConstantBuffer));
+	commandList->SetComputeRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
+	commandList->SetComputeRootDescriptorTable(1, m_blocksComputeSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
+	commandList->Dispatch(computeBlocksCount, computeBlocksCount, 1);
+	vector<CD3DX12_RESOURCE_BARRIER> transitions;
+	for (int i = 0; i < texturesRes.size(); i++)
+	{
+		transitions.push_back(CD3DX12_RESOURCE_BARRIER::Transition(texturesRes[i].Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+	}
+	commandList->ResourceBarrier(transitions.size(), &transitions[0]);
+	m_d3dSyst->Execute();
+	m_d3dSyst->Wait();
 }
 

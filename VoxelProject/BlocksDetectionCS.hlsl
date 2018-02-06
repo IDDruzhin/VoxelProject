@@ -23,6 +23,7 @@ cbuffer ComputeBlocksCB : register(b0)
 	int4 max;
 	int4 dim;
 	int4 dimBlocks;
+	int voxelsCount;
 	int blockSize;
 	int computeBlocksCount;
 	int overlap;
@@ -34,11 +35,11 @@ RWStructuredBuffer<BlockInfo> blocksInfo : register(u1);
 [numthreads(blocksize_x, blocksize_y, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
-	uint size;
-	uint offset;
+	//uint size;
+	//uint offset;
 	uint index = DTid.y*computeBlocksCount*blocksize_x + DTid.x;
-	voxels.GetDimensions(size, offset);
-	if (index < size)
+	//voxels.GetDimensions(size, offset);
+	if (index < voxelsCount)
 	{
 		int3 cur;
 		int tmp = voxels[index].index % (dim.x*dim.y);

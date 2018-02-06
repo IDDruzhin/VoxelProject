@@ -193,7 +193,7 @@ void VoxelObject::LoadBin(string path)
 	}
 }
 
-void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int3 min, int3 max)
+void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlay, int3 min, int3 max)
 {
 	if (max.x == 0 && max.y == 0 && max.z == 0)
 	{
@@ -219,27 +219,6 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	//ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(tmp);
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
 	voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
-	int blocksCount = 0;
-	for (int i = 0; i < blocksInfo.size(); i++)
-	{
-		
-		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
-		{
-			blocksCount++;
-		}
-		
-		/*
-		if ((blocksInfo[i].max.z >= blocksInfo[i].min.z))
-		{
-			blocksCount++;
-			uint2 test = { blocksInfo[i].min.x, blocksInfo[i].min.y };
-			Voxel* testVox = reinterpret_cast<Voxel*>(&test);
-			int keq;
-			keq = 84;
-		}
-		*/
-	}
-	int kh;
-	kh = 4892;
+	voxPipeline->RegisterBlocks(overlay, blocksInfo, m_blocksRes, m_texturesRes, m_blocksIndexes, m_blocksIndexesRes);
 }
 

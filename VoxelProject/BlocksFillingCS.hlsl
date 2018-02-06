@@ -34,6 +34,7 @@ cbuffer ComputeBlocksCB : register(b0)
 	int4 max;
 	int4 dim;
 	int4 dimBlocks;
+	int voxelsCount;
 	int blockSize;
 	int computeBlocksCount;
 	int overlap;
@@ -44,7 +45,57 @@ StructuredBuffer<BlockInfo> blocksInfo : register(t1);
 StructuredBuffer<int> blocksIndexes : register(t2);
 RWTexture3D<int2> textures[] : register(u2);
 
+void FillElement(int3 pos, int color, int segment, int3 block3dIndex)
+{
+	int blockIndex = block3dIndex.x + block3dIndex.y * dimBlocks.x + block3dIndex.z * dimBlocks.x * dimBlocks.y;
+	int textureIndex = blocksIndexes[blocksIndex];
+	if (textureIndex > -1)
+	{
+		BlockInfo blockInfo = blocksInfo[blockIndex];
+		if ((pos.x >= blockInfo.min.x - overlap) && (pos.x <= blockInfo.max.x + overlap) && (pos.y >= blockInfo.min.y - overlap) && (pos.y <= blockInfo.max.y + overlap) && (pos.z >= blockInfo.min.z - overlap) && (pos.z <= blockInfo.max.z + overlap))
+		{
+			uint3 texturePos = uint3(pos.x - blockInfo.min.x + overlap, pos.y - blockInfo.min.y + overlap, pos.z - blockInfo.min.z + overlap);
+			textures[textureIndex][texturePos].x = color;
+			textures[textureIndex][texturePos].y = segment;
+		}		
+	}
+}
+
 [numthreads(blocksize_x, blocksize_y, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
+	uint index = DTid.y*computeBlocksCount*blocksize_x + DTid.x;
+	if (index < voxelsCount)
+	{
+		int3 cur;
+		Voxel voxel = voxels[index];
+		int tmp = voxel.index % (dim.x*dim.y);
+		cur.z = voxel.index / (dim.x*dim.y);
+		cur.y = tmp / dim.x;
+		cur.x = tmp % dim.x;
+		if (cur.x >= min.x && cur.x <= max.x && cur.y >= min.y && cur.y <= max.y && cur.z >= min.z && cur.z <= max.z)
+		{
+			int color = (voxel.info & 255);
+			int segment = ((voxel.info >> 8) & 255);
+			int3 block3dIndex = int3((cur.x - min.x) / blockSize, (cur.y - min.y) / blockSize, (cur.z - min.z) / blockSize);
+			FillElement(cur, color, segment, block3dIndex);
+			if (overlap != 0)
+			{
+				for (int i = -1; i <= 1; i += 2)
+				{
+					for (int j = -1; j <= 1; j += 2)
+					{
+						for (int k = -1; k <= 1; k += 2)
+						{
+							int3 neighborBlock3dIndex = int3(block3dIndex.x + i, block3dIndex.y + j, block3dIndex.z + k);
+							if ((neighborBlock3dIndex.x > -1) && (neighborBlock3dIndex.y > -1) && (neighborBlock3dIndex.z > -1))
+							{
+								FillElement(cur, color, segment, neighborBlock3dIndex);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }

@@ -12,6 +12,7 @@ struct ComputeBlocksCB
 	int4 max;
 	int4 dim;
 	int4 dimBlocks;
+	int voxelsCount;
 	int blockSize;
 	int computeBlocksCount;
 	int overlap;
