@@ -43,8 +43,9 @@ typedef
 	void ComputeFillBlocks(int voxelsCount, int texturesCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes);
 private:
 	shared_ptr<D3DSystem> m_d3dSyst;
-	ComPtr<ID3D12RootSignature> m_meshRootSignature;
-	ComPtr<ID3D12PipelineState> m_meshPipelineState;
+	ComPtr<ID3D12RootSignature> m_renderRootSignature;
+	ComPtr<ID3D12PipelineState> m_backFacesPipelineState;
+	ComPtr<ID3D12PipelineState> m_rayCastingPipelineState;
 	RenderingCB m_renderingCB;
 	ComPtr<ID3D12Resource> m_constantBufferUploadHeaps[FRAMEBUFFERCOUNT];
 	UINT8* m_cbvGPUAddress[FRAMEBUFFERCOUNT];
