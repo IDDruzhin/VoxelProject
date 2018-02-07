@@ -209,6 +209,11 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 	m_blockIndexBufferView.BufferLocation = m_blockIndexBuffer->GetGPUVirtualAddress();
 	m_blockIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_blockIndexBufferView.SizeInBytes = sizeof(blockIndexes);
+
+	m_background[0] = 0.0f;
+	m_background[1] = 0.0f;
+	m_background[2] = 0.0f;
+	m_background[3] = 0.0f;
 }
 
 VoxelPipeline::~VoxelPipeline()
@@ -240,18 +245,27 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		commandList->SetGraphicsRootDescriptorTable(1, m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
 		
 		
-		const FLOAT clearVal[4] = { 0.0f,0.0f,0.0f,0.0f };
+		//const FLOAT clearVal[4] = { 0.0f,0.0f,0.0f,0.0f };
+		//float clearVal[4] = { 0.0f,0.0f,0.0f,0.0f };
+		//float clearVal[3] = { 0.0f,0.0f,0.0f};
+		//Vector4 background(0.0f,0.0f,0.0f,0.0f);
 		CD3DX12_GPU_DESCRIPTOR_HANDLE gpuH(m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
 		CD3DX12_CPU_DESCRIPTOR_HANDLE cpuH(m_rtvHeapRender->GetCPUDescriptorHandleForHeapStart());
-		commandList->ClearUnorderedAccessViewFloat(gpuH, cpuH, m_renderTexture.Get(), &clearVal[0],0,nullptr);
+		//commandList->ClearUnorderedAccessViewFloat(gpuH, cpuH, m_renderTexture.Get(), &background, 0, nullptr);
+		commandList->ClearUnorderedAccessViewFloat(gpuH, cpuH, m_renderTexture.Get(), &m_background[0],0,nullptr);
 		//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 		
 		
 		commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVBV()));
 		commandList->IASetIndexBuffer(&m_blockIndexBufferView);
-		vector<BlockPositionInfo> blocksOrder = voxObj->CalculatePriorities(Vector3(0, 0, 0));
-		for (int i = 0; i < blocksOrder.size(); i++)
-		//for (int i = blocksOrder.size()-1; i >-1 ; i--)
+
+		Matrix invertWorldView = (voxObj->GetWorld()*camera->GetView()).Invert();
+		//Matrix invertWorldView = (camera->GetView()*voxObj->GetWorld()).Invert();
+		Vector3 cameraPos(0.0f,0.0f,0.0f);
+		cameraPos = Vector3::Transform(cameraPos, invertWorldView);
+		vector<BlockPositionInfo> blocksOrder = voxObj->CalculatePriorities(cameraPos);
+		//for (int i = 0; i < blocksOrder.size(); i++)
+		for (int i = blocksOrder.size()-1; i >-1 ; i--)
 		{
 			commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
 			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
@@ -375,7 +389,7 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	m_d3dSyst->CopyDataFromGPU(blocksInfoRes, &blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size());
 }
 
-void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo)
+void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo)
 {
 	texturesRes.clear();
 	blocksPosInfo.clear();
@@ -432,7 +446,7 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo
 			blockPositionInfo.block3dIndex = block3dIndex;
 			blockPositionInfo.blockIndex = blocksPosInfo.size();
 			blockPositionInfo.distance = 0;
-			blockPositionInfo.position = Vector3(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f);
+			blockPositionInfo.position = Vector3(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f) * blockSize;
 			blockPositionInfo.priority = 0;
 			blocksPosInfo.push_back(blockPositionInfo);
 			
