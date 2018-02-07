@@ -223,6 +223,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		m_d3dSyst->Reset();
 		int frameIndex = m_d3dSyst->GetFrameIndex();
 		m_d3dSyst->UpdatePipelineAndClear(Vector3(0, 0, 0));
+		/*
 		ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
 		m_renderingCB.worldViewProj = (voxObj->GetWorld()*camera->GetView()*camera->GetProjection()).Transpose();
 		ID3D12DescriptorHeap* heaps[] = { m_srvUavHeapRender.Get() };
@@ -237,28 +238,24 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
 		//CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
 		commandList->SetGraphicsRootDescriptorTable(1, m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
-		
+		*/
+		/*
 		const FLOAT clearVal[4] = { 0.0f,0.0f,0.0f,0.0f };
 		CD3DX12_GPU_DESCRIPTOR_HANDLE gpuH(m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
-		//auto CpuH = m_d3dSyst->GetRtvCPUHandle();
 		CD3DX12_CPU_DESCRIPTOR_HANDLE cpuH(m_rtvHeapRender->GetCPUDescriptorHandleForHeapStart());
 		commandList->ClearUnorderedAccessViewFloat(gpuH, cpuH, m_renderTexture.Get(), &clearVal[0],0,nullptr);
 		//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 		
+		
 		commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVBV()));
-		//commandList->DrawInstanced(3, 1, 0, 0);
 		commandList->IASetIndexBuffer(&m_blockIndexBufferView);
-		//commandList->DrawIndexedInstanced(36, 1, 0, 0, 0);
-		//commandList->DrawIndexedInstanced(36, 1, 0, 0, 36*100);
-		//commandList->DrawIndexedInstanced(36, voxObj->GetBlocksCount(), 0, 0, 8);
-		//commandList->DrawIndexedInstanced(36, voxObj->GetBlocksCount(), 0, 0, 8);
-		//commandList->DrawIndexedInstanced(36, 1, 0, 8 * 100, 0);
 		vector<BlockPositionInfo> blocksOrder = voxObj->CalculatePriorities(Vector3(0, 0, 0));
 		for (int i = 0; i < blocksOrder.size(); i++)
 		{
 			commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
 			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 		}
+		*/
 		/*
 		for (int i = 0; i < voxObj->GetBlocksCount(); i++)
 		{
@@ -268,8 +265,8 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 		}
 		*/
-		commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_renderTexture.Get());
-		m_d3dSyst->ExecuteGraphics();
+		//commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_renderTexture.Get());
+		//m_d3dSyst->ExecuteGraphics();
 		//m_d3dSyst->Reset();
 		m_d3dSyst->PresentSimple();
 	}
@@ -393,6 +390,7 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = format;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+	srvDesc.Texture3D.MipLevels = 1;
 	//srvDesc.Buffer.FirstElement = 0;
 	//srvDesc.Buffer.NumElements = ElementsCount;
 	//srvDesc.Buffer.StructureByteStride = sizeof(T);
@@ -408,15 +406,15 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, vector<BlockInfo
 			blocks.emplace_back(blocksInfo[i].min, blocksInfo[i].max, overlap);
 			
 			int3 dim = { 1 + (blocksInfo[i].max.x - blocksInfo[i].min.x + 2 * overlap), 1 + (blocksInfo[i].max.y - blocksInfo[i].min.y + 2 * overlap), 1 + (blocksInfo[i].max.z - blocksInfo[i].min.z + 2 * overlap) };
-			
+			uavDesc.Texture3D.WSize = dim.z;
 			ComPtr<ID3D12Resource> textureRes = m_d3dSyst->CreateRWTexture3D(dim, format, L"3D texture");
-			/*
+			
 			CD3DX12_CPU_DESCRIPTOR_HANDLE uavHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::TEXTURES_3D_UAV_ARRAY + texturesRes.size(), m_srvUavDescriptorSize);
 			m_d3dSyst->GetDevice()->CreateUnorderedAccessView(textureRes.Get(), nullptr, &uavDesc, uavHandle);
 			
 			CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvUavHeapRender->GetCPUDescriptorHandleForHeapStart(), GRAPHICS_DESCRIPTORS::TEXTURES_3D_SRV_ARRAY + texturesRes.size(), m_srvUavDescriptorSize);
 			m_d3dSyst->GetDevice()->CreateShaderResourceView(textureRes.Get(), &srvDesc, srvHandle);
-			*/
+			
 			
 
 			texturesRes.push_back(textureRes);
