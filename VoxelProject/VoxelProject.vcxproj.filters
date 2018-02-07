@@ -128,9 +128,6 @@
     <FxCompile Include="MeshVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="MeshPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="RayCastingPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -138,6 +135,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="BlocksFillingCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BackFacesPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

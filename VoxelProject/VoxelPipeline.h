@@ -11,8 +11,8 @@ public:
 typedef
 	enum GRAPHICS_DESCRIPTORS
 	{
-		POSITION_TEXTURE_UAV = 0,
-		RENDER_TEXTURE_UAV = 1,
+		RENDER_TEXTURE_UAV = 0,
+		BACK_COORD_TEXTURE_UAV = 1,
 		PALETTE_SRV = 2,
 		SEGMENTS_OPACITY_SRV = 3,
 		TEXTURES_3D_SRV_ARRAY = 4
@@ -55,6 +55,7 @@ private:
 	ComPtr<ID3D12Resource> m_blockIndexBuffer;
 	D3D12_INDEX_BUFFER_VIEW m_blockIndexBufferView;
 
+	ComPtr<ID3D12Resource> m_backCoordTexture;
 	ComPtr<ID3D12Resource> m_renderTexture;
 	ComPtr<ID3D12DescriptorHeap> m_srvUavHeapRender;  ///Cpu read only heap
 	ComPtr<ID3D12DescriptorHeap> m_rtvHeapRender;   ///Cpu read/write heap

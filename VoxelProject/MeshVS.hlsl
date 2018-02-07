@@ -6,19 +6,19 @@ cbuffer RenderingConstantBuffer : register(b0)
 struct VS_INPUT
 {
 	float4 pos : POSITION;
-	float3 tex : TEXCOORD;
+	float3 texCoord : TEXCOORD;
 };
 
 struct PS_INPUT
 {
 	float4 pos : SV_POSITION;
-	float3 tex : TEXCOORD;
+	float3 texCoord : TEXCOORD;
 };
 
 PS_INPUT main(VS_INPUT input)
 {
 	PS_INPUT output;
 	output.pos = mul(input.pos, WorldViewProj);
-	output.tex = input.tex;
+	output.texCoord = input.texCoord;
 	return output;
 }
