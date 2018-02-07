@@ -207,12 +207,12 @@ void D3DSystem::Execute()
 
 void D3DSystem::ExecuteGraphics()
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
+	//CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
 	//float clearColor[4] = { 0, 1, 0, 1.0f };
 	//m_commandList->ClearRenderTargetView(rtvHandle, (float*)&C, 0, nullptr);
 	//m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 	m_commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
@@ -223,13 +223,14 @@ void D3DSystem::ExecuteGraphics()
 
 void D3DSystem::UpdatePipelineAndClear(Vector3 Bg)
 {
-	m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), m_frameIndex, m_rtvDescriptorSize);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-	float clearColor[] = { Bg.x, Bg.y, Bg.z, 1.0f };
-	m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-	m_commandList->ClearDepthStencilView(m_dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	//CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	//m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+	m_commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+	//float clearColor[] = { Bg.x, Bg.y, Bg.z, 1.0f };
+	//m_commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	//m_commandList->ClearDepthStencilView(m_dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
 /*

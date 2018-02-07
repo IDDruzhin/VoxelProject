@@ -17,6 +17,10 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 	{
 		LoadBin(path);
 	}
+	float maxSide = (m_dim.x > m_dim.y) ? m_dim.x : m_dim.y;
+	maxSide = (maxSide > m_dim.z) ? maxSide : m_dim.z;
+	maxSide = 1.0f / maxSide;
+	m_s = Vector3(maxSide,maxSide,maxSide);
 }
 
 
@@ -214,9 +218,7 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 			}
 		}
 	}
-	//vector<Voxel> tmp(m_voxels.begin(), m_voxels.begin() + 100);
 	ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(m_voxels);
-	//ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(tmp);
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
 	voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
 	int count = 0;
@@ -227,12 +229,12 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 			count++;
 		}		
 	}
+	
 	voxPipeline->RegisterBlocks(overlap, dimBlocks, blocksInfo, m_blocksRes, m_texturesRes, m_blocksIndexesRes, m_blocksPosInfo);
 
 	m_blocksBufferView.BufferLocation = m_blocksRes->GetGPUVirtualAddress();
 	m_blocksBufferView.StrideInBytes = sizeof(Vertex);
 	m_blocksBufferView.SizeInBytes = sizeof(Block)*m_blocksPosInfo.size();
-
 	voxPipeline->ComputeFillBlocks(m_voxels.size(), m_blocksPosInfo.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes);
 }
 
