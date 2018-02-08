@@ -542,7 +542,8 @@ void VoxelPipeline::ComputeFillBlocks(int voxelsCount, int texturesCount, int3 d
 	m_d3dSyst->Reset();
 	int frameIndex = m_d3dSyst->GetFrameIndex();
 	ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
-	commandList->SetPipelineState(m_blocksDetectionPipelineState.Get());
+	//commandList->SetPipelineState(m_blocksDetectionPipelineState.Get());
+	commandList->SetPipelineState(m_blocksFillingPipelineState.Get());
 	commandList->SetComputeRootSignature(m_blocksComputeRootSignature.Get());
 	ID3D12DescriptorHeap* heaps[] = { m_blocksComputeSrvUavHeap.Get() };
 	commandList->SetDescriptorHeaps(_countof(heaps), heaps);

@@ -29,9 +29,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 	//uint2 index = textures[textureIndex].Sample(s,input.texCoord);
 	//uint2 index = textures[textureIndex].SampleLevel(s,input.texCoord,0);
 
-	if (index.y != 0)
+	if (index.x != 0)
 	{
-		renderTexture[input.pos.xy] = palette[index.x];
+		//renderTexture[input.pos.xy] = palette[index.x];
+		renderTexture[input.pos.xy] = float4(1.0f, 0.0f, 0.0f, 1.0f);
 	}
 	
 
