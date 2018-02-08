@@ -39,11 +39,14 @@ float4 main(PS_INPUT input) : SV_TARGET
 		//return float4(1.0f, 0.0f, 0.0f, 0.0f);
 	}
 	*/
+	/*
 	uint width;
 	uint height;
 	uint depth;
 	textures[textureIndex].GetDimensions(width, height, depth);
-	uint2 smp = textures[textureIndex][float3(input.texCoord.x*width, input.texCoord.y*height, input.texCoord.z*depth)];
+	*/
+	uint2 smp = textures[textureIndex][input.texCoord];
+	//uint2 smp = textures[textureIndex][float3(input.texCoord.x*width, input.texCoord.y*height, input.texCoord.z*depth)];
 	//uint2 smp = textures[textureIndex][float3(input.texCoord.x*(width - 1), input.texCoord.y*(height - 1), input.texCoord.z*(depth - 1))];
 	//uint2 smp = textures[textureIndex].Load(uint4(input.texCoord.x*(width - 1), input.texCoord.y*(height-1), input.texCoord.z*(depth-1), 0));
 	//uint2 smp = textures[textureIndex].Load(uint4(ceil(input.texCoord.x*width)-1, input.texCoord.y*height, input.texCoord.z*depth, 0));
