@@ -39,6 +39,8 @@ public:
 	template<typename T>
 	void CopyDataToGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
 	ComPtr<ID3D12Resource> CreateRWTexture3D(int3 dim, DXGI_FORMAT format, wstring name);
+	template<typename T>
+	ComPtr<ID3D12Resource> CreateTexture1D(vector<T>& data, DXGI_FORMAT format, wstring name);
 	int GetFrameIndex();
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE GetFeatureData();
 private:
@@ -161,6 +163,13 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateRWTexture3D(int3 dim, DXGI_FORMAT
 }
 
 template<typename T>
+inline ComPtr<ID3D12Resource> D3DSystem::CreateTexture1D(vector<T>& data, DXGI_FORMAT format, wstring name)
+{
+	CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex1D(format, data.size());
+	return CreateDefaultBuffer(&data[0], sizeof(T)*data.size(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, textureDesc, name);
+}
+
+template<typename T>
 inline void D3DSystem::CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int size)
 {
 	ComPtr<ID3D12Resource> buffer;
@@ -203,11 +212,11 @@ inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int s
 		&CD3DX12_RESOURCE_DESC::Buffer(size),
 		D3D12_RESOURCE_STATE_GENERIC_READ, //GPU will read and copy content to the default heap
 		nullptr,
-		IID_PPV_ARGS(&Buffer));
+		IID_PPV_ARGS(&buffer));
 	//buffer->SetName(L"Buffer for upload");
-	T* pBuffData;
+	T* buffData;
 	buffer->Map(0, nullptr, reinterpret_cast<void**>(&buffData));
-	memcpy(pBuffData, data, size);
+	memcpy(buffData, data, size);
 	buffer->Unmap(0, nullptr);
 	//m_commandList
 	Reset();
@@ -217,7 +226,7 @@ inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int s
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 	m_fenceValue[m_frameIndex]++;
 	m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
-	if (m_fence[m_frameIndex]->m_GetCompletedValue() < m_fenceValue[m_frameIndex])
+	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
 	{
 		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
 		WaitForSingleObject(m_fenceEvent, INFINITE);

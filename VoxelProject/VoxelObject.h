@@ -46,7 +46,7 @@ private:
 	//vector<int3> m_blocks3dIndexes;
 	//vector<Vector3> m_blocksPositions;
 	//vector<pair<int, int>> m_blocksOrder; // first - block index, second - priority
-	ComPtr<ID3D12Resource> m_blocksIndexesRes;
+	//ComPtr<ID3D12Resource> m_blocksIndexesRes;
 	ComPtr<ID3D12Resource> m_blocksRes;
 	D3D12_VERTEX_BUFFER_VIEW m_blocksBufferView;
 	ComPtr<ID3D12Resource> m_paletteRes;

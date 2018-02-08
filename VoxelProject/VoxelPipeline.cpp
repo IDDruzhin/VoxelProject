@@ -364,6 +364,40 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterVoxels(vector<Voxel>& voxels)
 	return voxelsRes;
 }
 
+ComPtr<ID3D12Resource> VoxelPipeline::RegisterPalette(vector<uchar4>& palette)
+{
+	ComPtr<ID3D12Resource> paletteRes = m_d3dSyst->CreateTexture1D(palette, DXGI_FORMAT_R8G8B8A8_UNORM, L"Palette");
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+	srvDesc.Texture1D.MipLevels = 1;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvUavHeapRender->GetCPUDescriptorHandleForHeapStart(), GRAPHICS_DESCRIPTORS::PALETTE_SRV, m_srvUavDescriptorSize);
+	m_d3dSyst->GetDevice()->CreateShaderResourceView(paletteRes.Get(), &srvDesc, srvHandle);
+	return paletteRes;
+}
+
+ComPtr<ID3D12Resource> VoxelPipeline::RegisterSegmentsOpacity(vector<float>& segmentsOpacity)
+{
+	ComPtr<ID3D12Resource> segmentsOpacityRes = m_d3dSyst->CreateTexture1D(segmentsOpacity, DXGI_FORMAT_R32_FLOAT, L"Sements opacity");
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+	srvDesc.Texture1D.MipLevels = 1;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvUavHeapRender->GetCPUDescriptorHandleForHeapStart(), GRAPHICS_DESCRIPTORS::SEGMENTS_OPACITY_SRV, m_srvUavDescriptorSize);
+	m_d3dSyst->GetDevice()->CreateShaderResourceView(segmentsOpacityRes.Get(), &srvDesc, srvHandle);
+	return segmentsOpacityRes;
+}
+
+void VoxelPipeline::SetSegmentsOpacity(vector<float>& segmentsOpacity, ComPtr<ID3D12Resource>& segmentsOpacityRes)
+{
+	m_d3dSyst->CopyDataToGPU(segmentsOpacityRes, &segmentsOpacity[0], sizeof(float)*segmentsOpacity.size());
+}
+
+
 void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes)
 {
 	m_d3dSyst->Reset();

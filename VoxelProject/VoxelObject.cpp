@@ -21,6 +21,8 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 	maxSide = (maxSide > m_dim.z) ? maxSide : m_dim.z;
 	maxSide = 1.0f / maxSide;
 	m_s = Vector3(maxSide,maxSide,maxSide);
+	m_paletteRes = voxPipeline->RegisterPalette(m_palette);
+	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
 }
 
 
@@ -116,6 +118,7 @@ void VoxelObject::CreateFromSlices(string path)
 			{
 				m_segmentationTableNames.push_back(line);
 			}
+			m_segmentsOpacity.resize(m_segmentationTableNames.size(),1.0f);
 			segmentationNamesFile.close();
 		}
 		else
@@ -189,6 +192,7 @@ void VoxelObject::LoadBin(string path)
 			f.read((char*)(&tmp[0]), stringSize);
 			m_segmentationTableNames.push_back(tmp);
 		}
+		m_segmentsOpacity.resize(m_segmentationTableNames.size(),1.0f);
 		f.close();
 	}
 	else
@@ -230,7 +234,8 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 		}		
 	}
 	
-	voxPipeline->RegisterBlocks(overlap, dimBlocks, m_blockSize, blocksInfo, m_blocksRes, m_texturesRes, m_blocksIndexesRes, m_blocksPosInfo);
+	ComPtr<ID3D12Resource> blocksIndexesRes;
+	voxPipeline->RegisterBlocks(overlap, dimBlocks, m_blockSize, blocksInfo, m_blocksRes, m_texturesRes, blocksIndexesRes, m_blocksPosInfo);
 
 	m_blocksBufferView.BufferLocation = m_blocksRes->GetGPUVirtualAddress();
 	m_blocksBufferView.StrideInBytes = sizeof(Vertex);
