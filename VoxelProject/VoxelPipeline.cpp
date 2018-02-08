@@ -99,11 +99,13 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 
 		CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
 		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE); //t0-t2
-		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE); //u1-...
+		//ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE); //u1-...
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE); //u1-...
 
 		CD3DX12_ROOT_PARAMETER1 rootParameters[2];
 		rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);
 		//rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+		//rootParameters[1].InitAsDescriptorTable(2, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 		rootParameters[1].InitAsDescriptorTable(2, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
@@ -459,6 +461,7 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, v
 	vector<Block> blocks;
 	vector<int> blocksIndexes;
 	DXGI_FORMAT format = DXGI_FORMAT_R8G8_UINT;
+	//DXGI_FORMAT format = DXGI_FORMAT_R8G8_UNORM;
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.Format = format;

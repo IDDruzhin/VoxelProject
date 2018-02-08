@@ -44,7 +44,9 @@ StructuredBuffer<Voxel> voxels : register(t0);
 StructuredBuffer<BlockInfo> blocksInfo : register(t1);
 StructuredBuffer<int> blocksIndexes : register(t2);
 //RWStructuredBuffer<BlockInfo> blocksK : register(u1);
-RWTexture3D<uint2> textures[] : register(u1);  //u1 + 1 = first texture
+//RWTexture3D<uint2> textures[] : register(u1);  //u1 + 1 = first texture
+RWTexture3D<uint2> textures[] : register(u1);
+//RWTexture3D<uint2> textures[];
 
 void FillElement(int3 pos, int color, int segment, int3 block3dIndex)
 {

@@ -15,10 +15,10 @@ RWTexture2D<float4> renderTexture : register(u1);
 RWTexture2D<float4> backCoordTexture : register(u2);
 Texture1D<float4> palette : register(t0);
 Texture1D<float> segmentsOpacity : register(t1);
-Texture3D<uint2> textures[] : register(t2);
+//Texture3D<uint2> textures[] : register(t2);
 //Texture3D<float2> textures[] : register(t2);
 //Texture3D<float2> textures[] : register(t1);
-//Texture3D<uint2> textures[] : register(t2);
+Texture3D<uint2> textures[] : register(t2);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
@@ -43,7 +43,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 	uint height;
 	uint depth;
 	textures[textureIndex].GetDimensions(width, height, depth);
-	uint2 smp = textures[textureIndex].Load(uint4(input.texCoord.x*(width - 1), input.texCoord.y*(height-1), input.texCoord.z*(depth-1), 0));
+	uint2 smp = textures[textureIndex][float3(input.texCoord.x*width, input.texCoord.y*height, input.texCoord.z*depth)];
+	//uint2 smp = textures[textureIndex][float3(input.texCoord.x*(width - 1), input.texCoord.y*(height - 1), input.texCoord.z*(depth - 1))];
+	//uint2 smp = textures[textureIndex].Load(uint4(input.texCoord.x*(width - 1), input.texCoord.y*(height-1), input.texCoord.z*(depth-1), 0));
 	//uint2 smp = textures[textureIndex].Load(uint4(ceil(input.texCoord.x*width)-1, input.texCoord.y*height, input.texCoord.z*depth, 0));
 	//float2 smp = textures[textureIndex].Sample(s,input.texCoord);
 	//if ((renderTexture[input.pos.xy].x == 0) && (renderTexture[input.pos.xy].y == 0))

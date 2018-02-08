@@ -30,7 +30,9 @@ cbuffer ComputeBlocksCB : register(b0)
 };
 
 StructuredBuffer<Voxel> voxels : register(t0);
-RWStructuredBuffer<BlockInfo> blocksInfo : register(u1);
+//RWStructuredBuffer<BlockInfo> blocksInfo : register(u1);
+RWStructuredBuffer<BlockInfo> blocksInfo : register(u0);
+//RWStructuredBuffer<BlockInfo> blocksInfo;
 
 [numthreads(blocksize_x, blocksize_y, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
