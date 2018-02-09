@@ -1,4 +1,4 @@
-cbuffer RenderingConstantBuffer : register(b0)
+cbuffer RenderingConstantBuffer : register(b1)
 {
 	float4x4 WorldViewProj;
 	float voxelSize;
