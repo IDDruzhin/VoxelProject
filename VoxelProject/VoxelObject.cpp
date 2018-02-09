@@ -119,6 +119,7 @@ void VoxelObject::CreateFromSlices(string path)
 				m_segmentationTableNames.push_back(line);
 			}
 			m_segmentsOpacity.resize(m_segmentationTableNames.size(),1.0f);
+			m_segmentsOpacity[0] = 0.0f;
 			segmentationNamesFile.close();
 		}
 		else
@@ -193,6 +194,7 @@ void VoxelObject::LoadBin(string path)
 			m_segmentationTableNames.push_back(tmp);
 		}
 		m_segmentsOpacity.resize(m_segmentationTableNames.size(),1.0f);
+		m_segmentsOpacity[0] = 0.0f;
 		f.close();
 	}
 	else
@@ -256,5 +258,12 @@ vector<BlockPositionInfo> VoxelObject::CalculatePriorities(Vector3 cameraPos)
 D3D12_VERTEX_BUFFER_VIEW VoxelObject::GetBlocksVBV()
 {
 	return m_blocksBufferView;
+}
+
+float VoxelObject::GetVoxelSize()
+{
+	float maxSide = (m_dim.x > m_dim.y) ? m_dim.x : m_dim.y;
+	maxSide = (maxSide > m_dim.z) ? maxSide : m_dim.z;
+	return (1.0f / maxSide);
 }
 

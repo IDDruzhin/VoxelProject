@@ -1,6 +1,8 @@
 cbuffer RenderingConstantBuffer : register(b0)
 {
 	float4x4 WorldViewProj;
+	float voxelSize;
+	float stepRatio;
 };
 
 struct VS_INPUT

@@ -29,6 +29,7 @@ typedef
 	void BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlay = 0, int3 min = { 0,0,0 }, int3 max = { 0,0,0 });
 	vector<BlockPositionInfo> CalculatePriorities(Vector3 cameraPos);
 	D3D12_VERTEX_BUFFER_VIEW GetBlocksVBV();
+	float GetVoxelSize();
 private:
 	string m_name;
 	int3 m_dim;

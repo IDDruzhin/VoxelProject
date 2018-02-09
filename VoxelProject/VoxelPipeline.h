@@ -44,6 +44,7 @@ typedef
 	void ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes);
 	void RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo);
 	void ComputeFillBlocks(int voxelsCount, int texturesCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes);
+	void SetStepSize(float voxelSize, float ratio = 1.0f);
 private:
 	shared_ptr<D3DSystem> m_d3dSyst;
 	ComPtr<ID3D12RootSignature> m_renderRootSignature;
@@ -71,6 +72,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_blocksComputeSrvUavHeap;
 
 	float m_background[4];
+	//float m_stepSize;
 	
 };
 

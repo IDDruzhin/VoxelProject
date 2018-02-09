@@ -3,6 +3,8 @@
 struct RenderingCB
 {
 	Matrix worldViewProj;
+	float stepSize;
+	float stepRatio;
 };
 const int RenderingCBAlignedSize = (sizeof(RenderingCB) + 255) & ~255;
 

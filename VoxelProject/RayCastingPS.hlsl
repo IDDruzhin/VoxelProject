@@ -7,6 +7,8 @@ struct PS_INPUT
 cbuffer RenderingConstantBuffer : register(b0)
 {
 	float4x4 WorldViewProj;
+	float stepSize;
+	float stepRatio;
 };
 
 uint textureIndex : register(b1);
@@ -22,54 +24,27 @@ Texture3D<uint2> textures[] : register(t2);
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-	//uint2 index = textures[textureIndex].Sample(s,input.texCoord);
-	//float index = textures[textureIndex][uint3(0,0,0)];
-	//float index = textures[textureIndex].Load(uint4(0,0,0,0));
-
-	//uint2 index = textures[textureIndex].Sample(s,input.texCoord);
-
-	//uint2 index = textures[textureIndex].Sample(s,input.texCoord);
-	//uint2 index = textures[textureIndex].SampleLevel(s,input.texCoord,0);
-
-	/*
-	if (index.x != 0)
+	float3 dir = input.texCoord - backCoordTexture[input.pos.xy].xyz;
+	float lenView = input.pos.z - backCoordTexture[input.pos.xy].w;
+	float lenTex = length(dir);
+	dir = stepRatio * lenTex / lenTex;
+	float startLen = ceil(input.pos.z / stepSize) * stepSize;
+	float3 cur = (startLen - input.pos.z) * lenTex / lenView + input.texCoord;
+	uint stepsCount = (backCoordTexture[input.pos.xy].w - startLen) / stepSize;
+	float4 color = renderTexture[input.pos.xy];
+	uint2 smp;
+	for (uint i = 0; i < stepsCount; i++)
 	{
-		//renderTexture[input.pos.xy] = palette[index.x];
-		renderTexture[input.pos.xy] = float4(1.0f, 0.0f, 0.0f, 1.0f);
-		//return float4(1.0f, 0.0f, 0.0f, 0.0f);
+		if (color.w < 0.1f)
+		{
+			break;
+		}
+		smp = textures[textureIndex][cur];
+		color.xyz = color.xyz + color.w * palette[smp.x] * segmentsOpacity[smp.y];
+		color.w = color.w * (1.0f - segmentsOpacity[smp.y]);
+		cur += dir;
 	}
-	*/
-	/*
-	uint width;
-	uint height;
-	uint depth;
-	textures[textureIndex].GetDimensions(width, height, depth);
-	*/
-	uint2 smp = textures[textureIndex][input.texCoord];
-	//uint2 smp = textures[textureIndex][float3(input.texCoord.x*width, input.texCoord.y*height, input.texCoord.z*depth)];
-	//uint2 smp = textures[textureIndex][float3(input.texCoord.x*(width - 1), input.texCoord.y*(height - 1), input.texCoord.z*(depth - 1))];
-	//uint2 smp = textures[textureIndex].Load(uint4(input.texCoord.x*(width - 1), input.texCoord.y*(height-1), input.texCoord.z*(depth-1), 0));
-	//uint2 smp = textures[textureIndex].Load(uint4(ceil(input.texCoord.x*width)-1, input.texCoord.y*height, input.texCoord.z*depth, 0));
-	//float2 smp = textures[textureIndex].Sample(s,input.texCoord);
-	//if ((renderTexture[input.pos.xy].x == 0) && (renderTexture[input.pos.xy].y == 0))
-	if (smp.y!=0)
-	{
-		//renderTexture[input.pos.xy] = float4(smp.x, smp.y, 0.0f, 0.0f);
-		renderTexture[input.pos.xy] = float4(1.0f, 0.0f, 0.0f, 0.0f);
-	}
-	
-	return float4(smp.x, smp.y, 0.0f, 0.0f);
-	
-
-	//renderTexture[input.pos.xy] = float4(textureIndex/256.0f,0,0,1);
-	//uint2 index = textures[textureIndex].SampleLevel(s,input.texCoord,0);
-	//uint2 index = textures[textureIndex].Load(input.texCoord);
-	//renderTexture[input.pos.xy] = palette[index.x];
-	//return textures[textureIndex].Sample(s,input.texCoord);
-	//renderTexture[input.pos.xy] = float4(input.texCoord, 1.0f) - backCoordTexture[input.pos.xy];
-	//renderTexture[input.pos.xy] = backCoordTexture[input.pos.xy];
+	renderTexture[input.pos.xy] = color;
 	discard;
-	//return palette[index.x];
 	return float4(0.0f,0.0f,0.0f,0.0f);
-	//return float4(1.0f, 1.0f, 1.0f, 1.0f);
 }

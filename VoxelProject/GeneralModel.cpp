@@ -31,6 +31,7 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 	//m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 64);
 	//m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 1024);
 	m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 256);
+	m_voxPipeline->SetStepSize(m_voxObj->GetVoxelSize());
 	
 }
 
