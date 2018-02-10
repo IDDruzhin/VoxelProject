@@ -263,7 +263,11 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		m_d3dSyst->UpdatePipelineAndClear(Vector3(0, 0, 0));
 		
 		ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
-		m_renderingCB.worldViewProj = (voxObj->GetWorld()*camera->GetView()*camera->GetProjection()).Transpose();
+		Matrix worldView = voxObj->GetWorld() * camera->GetView();
+		m_renderingCB.worldView = worldView.Transpose();
+		m_renderingCB.worldViewProj = (worldView * camera->GetProjection()).Transpose();
+		//m_renderingCB.worldViewProj = (voxObj->GetWorld()*camera->GetView()*camera->GetProjection()).Transpose();
+		
 		ID3D12DescriptorHeap* heaps[] = { m_srvUavHeapRender.Get() };
 		commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 
@@ -311,6 +315,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 			commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
 			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 			//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
+
 		}
 		
 		/*

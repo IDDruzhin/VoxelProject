@@ -22,6 +22,15 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 	maxSide = 1.0f / maxSide;
 	m_s = Vector3(maxSide,maxSide,maxSide);
 	m_paletteRes = voxPipeline->RegisterPalette(m_palette);
+	//m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
+	for (int i = 0; i < m_segmentsOpacity.size(); i++)
+	{
+		m_segmentsOpacity[i] = 0.01f;
+	}
+	m_segmentsOpacity[0] = 0.0f;
+	m_segmentsOpacity[1] = 0.0f;
+	m_segmentsOpacity[27] = 0.0f;
+	m_segmentsOpacity[m_segmentsOpacity.size()-1] = 0.0f;
 	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
 }
 
@@ -219,7 +228,8 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 			for (int i = 0; i < dimBlocks.x; i++)
 			{
 				//BlockInfo cur = { { i*blockSize, j*blockSize, k*blockSize },{ (i + 1)*blockSize, (j + 1)*blockSize, (k + 1)*blockSize } };
-				BlockInfo cur = { { (i + 1)*blockSize, (j + 1)*blockSize, (k + 1)*blockSize }, { i*blockSize, j*blockSize, k*blockSize } };
+				//BlockInfo cur = { { (i + 1)*blockSize, (j + 1)*blockSize, (k + 1)*blockSize }, { i*blockSize, j*blockSize, k*blockSize } };
+				BlockInfo cur = { { (i + 1)*blockSize - 1, (j + 1)*blockSize - 1, (k + 1)*blockSize - 1 },{ i*blockSize, j*blockSize, k*blockSize } };
 				blocksInfo.push_back(cur);
 			}
 		}

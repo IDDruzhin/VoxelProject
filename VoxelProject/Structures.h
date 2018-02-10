@@ -3,6 +3,7 @@
 struct RenderingCB
 {
 	Matrix worldViewProj;
+	Matrix worldView;
 	float stepSize;
 	float stepRatio;
 };

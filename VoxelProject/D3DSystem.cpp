@@ -256,7 +256,9 @@ void D3DSystem::PresentSimple()
 {
 	// present the current backbuffer
 	ThrowIfFailed(m_swapChain->Present(0, 0));
+	//ThrowIfFailed(m_swapChain->Present(1, 0));
 	//m_swapChain->Present(4, 0);
+	//ThrowIfFailed(m_swapChain->Present1(1, 0, nullptr));
 }
 
 ID3D12Resource * D3DSystem::GetRenderTarget()
