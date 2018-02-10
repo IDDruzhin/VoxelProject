@@ -92,6 +92,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 	//float3 cur = input.texCoord.xyz;
 	//float3 cur = input.texCoord.xyz;
 	//float3 cur = dir * (startLen - curDist) / lenView + input.texCoord.xyz;
+	if (startLen > backCoordTexture[input.pos.xy].w)
+	{
+		discard;
+	}
 	uint stepsCount = (backCoordTexture[input.pos.xy].w - startLen) / stepSize;
 	//dir = stepRatio * dir / lenTex;
 	float3 cur = dir * (startLen - curDist) / stepSize + input.texCoord.xyz;
