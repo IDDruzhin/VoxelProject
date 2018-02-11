@@ -23,17 +23,20 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 	m_s = Vector3(maxSide,maxSide,maxSide);
 	m_t = (Vector3(m_dim.x, m_dim.y, m_dim.z) * m_s) / -2.0f;
 	m_paletteRes = voxPipeline->RegisterPalette(m_palette);
-	//m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
+	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
+	
 	for (int i = 0; i < m_segmentsOpacity.size(); i++)
 	{
-		m_segmentsOpacity[i] = 0.01f;
+		//m_segmentsOpacity[i] = 0.01f;
+		m_segmentsOpacity[i] = 0.1f;
 	}
 	m_segmentsOpacity[0] = 0.0f;
 	//m_segmentsOpacity[1] = 0.0f;
-	m_segmentsOpacity[2] = 0.1f;
+	//m_segmentsOpacity[2] = 0.1f;
 	//m_segmentsOpacity[27] = 0.0f;
 	//m_segmentsOpacity[m_segmentsOpacity.size()-1] = 0.0f;
 	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
+	
 }
 
 
