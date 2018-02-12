@@ -42,7 +42,7 @@ typedef
 	ComPtr<ID3D12Resource> RegisterSegmentsOpacity(vector<float>& segmentsOpacity);
 	void SetSegmentsOpacity(vector<float>& segmentsOpacity, ComPtr<ID3D12Resource>& segmentsOpacityRes);
 	void ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes);
-	void RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo);
+	void RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo, vector<BlockPriorityInfo>& blocksPriorInfo);
 	void ComputeFillBlocks(int voxelsCount, int texturesCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes);
 	void SetStepSize(float voxelSize, float ratio = 1.0f);
 private:

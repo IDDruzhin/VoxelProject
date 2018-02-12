@@ -145,13 +145,18 @@ struct BlockInfo
 	int3 max;
 };
 
-struct BlockPositionInfo
+struct BlockPriorityInfo
 {
 	int blockIndex;
 	int3 block3dIndex;
+	int priority;
+};
+
+struct BlockPositionInfo
+{
+	int3 block3dIndex;
 	Vector3 position;
 	float distance;
-	int priority;
 };
 
 

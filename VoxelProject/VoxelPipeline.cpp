@@ -302,9 +302,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		//Matrix invertWorldView = (camera->GetView()*voxObj->GetWorld()).Invert();
 		Vector3 cameraPos(0.0f,0.0f,0.0f);
 		cameraPos = Vector3::Transform(cameraPos, invertWorldView);
-		vector<BlockPositionInfo> blocksOrder = voxObj->CalculatePriorities(cameraPos);
-		//vector<BlockPositionInfo> distOrder = blocksOrder;
-		//sort(distOrder.begin(), distOrder.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
+		vector<BlockPriorityInfo> blocksOrder = voxObj->CalculatePriorities(cameraPos);
 		int priority = blocksOrder[0].priority;
 		//int priority = -1;
 		int start = 0;
@@ -515,10 +513,11 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	m_d3dSyst->CopyDataFromGPU(blocksInfoRes, &blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size());
 }
 
-void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo)
+void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo, vector<BlockPriorityInfo>& blocksPriorInfo)
 {
 	texturesRes.clear();
 	blocksPosInfo.clear();
+	blocksPriorInfo.clear();
 	vector<Block> blocks;
 	vector<int> blocksIndexes;
 	DXGI_FORMAT format = DXGI_FORMAT_R8G8_UINT;
@@ -542,6 +541,16 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, v
 	//m_d3dSyst->GetDevice()->CreateUnorderedAccessView(m_renderTexture.Get(), nullptr, &uavDesc, cpuWriteUavHandle);
 	for (int i = 0; i < blocksInfo.size(); i++)
 	{
+		int3 block3dIndex;
+		block3dIndex.z = i / (dimBlocks.x * dimBlocks.y);
+		int tmp = i % (dimBlocks.x * dimBlocks.y);
+		block3dIndex.y = tmp / dimBlocks.x;
+		block3dIndex.x = tmp % dimBlocks.x;
+		BlockPositionInfo blockPositionInfo;
+		blockPositionInfo.block3dIndex = block3dIndex;
+		blockPositionInfo.distance = 0;
+		blockPositionInfo.position = Vector3(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f) * blockSize;
+		blocksPosInfo.push_back(blockPositionInfo);
 		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
 		{
 			blocksIndexes.push_back(blocks.size());
@@ -560,23 +569,12 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, v
 			
 
 			texturesRes.push_back(textureRes);
-			
 
-			int3 block3dIndex;
-			block3dIndex.z = i / (dimBlocks.x * dimBlocks.y);
-			int tmp = i % (dimBlocks.x * dimBlocks.y);
-			block3dIndex.y = tmp / dimBlocks.x;
-			block3dIndex.x = tmp % dimBlocks.x;
-			//blocks3dIndexes.push_back(block3dIndex);
-			//blocksPositions.emplace_back(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f);
-			BlockPositionInfo blockPositionInfo;
-			blockPositionInfo.block3dIndex = block3dIndex;
-			blockPositionInfo.blockIndex = blocksPosInfo.size();
-			blockPositionInfo.distance = 0;
-			blockPositionInfo.position = Vector3(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f) * blockSize;
-			blockPositionInfo.priority = 0;
-			blocksPosInfo.push_back(blockPositionInfo);
-			
+			BlockPriorityInfo blockPriorInfo;
+			blockPriorInfo.block3dIndex = block3dIndex;
+			blockPriorInfo.blockIndex = blocksPriorInfo.size();
+			blockPriorInfo.priority = 0;
+			blocksPriorInfo.push_back(blockPriorInfo);
 		}
 		else
 		{

@@ -252,17 +252,16 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	}
 	
 	ComPtr<ID3D12Resource> blocksIndexesRes;
-	voxPipeline->RegisterBlocks(overlap, dimBlocks, m_blockSize, blocksInfo, m_blocksRes, m_texturesRes, blocksIndexesRes, m_blocksPosInfo);
+	voxPipeline->RegisterBlocks(overlap, dimBlocks, m_blockSize, blocksInfo, m_blocksRes, m_texturesRes, blocksIndexesRes, m_blocksPosInfo, m_blocksPriorInfo);
 
 	m_blocksBufferView.BufferLocation = m_blocksRes->GetGPUVirtualAddress();
 	m_blocksBufferView.StrideInBytes = sizeof(Vertex);
-	m_blocksBufferView.SizeInBytes = sizeof(Block)*m_blocksPosInfo.size();
-	voxPipeline->ComputeFillBlocks(m_voxels.size(), m_blocksPosInfo.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes);
+	m_blocksBufferView.SizeInBytes = sizeof(Block)*m_texturesRes.size();
+	voxPipeline->ComputeFillBlocks(m_voxels.size(), m_texturesRes.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes);
 }
 
-vector<BlockPositionInfo> VoxelObject::CalculatePriorities(Vector3 cameraPos)
+vector<BlockPriorityInfo> VoxelObject::CalculatePriorities(Vector3 cameraPos)
 {
-	for (int i = 0; i < )
 	for (int i = 0; i < m_blocksPosInfo.size(); i++)
 	{
 		m_blocksPosInfo[i].distance = Vector3::DistanceSquared(m_blocksPosInfo[i].position, cameraPos);
@@ -270,12 +269,12 @@ vector<BlockPositionInfo> VoxelObject::CalculatePriorities(Vector3 cameraPos)
 	//sort(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
 	auto first = min_element(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
 	//first->priority = 0;
-	for (int i = 0; i < m_blocksPosInfo.size(); i++)
+	for (int i = 0; i < m_blocksPriorInfo.size(); i++)
 	{
-		m_blocksPosInfo[i].priority = abs(m_blocksPosInfo[i].block3dIndex.x - first->block3dIndex.x) + abs(m_blocksPosInfo[i].block3dIndex.y - first->block3dIndex.y) + abs(m_blocksPosInfo[i].block3dIndex.z - first->block3dIndex.z);
+		m_blocksPriorInfo[i].priority = abs(m_blocksPriorInfo[i].block3dIndex.x - first->block3dIndex.x) + abs(m_blocksPriorInfo[i].block3dIndex.y - first->block3dIndex.y) + abs(m_blocksPriorInfo[i].block3dIndex.z - first->block3dIndex.z);
 	}
-	sort(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.priority < b.priority); });
-	return m_blocksPosInfo;
+	sort(m_blocksPriorInfo.begin(), m_blocksPriorInfo.end(), [](BlockPriorityInfo &a, BlockPriorityInfo &b) { return (a.priority < b.priority); });
+	return m_blocksPriorInfo;
 }
 
 D3D12_VERTEX_BUFFER_VIEW VoxelObject::GetBlocksVBV()
