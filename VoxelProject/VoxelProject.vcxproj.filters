@@ -140,6 +140,9 @@
     <FxCompile Include="BackFacesPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="SimpleColorPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CudaFunctions.cu">

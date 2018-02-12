@@ -2,7 +2,7 @@
 #include "VoxelPipeline.h"
 
 
-VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
+VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(true)
 {
 	m_d3dSyst = d3dSyst;
 	//Viewport
@@ -91,6 +91,13 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst)
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
 		psoDesc.RasterizerState = rasterizerDesc;
 		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_rayCastingPipelineState)));
+
+		ThrowIfFailed(D3DCompileFromFile(L"SimpleColorPS.hlsl", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
+		rasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME;
+		//rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+		psoDesc.RasterizerState = rasterizerDesc;
+		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_blocksRenderPipelineState)));
 	}
 
 	/// Blocks detection and filling compute pipeline
@@ -370,6 +377,14 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		}
 		*/
 		commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_renderTexture.Get());
+		if (m_renderBlocks)
+		{
+			commandList->SetPipelineState(m_blocksRenderPipelineState.Get());
+			for (int i = 0; i < blocksOrder.size(); i++)
+			{
+				commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
+			}
+		}
 		//commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_backCoordTexture.Get());
 		m_d3dSyst->ExecuteGraphics();
 		//m_d3dSyst->Reset();

@@ -50,6 +50,7 @@ private:
 	ComPtr<ID3D12RootSignature> m_renderRootSignature;
 	ComPtr<ID3D12PipelineState> m_backFacesPipelineState;
 	ComPtr<ID3D12PipelineState> m_rayCastingPipelineState;
+	ComPtr<ID3D12PipelineState> m_blocksRenderPipelineState;
 	RenderingCB m_renderingCB;
 	ComPtr<ID3D12Resource> m_constantBufferUploadHeaps[FRAMEBUFFERCOUNT];
 	UINT8* m_cbvGPUAddress[FRAMEBUFFERCOUNT];
@@ -72,6 +73,7 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_blocksComputeSrvUavHeap;
 
 	float m_background[4];
+	bool m_renderBlocks;
 	//float m_stepSize;
 	
 };
