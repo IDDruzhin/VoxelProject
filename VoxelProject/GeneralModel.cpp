@@ -30,8 +30,9 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 	m_voxObj = make_shared<VoxelObject>(loadPath, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
 	//m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 64);
 	//m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 1024);
+	m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 128);
 	//m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 256);
-	m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 2000);
+	//m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 2000);
 	m_voxPipeline->SetStepSize(m_voxObj->GetVoxelSize(),0.5f);
 	
 }

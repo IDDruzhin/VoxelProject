@@ -303,6 +303,49 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		Vector3 cameraPos(0.0f,0.0f,0.0f);
 		cameraPos = Vector3::Transform(cameraPos, invertWorldView);
 		vector<BlockPositionInfo> blocksOrder = voxObj->CalculatePriorities(cameraPos);
+		//vector<BlockPositionInfo> distOrder = blocksOrder;
+		//sort(distOrder.begin(), distOrder.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
+		int priority = blocksOrder[0].priority;
+		//int priority = -1;
+		int start = 0;
+		for (int i = 0; i < blocksOrder.size(); i++)
+		{
+			if ((priority != blocksOrder[i].priority))
+			{
+				commandList->SetPipelineState(m_backFacesPipelineState.Get());
+				for (int j = start; j < i; j++)
+				{
+					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+				}
+				commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
+
+				commandList->SetPipelineState(m_rayCastingPipelineState.Get());
+				for (int j = start; j < i; j++)
+				{
+					commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
+					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+				}
+				commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
+
+				priority = blocksOrder[i].priority;
+				start = i;
+			}
+		}
+		commandList->SetPipelineState(m_backFacesPipelineState.Get());
+		for (int j = start; j < blocksOrder.size(); j++)
+		{
+			commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+		}
+		commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
+
+		commandList->SetPipelineState(m_rayCastingPipelineState.Get());
+		for (int j = start; j < blocksOrder.size(); j++)
+		{
+			commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
+			commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+		}
+		commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
+		/*
 		for (int i = 0; i < blocksOrder.size(); i++)
 		//for (int i = blocksOrder.size()-1; i >-1 ; i--)
 		{
@@ -317,6 +360,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 			//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
 
 		}
+		*/
 		
 		/*
 		for (int i = 0; i < voxObj->GetBlocksCount(); i++)

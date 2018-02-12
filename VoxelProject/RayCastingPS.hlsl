@@ -108,6 +108,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	}
 	renderTexture[input.pos.xy] = color;
+	/*
 	discard;
 	return float4(0.0f,0.0f,0.0f,0.0f);
+	*/
+	return color;
 }

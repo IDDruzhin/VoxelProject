@@ -23,7 +23,7 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 	m_s = Vector3(maxSide,maxSide,maxSide);
 	m_t = (Vector3(m_dim.x, m_dim.y, m_dim.z) * m_s) / -2.0f;
 	m_paletteRes = voxPipeline->RegisterPalette(m_palette);
-	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
+	//m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
 	
 	for (int i = 0; i < m_segmentsOpacity.size(); i++)
 	{
@@ -31,10 +31,10 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 		m_segmentsOpacity[i] = 0.1f;
 	}
 	m_segmentsOpacity[0] = 0.0f;
-	//m_segmentsOpacity[1] = 0.0f;
+	m_segmentsOpacity[1] = 0.0f;
 	//m_segmentsOpacity[2] = 0.1f;
-	//m_segmentsOpacity[27] = 0.0f;
-	//m_segmentsOpacity[m_segmentsOpacity.size()-1] = 0.0f;
+	m_segmentsOpacity[27] = 0.0f;
+	m_segmentsOpacity[m_segmentsOpacity.size()-1] = 0.0f;
 	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
 	
 }
@@ -262,11 +262,19 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 
 vector<BlockPositionInfo> VoxelObject::CalculatePriorities(Vector3 cameraPos)
 {
+	for (int i = 0; i < )
 	for (int i = 0; i < m_blocksPosInfo.size(); i++)
 	{
 		m_blocksPosInfo[i].distance = Vector3::DistanceSquared(m_blocksPosInfo[i].position, cameraPos);
 	}
-	sort(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
+	//sort(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
+	auto first = min_element(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
+	//first->priority = 0;
+	for (int i = 0; i < m_blocksPosInfo.size(); i++)
+	{
+		m_blocksPosInfo[i].priority = abs(m_blocksPosInfo[i].block3dIndex.x - first->block3dIndex.x) + abs(m_blocksPosInfo[i].block3dIndex.y - first->block3dIndex.y) + abs(m_blocksPosInfo[i].block3dIndex.z - first->block3dIndex.z);
+	}
+	sort(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.priority < b.priority); });
 	return m_blocksPosInfo;
 }
 
