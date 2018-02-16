@@ -2,7 +2,7 @@
 #include "VoxelPipeline.h"
 
 
-VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(true)
+VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(false), m_linterp(false)
 {
 	m_d3dSyst = d3dSyst;
 	//Viewport

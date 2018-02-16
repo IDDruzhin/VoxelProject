@@ -74,6 +74,7 @@ private:
 
 	float m_background[4];
 	bool m_renderBlocks;
+	bool m_linterp;
 	//float m_stepSize;
 	
 };
