@@ -30,6 +30,7 @@ typedef
 	vector<BlockPriorityInfo> CalculatePriorities(Vector3 cameraPos);
 	D3D12_VERTEX_BUFFER_VIEW GetBlocksVBV();
 	float GetVoxelSize();
+	vector<string> GetSegmentsNames();
 private:
 	string m_name;
 	int3 m_dim;

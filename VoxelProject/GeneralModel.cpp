@@ -191,4 +191,9 @@ void GeneralModel::LoadAnatomicalAndSegmentedList(string Path)
 	*/
 }
 
+vector<string> GeneralModel::GetObjectSegmentsNames()
+{
+	return m_voxObj->GetSegmentsNames();
+}
+
 

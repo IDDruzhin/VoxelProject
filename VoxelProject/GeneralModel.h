@@ -15,6 +15,7 @@ public:
 	void Save(ofstream* F);
 	void Load(ifstream* F);
 	void LoadAnatomicalAndSegmentedList(string Path);
+	vector<string> GetObjectSegmentsNames();
 	//void AddBone();
 	//void InsertMirroredBone(Vector3 Axis);
 	//void PickBone(float x, float y);

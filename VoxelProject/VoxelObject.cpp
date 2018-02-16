@@ -289,3 +289,8 @@ float VoxelObject::GetVoxelSize()
 	return (1.0f / maxSide);
 }
 
+vector<string> VoxelObject::GetSegmentsNames()
+{
+	return m_segmentationTableNames;
+}
+
