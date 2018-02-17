@@ -12,13 +12,15 @@ public:
 	void Render();
 	void RotateCamera(Vector3 dR);
 	void ZoomCamera(float dx);
-	void LoadAnatomicalAndSegmentedList(string Path);
 	void LoadBin(string path);
+	void LoadFromImages(string path);
 	void BlocksDecomposition(int blockSize);
 	void SetStepSize(float ratio);
 	vector<string> GetObjectSegmentsNames();
 	void SetSegmentsOpacity(vector<float> &segmentsOpacity);
 	vector<float> GetSegmentsOpacity();
+	void SetBlocksVisiblity(bool isVisible);
+	void SetInterpolationMode(VoxelPipeline::INTERPOLATION_MODE mode);
 	//void AddBone();
 	//void InsertMirroredBone(Vector3 Axis);
 	//void PickBone(float x, float y);

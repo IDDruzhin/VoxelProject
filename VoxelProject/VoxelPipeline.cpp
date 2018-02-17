@@ -92,6 +92,10 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(fal
 		psoDesc.RasterizerState = rasterizerDesc;
 		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_rayCastingPipelineState)));
 
+		ThrowIfFailed(D3DCompileFromFile(L"RayCastingTrilinearPS.hlsl", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_rayCastingTrilinearPipelineState)));
+
 		ThrowIfFailed(D3DCompileFromFile(L"SimpleColorPS.hlsl", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
 		rasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME;
 		//rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
@@ -679,9 +683,15 @@ void VoxelPipeline::SetInterpolationMode(INTERPOLATION_MODE mode)
 		m_selectedRCPipelineState = m_rayCastingPipelineState;
 		break;
 	case VoxelPipeline::INTERPOLATION_MODE_TRILINEAR:
+		m_selectedRCPipelineState = m_rayCastingTrilinearPipelineState;
 		break;
 	default:
 		break;
 	}
+}
+
+void VoxelPipeline::SetBlocksVisiblity(bool isVisible)
+{
+	m_renderBlocks = isVisible;
 }
 

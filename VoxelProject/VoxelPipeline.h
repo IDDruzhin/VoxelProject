@@ -53,11 +53,13 @@ enum INTERPOLATION_MODE
 	void ComputeFillBlocks(int voxelsCount, int texturesCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes);
 	void SetStepSize(float voxelSize, float ratio = 1.0f);
 	void SetInterpolationMode(INTERPOLATION_MODE mode);
+	void SetBlocksVisiblity(bool isVisible);
 private:
 	shared_ptr<D3DSystem> m_d3dSyst;
 	ComPtr<ID3D12RootSignature> m_renderRootSignature;
 	ComPtr<ID3D12PipelineState> m_backFacesPipelineState;
 	ComPtr<ID3D12PipelineState> m_rayCastingPipelineState;
+	ComPtr<ID3D12PipelineState> m_rayCastingTrilinearPipelineState;
 	ComPtr<ID3D12PipelineState> m_blocksRenderPipelineState;
 	RenderingCB m_renderingCB;
 	ComPtr<ID3D12Resource> m_constantBufferUploadHeaps[FRAMEBUFFERCOUNT];

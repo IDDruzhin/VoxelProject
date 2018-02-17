@@ -135,21 +135,21 @@ void GeneralModel::RemoveBone()
 }
 */
 
-void GeneralModel::LoadAnatomicalAndSegmentedList(string Path)
-{
-
-}
-
 void GeneralModel::LoadBin(string path)
 {
 	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
+}
+
+void GeneralModel::LoadFromImages(string path)
+{
+	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_SLICES, m_voxPipeline.get());
 }
 
 void GeneralModel::BlocksDecomposition(int blockSize)
 {
 	if (m_voxObj != nullptr)
 	{
-		m_voxObj->BlocksDecomposition(m_voxPipeline.get(), blockSize);
+		m_voxObj->BlocksDecomposition(m_voxPipeline.get(), blockSize, 1);
 	}
 }
 
@@ -183,6 +183,16 @@ vector<float> GeneralModel::GetSegmentsOpacity()
 	{
 		return m_voxObj->GetSegmentsOpacity();
 	}
+}
+
+void GeneralModel::SetBlocksVisiblity(bool isVisible)
+{
+	m_voxPipeline->SetBlocksVisiblity(isVisible);
+}
+
+void GeneralModel::SetInterpolationMode(VoxelPipeline::INTERPOLATION_MODE mode)
+{
+	m_voxPipeline->SetInterpolationMode(mode);
 }
 
 

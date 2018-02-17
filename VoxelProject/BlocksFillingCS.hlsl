@@ -56,7 +56,7 @@ void FillElement(int3 pos, int color, int segment, int3 block3dIndex)
 	if (textureIndex > -1)
 	{
 		BlockInfo blockInfo = blocksInfo[blockIndex];		
-		if ((pos.x >= blockInfo.min.x - overlap) && (pos.x <= blockInfo.max.x + overlap) && (pos.y >= blockInfo.min.y - overlap) && (pos.y <= blockInfo.max.y + overlap) && (pos.z >= blockInfo.min.z - overlap) && (pos.z <= blockInfo.max.z + overlap))
+		if ((pos.x >= (blockInfo.min.x - overlap)) && (pos.x <= (blockInfo.max.x + overlap)) && (pos.y >= (blockInfo.min.y - overlap)) && (pos.y <= (blockInfo.max.y + overlap)) && (pos.z >= (blockInfo.min.z - overlap)) && (pos.z <= (blockInfo.max.z + overlap)))
 		{
 			uint3 texturePos = uint3(pos.x - blockInfo.min.x + overlap, pos.y - blockInfo.min.y + overlap, pos.z - blockInfo.min.z + overlap);
 			//textures[textureIndex][texturePos].x = color;
@@ -89,17 +89,20 @@ void main( uint3 DTid : SV_DispatchThreadID )
 			int color = (voxel.info & 255);
 			int segment = ((voxel.info >> 8) & 255);
 			int3 block3dIndex = int3((cur.x - min.x) / blockSize, (cur.y - min.y) / blockSize, (cur.z - min.z) / blockSize);
-			FillElement(cur, color, segment, block3dIndex);
-			if (overlap != 0)
+			if (overlap == 0)
 			{
-				for (int i = -1; i <= 1; i += 2)
+				FillElement(cur, color, segment, block3dIndex);
+			}	
+			else
+			{
+				for (int i = -1; i <= 1; i += 1)
 				{
-					for (int j = -1; j <= 1; j += 2)
+					for (int j = -1; j <= 1; j += 1)
 					{
-						for (int k = -1; k <= 1; k += 2)
+						for (int k = -1; k <= 1; k += 1)
 						{
 							int3 neighborBlock3dIndex = int3(block3dIndex.x + i, block3dIndex.y + j, block3dIndex.z + k);
-							if ((neighborBlock3dIndex.x > -1) && (neighborBlock3dIndex.y > -1) && (neighborBlock3dIndex.z > -1))
+							if ((neighborBlock3dIndex.x > -1) && (neighborBlock3dIndex.x < dimBlocks.x) && (neighborBlock3dIndex.y > -1) && (neighborBlock3dIndex.y < dimBlocks.y) && (neighborBlock3dIndex.z > -1) && (neighborBlock3dIndex.z < dimBlocks.z))
 							{
 								FillElement(cur, color, segment, neighborBlock3dIndex);
 							}
