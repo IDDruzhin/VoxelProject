@@ -12,10 +12,13 @@ public:
 	void Render();
 	void RotateCamera(Vector3 dR);
 	void ZoomCamera(float dx);
-	void Save(ofstream* F);
-	void Load(ifstream* F);
 	void LoadAnatomicalAndSegmentedList(string Path);
+	void LoadBin(string path);
+	void BlocksDecomposition(int blockSize);
+	void SetStepSize(float ratio);
 	vector<string> GetObjectSegmentsNames();
+	void SetSegmentsOpacity(vector<float> &segmentsOpacity);
+	vector<float> GetSegmentsOpacity();
 	//void AddBone();
 	//void InsertMirroredBone(Vector3 Axis);
 	//void PickBone(float x, float y);

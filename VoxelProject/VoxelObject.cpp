@@ -27,14 +27,14 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 	
 	for (int i = 0; i < m_segmentsOpacity.size(); i++)
 	{
-		//m_segmentsOpacity[i] = 0.01f;
-		m_segmentsOpacity[i] = 0.1f;
+		m_segmentsOpacity[i] = 0.01f;
+		//m_segmentsOpacity[i] = 0.1f;
 	}
 	m_segmentsOpacity[0] = 0.0f;
-	m_segmentsOpacity[1] = 0.0f;
+	//m_segmentsOpacity[1] = 0.0f;
 	//m_segmentsOpacity[2] = 0.1f;
-	m_segmentsOpacity[27] = 0.0f;
-	m_segmentsOpacity[m_segmentsOpacity.size()-1] = 0.0f;
+	//m_segmentsOpacity[27] = 0.0f;
+	//m_segmentsOpacity[m_segmentsOpacity.size()-1] = 0.0f;
 	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
 	
 }
@@ -292,5 +292,16 @@ float VoxelObject::GetVoxelSize()
 vector<string> VoxelObject::GetSegmentsNames()
 {
 	return m_segmentationTableNames;
+}
+
+void VoxelObject::SetSegmentsOpacity(VoxelPipeline * voxPipeline, vector<float> &segmentsOpacity)
+{
+	m_segmentsOpacity = segmentsOpacity;
+	voxPipeline->SetSegmentsOpacity(m_segmentsOpacity, m_segmentsOpacityRes);
+}
+
+vector<float> VoxelObject::GetSegmentsOpacity()
+{
+	return m_segmentsOpacity;
 }
 

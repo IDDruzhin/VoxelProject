@@ -27,6 +27,13 @@ typedef
 		TEXTURES_3D_UAV_ARRAY = 4
 	} 	COMPUTE_DESCRIPTORS;
 
+typedef
+enum INTERPOLATION_MODE
+{
+	INTERPOLATION_MODE_NONE = 0,
+	INTERPOLATION_MODE_TRILINEAR = 1
+} 	INTERPOLATION_MODE;
+
 	VoxelPipeline(shared_ptr<D3DSystem> d3dSyst);
 	~VoxelPipeline();
 	void RenderObject(VoxelObject* voxObj, Camera* camera);
@@ -45,6 +52,7 @@ typedef
 	void RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo, vector<BlockPriorityInfo>& blocksPriorInfo);
 	void ComputeFillBlocks(int voxelsCount, int texturesCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes);
 	void SetStepSize(float voxelSize, float ratio = 1.0f);
+	void SetInterpolationMode(INTERPOLATION_MODE mode);
 private:
 	shared_ptr<D3DSystem> m_d3dSyst;
 	ComPtr<ID3D12RootSignature> m_renderRootSignature;
@@ -56,6 +64,8 @@ private:
 	UINT8* m_cbvGPUAddress[FRAMEBUFFERCOUNT];
 	D3D12_VIEWPORT m_viewport;
 	D3D12_RECT m_scissorRect;
+
+	ComPtr<ID3D12Resource> m_opacityUploadBuffer;
 
 	ComPtr<ID3D12Resource> m_blockIndexBuffer;
 	D3D12_INDEX_BUFFER_VIEW m_blockIndexBufferView;
@@ -74,8 +84,8 @@ private:
 
 	float m_background[4];
 	bool m_renderBlocks;
-	bool m_linterp;
 	//float m_stepSize;
+	ComPtr<ID3D12PipelineState> m_selectedRCPipelineState;
 	
 };
 

@@ -37,7 +37,9 @@ public:
 	template<typename T>
 	void CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
 	template<typename T>
-	void CopyDataToGPU(ComPtr<ID3D12Resource> src, T * dst, int size);
+	void CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int size);
+	template<typename T>
+	void CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int size, ComPtr<ID3D12Resource> uploadBuffer);
 	ComPtr<ID3D12Resource> CreateRWTexture3D(int3 dim, DXGI_FORMAT format, wstring name);
 	template<typename T>
 	ComPtr<ID3D12Resource> CreateTexture1D(vector<T>& data, DXGI_FORMAT format, wstring name);
@@ -232,4 +234,30 @@ inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int s
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
 	//buffer->Release();
+}
+
+template<typename T>
+inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int size, ComPtr<ID3D12Resource> uploadBuffer)
+{
+	D3D12_SUBRESOURCE_DATA subResourceData = {};
+	subResourceData.pData = reinterpret_cast<BYTE*>(data); //Pointer to upload data
+	subResourceData.RowPitch = size;
+	subResourceData.SlicePitch = size;
+
+	//m_commandList
+	Reset();
+	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, finalState));
+	UpdateSubresources(m_commandList.Get(), dst.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
+	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, finalState));
+	m_commandList->Close();
+	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
+	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	m_fenceValue[m_frameIndex]++;
+	m_commandQueue->Signal(m_fence[m_frameIndex].Get(), m_fenceValue[m_frameIndex]);
+	if (m_fence[m_frameIndex]->GetCompletedValue() < m_fenceValue[m_frameIndex])
+	{
+		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
+	//bufferUploadHeap->Release();
 }

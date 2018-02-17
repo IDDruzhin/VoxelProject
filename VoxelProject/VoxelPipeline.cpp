@@ -2,7 +2,7 @@
 #include "VoxelPipeline.h"
 
 
-VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(false), m_linterp(false)
+VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(false)
 {
 	m_d3dSyst = d3dSyst;
 	//Viewport
@@ -254,6 +254,17 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(fal
 	m_background[1] = 0.0f;
 	m_background[2] = 0.0f;
 	m_background[3] = 1.0f;
+
+	m_d3dSyst->GetDevice()->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), //An upload heap
+		D3D12_HEAP_FLAG_NONE, //No flags
+		&CD3DX12_RESOURCE_DESC::Buffer(sizeof(float)*256),
+		D3D12_RESOURCE_STATE_GENERIC_READ, //GPU will read and copy content to the default heap
+		nullptr,
+		IID_PPV_ARGS(&m_opacityUploadBuffer));
+	//buffer->SetName(L"Buffer for upload");
+
+	SetInterpolationMode(INTERPOLATION_MODE::INTERPOLATION_MODE_NONE);
 }
 
 VoxelPipeline::~VoxelPipeline()
@@ -324,7 +335,8 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 				}
 				commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
 
-				commandList->SetPipelineState(m_rayCastingPipelineState.Get());
+				//commandList->SetPipelineState(m_rayCastingPipelineState.Get());
+				commandList->SetPipelineState(m_selectedRCPipelineState.Get());
 				for (int j = start; j < i; j++)
 				{
 					commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
@@ -343,7 +355,8 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		}
 		commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
 
-		commandList->SetPipelineState(m_rayCastingPipelineState.Get());
+		//commandList->SetPipelineState(m_rayCastingPipelineState.Get());
+		commandList->SetPipelineState(m_selectedRCPipelineState.Get());
 		for (int j = start; j < blocksOrder.size(); j++)
 		{
 			commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
@@ -470,7 +483,8 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterSegmentsOpacity(vector<float>& seg
 
 void VoxelPipeline::SetSegmentsOpacity(vector<float>& segmentsOpacity, ComPtr<ID3D12Resource>& segmentsOpacityRes)
 {
-	m_d3dSyst->CopyDataToGPU(segmentsOpacityRes, &segmentsOpacity[0], sizeof(float)*segmentsOpacity.size());
+	//m_d3dSyst->CopyDataToGPU(segmentsOpacityRes, &segmentsOpacity[0], sizeof(float)*segmentsOpacity.size());
+	m_d3dSyst->CopyDataToGPU(segmentsOpacityRes, &segmentsOpacity[0], sizeof(float)*segmentsOpacity.size(),m_opacityUploadBuffer);
 }
 
 
@@ -655,5 +669,19 @@ void VoxelPipeline::SetStepSize(float voxelSize, float ratio)
 {
 	m_renderingCB.stepSize = voxelSize * ratio;
 	m_renderingCB.stepRatio = ratio;
+}
+
+void VoxelPipeline::SetInterpolationMode(INTERPOLATION_MODE mode)
+{
+	switch (mode)
+	{
+	case VoxelPipeline::INTERPOLATION_MODE_NONE:
+		m_selectedRCPipelineState = m_rayCastingPipelineState;
+		break;
+	case VoxelPipeline::INTERPOLATION_MODE_TRILINEAR:
+		break;
+	default:
+		break;
+	}
 }
 

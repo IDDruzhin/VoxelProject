@@ -25,7 +25,7 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 	m_voxObj->SaveBin(savePath, saveName);
 	*/
 	
-	
+	/*
 	string loadPath = "D:\\SomeData\\VoxelData\\SavedVoxels\\VKH_palette.bin";
 	m_voxObj = make_shared<VoxelObject>(loadPath, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
 	//m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 64);
@@ -34,6 +34,7 @@ GeneralModel::GeneralModel(HWND hWnd, int width, int height)
 	m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 256);
 	//m_voxObj->BlocksDecomposition(m_voxPipeline.get(), 2000);
 	m_voxPipeline->SetStepSize(m_voxObj->GetVoxelSize(),0.5f);
+	*/
 	
 }
 
@@ -134,66 +135,54 @@ void GeneralModel::RemoveBone()
 }
 */
 
-void GeneralModel::Save(ofstream * F)
-{
-	//voxelObjects[SelectedObject].Save(F);
-}
-
-void GeneralModel::Load(ifstream * F)
-{
-	/*
-	if (voxelObjects.size() == 0)
-	{
-		voxelObjects.emplace_back();
-	}
-	voxelObjects[SelectedObject].Load(F);
-	voxelPipeline.LoadToGPU(&d3dSyst, voxelObjects[SelectedObject].VoxData.get());
-	voxelObjects[SelectedObject].SetSegmentMaskFromList("D:\\SomeData\\VoxelData\\(VKH)Bones_indexes.txt", &d3dSyst);
-	//voxelObjects[SelectedObject].SetSegmentMaskFromList("D:\\SomeData\\VoxelData\\(VKH)Non_skin.txt", &d3dSyst);
-
-	d3dSyst.Reset();
-	voxelPipeline.ComputeActivityMask(&d3dSyst, voxelObjects, SelectedObject);
-	d3dSyst.Execute();
-
-	d3dSyst.Wait();
-
-	d3dSyst.Reset();
-	voxelPipeline.ComputeBorderMask(&d3dSyst, voxelObjects, SelectedObject);
-	d3dSyst.Execute();
-
-
-	d3dSyst.Wait();
-	SelectedBone = voxelObjects[SelectedObject].GetRootBone();
-	*/
-	
-}
-
 void GeneralModel::LoadAnatomicalAndSegmentedList(string Path)
 {
-	/*
-	if (voxelObjects.size() == 0)
-	{
-		voxelObjects.emplace_back();
-	}
-	voxelObjects[SelectedObject].LoadAnatomicalAndSegmentedList(Path, &d3dSyst);
-	voxelPipeline.LoadToGPU(&d3dSyst, voxelObjects[SelectedObject].VoxData.get());
-	//voxelObjects[SelectedObject].SetSegmentMaskFromList("D:\\SomeData\\VoxelData\\(VKH)Bones_indexes.txt", &d3dSyst);
 
-	d3dSyst.Reset();
-	voxelPipeline.ComputeActivityMask(&d3dSyst, voxelObjects, SelectedObject);
-	d3dSyst.Execute();
-	d3dSyst.Wait();
-	d3dSyst.Reset();
-	voxelPipeline.ComputeBorderMask(&d3dSyst, voxelObjects, SelectedObject);
-	d3dSyst.Execute();
-	d3dSyst.Wait();
-	SelectedBone = voxelObjects[SelectedObject].GetRootBone();
-	*/
+}
+
+void GeneralModel::LoadBin(string path)
+{
+	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
+}
+
+void GeneralModel::BlocksDecomposition(int blockSize)
+{
+	if (m_voxObj != nullptr)
+	{
+		m_voxObj->BlocksDecomposition(m_voxPipeline.get(), blockSize);
+	}
+}
+
+void GeneralModel::SetStepSize(float ratio)
+{
+	if (m_voxObj != nullptr)
+	{
+		m_voxPipeline->SetStepSize(m_voxObj->GetVoxelSize(), ratio);
+	}
 }
 
 vector<string> GeneralModel::GetObjectSegmentsNames()
 {
-	return m_voxObj->GetSegmentsNames();
+	if (m_voxObj != nullptr)
+	{
+		return m_voxObj->GetSegmentsNames();
+	}
+}
+
+void GeneralModel::SetSegmentsOpacity(vector<float> &segmentsOpacity)
+{
+	if (m_voxObj != nullptr)
+	{
+		m_voxObj->SetSegmentsOpacity(m_voxPipeline.get(), segmentsOpacity);
+	}
+}
+
+vector<float> GeneralModel::GetSegmentsOpacity()
+{
+	if (m_voxObj != nullptr)
+	{
+		return m_voxObj->GetSegmentsOpacity();
+	}
 }
 
 

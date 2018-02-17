@@ -31,6 +31,8 @@ typedef
 	D3D12_VERTEX_BUFFER_VIEW GetBlocksVBV();
 	float GetVoxelSize();
 	vector<string> GetSegmentsNames();
+	void SetSegmentsOpacity(VoxelPipeline* voxPipeline, vector<float> &segmentsOpacity);
+	vector<float> GetSegmentsOpacity();
 private:
 	string m_name;
 	int3 m_dim;
@@ -54,6 +56,7 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW m_blocksBufferView;
 	ComPtr<ID3D12Resource> m_paletteRes;
 	ComPtr<ID3D12Resource> m_segmentsOpacityRes;
+
 
 	
 	
