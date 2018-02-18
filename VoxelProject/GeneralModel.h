@@ -13,6 +13,7 @@ public:
 	void RotateCamera(Vector3 dR);
 	void ZoomCamera(float dx);
 	void LoadBin(string path);
+	void SaveBin(string path);
 	void LoadFromImages(string path);
 	void BlocksDecomposition(int blockSize);
 	void SetStepSize(float ratio);

@@ -175,6 +175,7 @@ void VoxelObject::SaveBin(string path, string name)
 			tmp = m_segmentationTableNames[i];
 			f.write((char*)(&tmp[0]), stringSize);
 		}
+		f.write((char*)(&m_segmentsOpacity[0]), sizeof(float)*count);
 		f.close();
 	}
 	else
@@ -207,8 +208,10 @@ void VoxelObject::LoadBin(string path)
 			f.read((char*)(&tmp[0]), stringSize);
 			m_segmentationTableNames.push_back(tmp);
 		}
-		m_segmentsOpacity.resize(m_segmentationTableNames.size(),1.0f);
-		m_segmentsOpacity[0] = 0.0f;
+		//m_segmentsOpacity.resize(m_segmentationTableNames.size(),1.0f);
+		m_segmentsOpacity.resize(count);
+		f.read((char*)(&m_segmentsOpacity[0]), sizeof(float)*count);
+		//m_segmentsOpacity[0] = 0.0f;
 		f.close();
 	}
 	else

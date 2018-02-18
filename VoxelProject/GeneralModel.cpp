@@ -140,6 +140,14 @@ void GeneralModel::LoadBin(string path)
 	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
 }
 
+void GeneralModel::SaveBin(string path)
+{
+	if (m_voxObj != nullptr)
+	{
+		m_voxObj->SaveBin(path,"");
+	}
+}
+
 void GeneralModel::LoadFromImages(string path)
 {
 	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_SLICES, m_voxPipeline.get());
