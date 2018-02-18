@@ -39,6 +39,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float3 coefs;
 	float4 curColor;
 	float4 tmpColor;
+	float4 smpColor;
 	int3 neighborsOffsets;
 	int3 curIndexes;
 	//uint3 curNeighbor;
@@ -56,43 +57,92 @@ float4 main(PS_INPUT input) : SV_TARGET
 		coefs = abs(coefs);
 
 		smp = textures[textureIndex][curIndexes];
-		tmpColor.xyz = palette[smp.x].xyz;
-		tmpColor.w = segmentsOpacity[smp.y];
-		curColor = tmpColor * (1.0f - coefs.x) * (1.0f - coefs.y) * (1.0f - coefs.z);
+		smpColor.xyz = palette[smp.x].xyz;
+		smpColor.w = segmentsOpacity[smp.y];
+		curColor = smpColor * (1.0f - coefs.x) * (1.0f - coefs.y) * (1.0f - coefs.z);
 
 		smp = textures[textureIndex][uint3(curIndexes.x, curIndexes.y, curIndexes.z + neighborsOffsets.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
 		tmpColor.w = segmentsOpacity[smp.y];
+		if (tmpColor.w == 0)
+		{
+			tmpColor = smpColor;
+		}
+		else
+		{
+			tmpColor.xyz = palette[smp.x].xyz;
+		}	
 		curColor += tmpColor * (1.0f - coefs.x) * (1.0f - coefs.y) * coefs.z;
 
 		smp = textures[textureIndex][uint3(curIndexes.x, curIndexes.y + neighborsOffsets.y, curIndexes.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
 		tmpColor.w = segmentsOpacity[smp.y];
+		if (tmpColor.w == 0)
+		{
+			tmpColor = smpColor;
+		}
+		else
+		{
+			tmpColor.xyz = palette[smp.x].xyz;
+		}
 		curColor += tmpColor * (1.0f - coefs.x) * coefs.y * (1.0f - coefs.z);
 
 		smp = textures[textureIndex][uint3(curIndexes.x, curIndexes.y + neighborsOffsets.y, curIndexes.z + neighborsOffsets.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
 		tmpColor.w = segmentsOpacity[smp.y];
+		if (tmpColor.w == 0)
+		{
+			tmpColor = smpColor;
+		}
+		else
+		{
+			tmpColor.xyz = palette[smp.x].xyz;
+		}
 		curColor += tmpColor * (1.0f - coefs.x) * coefs.y * coefs.z;
 
 		smp = textures[textureIndex][uint3(curIndexes.x + neighborsOffsets.x, curIndexes.y, curIndexes.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
 		tmpColor.w = segmentsOpacity[smp.y];
+		if (tmpColor.w == 0)
+		{
+			tmpColor = smpColor;
+		}
+		else
+		{
+			tmpColor.xyz = palette[smp.x].xyz;
+		}
 		curColor += tmpColor * coefs.x * (1.0f - coefs.y) * (1.0f - coefs.z);
 
 		smp = textures[textureIndex][uint3(curIndexes.x + neighborsOffsets.x, curIndexes.y, curIndexes.z + neighborsOffsets.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
 		tmpColor.w = segmentsOpacity[smp.y];
+		if (tmpColor.w == 0)
+		{
+			tmpColor = smpColor;
+		}
+		else
+		{
+			tmpColor.xyz = palette[smp.x].xyz;
+		}
 		curColor += tmpColor * coefs.x * (1.0f - coefs.y) * coefs.z;
 
 		smp = textures[textureIndex][uint3(curIndexes.x + neighborsOffsets.x, curIndexes.y + neighborsOffsets.y, curIndexes.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
 		tmpColor.w = segmentsOpacity[smp.y];
+		if (tmpColor.w == 0)
+		{
+			tmpColor = smpColor;
+		}
+		else
+		{
+			tmpColor.xyz = palette[smp.x].xyz;
+		}
 		curColor += tmpColor * coefs.x * coefs.y * (1.0f - coefs.z);
 
 		smp = textures[textureIndex][uint3(curIndexes.x + neighborsOffsets.x, curIndexes.y + neighborsOffsets.y, curIndexes.z + neighborsOffsets.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
 		tmpColor.w = segmentsOpacity[smp.y];
+		if (tmpColor.w == 0)
+		{
+			tmpColor = smpColor;
+		}
+		else
+		{
+			tmpColor.xyz = palette[smp.x].xyz;
+		}
 		curColor += tmpColor * coefs.x * coefs.y * coefs.z;
 
 		color.xyz = color.xyz + color.w * curColor.xyz * curColor.w;
