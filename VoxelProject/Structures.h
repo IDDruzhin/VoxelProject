@@ -171,7 +171,6 @@ struct RGBVoxel
 {
 	UINT index;
 	uchar4 color;
-	//UINT segment;
 };
 
 
@@ -210,17 +209,5 @@ typedef
 			length = parent.length - parent.length / 2;
 		}
 		level = parent.level + 1;
-		switch (parent.sortMode)
-		{
-		case SORT_MODE_RED:
-			sortMode = SORT_MODE_GREEN;
-			break;
-		case SORT_MODE_GREEN:
-			sortMode = SORT_MODE_BLUE;
-			break;
-		case SORT_MODE_BLUE:
-			sortMode = SORT_MODE_RED;
-			break;
-		}
 	};
 };

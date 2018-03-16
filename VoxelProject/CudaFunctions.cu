@@ -199,10 +199,31 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	queue<PaletteElement> qPalette;
 	qPalette.emplace(dVoxels.size());
 	vector<PaletteElement> finalPaletteElements;
+	RGBVoxel min;
+	RGBVoxel max;
+	int len = 0;
 
 	while (!qPalette.empty())
 	{
 		PaletteElement cur = qPalette.front();
+		min = *thrust::min_element(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsRed());
+		max = *thrust::max_element(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsRed());
+		len = max.color.x - min.color.x;
+		cur.sortMode = PaletteElement::SORT_MODE::SORT_MODE_RED;
+		min = *thrust::min_element(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsGreen());
+		max = *thrust::max_element(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsGreen());
+		if (len < (max.color.y - min.color.y))
+		{
+			len = max.color.y - min.color.y;
+			cur.sortMode = PaletteElement::SORT_MODE::SORT_MODE_GREEN;
+		}	
+		min = *thrust::min_element(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsBlue());
+		max = *thrust::max_element(dVoxels.begin() + cur.start, dVoxels.begin() + cur.start + cur.length, CompareVoxelsBlue());
+		if (len < (max.color.z - min.color.z))
+		{
+			len = max.color.z - min.color.z;
+			cur.sortMode = PaletteElement::SORT_MODE::SORT_MODE_BLUE;
+		}
 		switch (cur.sortMode)
 		{
 		case PaletteElement::SORT_MODE::SORT_MODE_RED:

@@ -14,9 +14,9 @@ cbuffer RenderingConstantBuffer : register(b1)
 	float stepRatio;
 };
 
+//SamplerState s : register(s0);
 
 uint textureIndex : register(b0);
-SamplerState s : register(s0);
 RWTexture2D<float4> renderTexture : register(u1);
 RWTexture2D<float4> backCoordTexture : register(u2);
 Texture1D<float4> palette : register(t0);
@@ -36,76 +36,16 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float3 cur = dir * (startLen - curDist) / stepSize + input.texCoord.xyz;
 	float4 color = renderTexture[input.pos.xy];
 	uint2 smp;
-	float3 coefs;
-	float4 curColor;
-	float4 tmpColor;
-	int3 neighborsOffsets;
-	int3 curIndexes;
-	//uint3 curNeighbor;
 	[loop] for (uint s = 0; s <= stepsCount; s++)
 	{
 		if (color.w < 0.1f)
 		{
 			break;
 		}
-		
 		smp = textures[textureIndex][cur];
 		color.xyz = color.xyz + color.w * palette[smp.x] * segmentsOpacity[smp.y];
 		color.w = color.w * (1.0f - segmentsOpacity[smp.y]);
 		cur += dir;
-		
-		/*
-		//Linear interpolation
-		curIndexes = cur;
-		coefs = cur - curIndexes - float3(0.5f, 0.5f, 0.5f);
-		neighborsOffsets = sign(coefs);
-		coefs = abs(coefs);
-
-		smp = textures[textureIndex][curIndexes];
-		tmpColor.xyz = palette[smp.x].xyz;
-		tmpColor.w = segmentsOpacity[smp.y];
-		curColor = tmpColor * (1.0f - coefs.x) * (1.0f - coefs.y) * (1.0f - coefs.z);
-
-		smp = textures[textureIndex][uint3(curIndexes.x, curIndexes.y, curIndexes.z + neighborsOffsets.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
-		tmpColor.w = segmentsOpacity[smp.y];
-		curColor += tmpColor * (1.0f - coefs.x) * (1.0f - coefs.y) * coefs.z;
-
-		smp = textures[textureIndex][uint3(curIndexes.x, curIndexes.y + neighborsOffsets.y, curIndexes.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
-		tmpColor.w = segmentsOpacity[smp.y];
-		curColor += tmpColor * (1.0f - coefs.x) * coefs.y * (1.0f - coefs.z);
-
-		smp = textures[textureIndex][uint3(curIndexes.x, curIndexes.y + neighborsOffsets.y, curIndexes.z + neighborsOffsets.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
-		tmpColor.w = segmentsOpacity[smp.y];
-		curColor += tmpColor * (1.0f - coefs.x) * coefs.y * coefs.z;
-
-		smp = textures[textureIndex][uint3(curIndexes.x + neighborsOffsets.x, curIndexes.y, curIndexes.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
-		tmpColor.w = segmentsOpacity[smp.y];
-		curColor += tmpColor * coefs.x * (1.0f - coefs.y) * (1.0f - coefs.z);
-
-		smp = textures[textureIndex][uint3(curIndexes.x + neighborsOffsets.x, curIndexes.y, curIndexes.z + neighborsOffsets.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
-		tmpColor.w = segmentsOpacity[smp.y];
-		curColor += tmpColor * coefs.x * (1.0f - coefs.y) * coefs.z;
-
-		smp = textures[textureIndex][uint3(curIndexes.x + neighborsOffsets.x, curIndexes.y + neighborsOffsets.y, curIndexes.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
-		tmpColor.w = segmentsOpacity[smp.y];
-		curColor += tmpColor * coefs.x * coefs.y * (1.0f - coefs.z);
-
-		smp = textures[textureIndex][uint3(curIndexes.x + neighborsOffsets.x, curIndexes.y + neighborsOffsets.y, curIndexes.z + neighborsOffsets.z)];
-		tmpColor.xyz = palette[smp.x].xyz;
-		tmpColor.w = segmentsOpacity[smp.y];
-		curColor += tmpColor * coefs.x * coefs.y * coefs.z;
-
-		color.xyz = color.xyz + color.w * curColor.xyz * curColor.w;
-		color.w = color.w * (1.0f - curColor.w);
-		cur += dir;
-		*/
-
 	}
 	renderTexture[input.pos.xy] = color;
 	discard;

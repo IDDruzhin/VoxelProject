@@ -4,6 +4,7 @@
 #include <thrust/copy.h>
 #include <thrust/sort.h>
 #include <thrust/transform.h>
+#include <thrust/extrema.h>
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui/highgui.hpp"
