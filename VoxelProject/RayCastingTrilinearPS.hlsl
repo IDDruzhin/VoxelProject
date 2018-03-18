@@ -42,8 +42,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float4 smpColor;
 	int3 neighborsOffsets;
 	int3 curIndexes;
-	//uint3 curNeighbor;
-	[loop] for (uint s = 0; s <= stepsCount; s++)
+	for (uint s = 0; s <= stepsCount; s++)
 	{
 		if (color.w < 0.1f)
 		{
