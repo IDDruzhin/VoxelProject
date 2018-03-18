@@ -190,7 +190,6 @@ typedef
 	SORT_MODE_GREEN = 1,
 	SORT_MODE_BLUE = 2
 } 	SORT_MODE;
-
 	int start;
 	int length;
 	int level;

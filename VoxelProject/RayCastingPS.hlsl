@@ -36,7 +36,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float3 cur = dir * (startLen - curDist) / stepSize + input.texCoord.xyz;
 	float4 color = renderTexture[input.pos.xy];
 	uint2 smp;
-	[loop] for (uint s = 0; s <= stepsCount; s++)
+	for (uint s = 0; s <= stepsCount; s++)
 	{
 		if (color.w < 0.1f)
 		{

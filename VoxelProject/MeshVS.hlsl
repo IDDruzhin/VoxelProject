@@ -23,10 +23,8 @@ PS_INPUT main(VS_INPUT input)
 {
 	PS_INPUT output;
 	float3 eyeSpacePos = mul(input.pos, WorldView);
-	//float4 eyeSpacePos = mul(float4(input.pos.xyz,1.0f), WorldView);
 	output.pos = mul(input.pos, WorldViewProj);
 	output.texCoord = input.texCoord;
 	output.eyeSpacePos = eyeSpacePos;
-	//output.texCoord.w = length(eyeSpacePos);
 	return output;
 }
