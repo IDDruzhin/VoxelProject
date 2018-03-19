@@ -14,8 +14,6 @@ cbuffer RenderingConstantBuffer : register(b1)
 	float stepRatio;
 };
 
-//SamplerState s : register(s0);
-
 uint textureIndex : register(b0);
 RWTexture2D<float4> renderTexture : register(u1);
 RWTexture2D<float4> backCoordTexture : register(u2);

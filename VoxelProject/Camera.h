@@ -10,6 +10,7 @@ public:
 	void UpdateView();
 	void Rotate(Vector3 dr);
 	void Zoom(float dx);
+	void Move(Vector3 dt);
 private:
 	Matrix m_view;
 	Matrix m_projection;

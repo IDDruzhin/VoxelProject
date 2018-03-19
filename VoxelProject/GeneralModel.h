@@ -10,8 +10,9 @@ public:
 	GeneralModel(HWND hWnd, int width, int height);
 	~GeneralModel();
 	void Render();
-	void RotateCamera(Vector3 dR);
+	void RotateCamera(Vector3 dr);
 	void ZoomCamera(float dx);
+	void MoveCamera(Vector3 dt);
 	void LoadBin(string path);
 	void SaveBin(string path);
 	void LoadFromImages(string path);
@@ -22,13 +23,6 @@ public:
 	vector<float> GetSegmentsOpacity();
 	void SetBlocksVisiblity(bool isVisible);
 	void SetInterpolationMode(VoxelPipeline::INTERPOLATION_MODE mode);
-	//void AddBone();
-	//void InsertMirroredBone(Vector3 Axis);
-	//void PickBone(float x, float y);
-	//void SetCurBoneLength(float _length);
-	//void RotateCurBone(Vector3 dR);
-	//void TranslateCurSkeleton(Vector3 dT);
-	//void RemoveBone();
 private:
 	shared_ptr<Camera> m_camera;
 	Vector3 m_background;
@@ -38,9 +32,5 @@ private:
 	float m_cameraSens;
 	shared_ptr<VoxelObject> m_voxObj;
 	unique_ptr<VoxelPipeline> m_voxPipeline;
-	//D3DSystem m_d3dSyst;
-	//int SelectedObject;
-	//int SelectedBoneID;
-	//Bone* SelectedBone;
 };
 

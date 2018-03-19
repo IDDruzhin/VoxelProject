@@ -35,11 +35,7 @@ RWStructuredBuffer<BlockInfo> blocksInfo : register(u0);
 [numthreads(blocksize_x, blocksize_y, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
-	//uint size;
-	//uint offset;
 	uint index = DTid.y*computeBlocksCount*blocksize_x + DTid.x;
-	//voxels.GetDimensions(size, offset);
-	//if (index < size)
 	if (index < voxelsCount)
 	{
 		int3 cur;

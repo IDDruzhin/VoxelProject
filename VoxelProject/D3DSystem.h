@@ -18,8 +18,7 @@ public:
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList();
 	void Reset();
 	void Execute();
-	void ExecuteGraphics();
-	void UpdatePipelineAndClear(Vector3 bg);
+	void UpdatePipeline();
 	void Wait();
 	void PresentSimple();
 	ID3D12Resource* GetRenderTarget();
@@ -46,7 +45,6 @@ public:
 	int GetFrameIndex();
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE GetFeatureData();
 private:
-
 	ComPtr<ID3D12Device> m_device;
 	ComPtr<IDXGISwapChain3> m_swapChain;
 	ComPtr<ID3D12CommandQueue> m_commandQueue;
@@ -59,15 +57,9 @@ private:
 	UINT64 m_fenceValue[FRAMEBUFFERCOUNT];
 	int m_frameIndex;
 	int m_rtvDescriptorSize;
-
 	ComPtr<ID3D12Resource> m_depthStencilBuffer;
 	ComPtr<ID3D12DescriptorHeap> m_dsDescriptorHeap;
-
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE m_featureData;
-
-	HANDLE m_swapChainEvent;
-
-	//void WaitForPreviousFrame();
 	void OnDestroy();
 };
 
@@ -83,19 +75,19 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateDefaultBuffer(T * data, int size,
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
 		IID_PPV_ARGS(&buffer)));
-	//buffer->SetName(name.c_str());
+	buffer->SetName(name.c_str());
 
 	ComPtr<ID3D12Resource> bufferUploadHeap;
 	ThrowIfFailed(m_device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), //An upload heap
-		D3D12_HEAP_FLAG_NONE, //No flags
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
 		&CD3DX12_RESOURCE_DESC::Buffer(size),
-		D3D12_RESOURCE_STATE_GENERIC_READ, //GPU will read and copy content to the default heap
+		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&bufferUploadHeap)));
-	//bufferUploadHeap->SetName(L"Buffer Upload Resource Heap");
+	bufferUploadHeap->SetName(L"Upload heap");
 	D3D12_SUBRESOURCE_DATA subResourceData = {};
-	subResourceData.pData = reinterpret_cast<BYTE*>(data); //Pointer to upload data
+	subResourceData.pData = reinterpret_cast<BYTE*>(data);
 	subResourceData.RowPitch = size;
 	subResourceData.SlicePitch = size;
 
@@ -113,7 +105,6 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateDefaultBuffer(T * data, int size,
 		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
-	//bufferUploadHeap->Release();
 	return buffer;
 }
 
@@ -121,7 +112,6 @@ template<typename T>
 inline ComPtr<ID3D12Resource> D3DSystem::CreateVertexBuffer(T * data, int size, wstring name)
 {
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
-	//D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, desc, name);
 }
 
@@ -137,7 +127,6 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateStructuredBuffer(T * data, int si
 {
 
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-	//return CreateDefaultBuffer(Data, Size, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, Desc, Name);
 	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, desc, name);
 }
 
@@ -147,7 +136,6 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateRWStructuredBuffer(T * data, int 
 
 	D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, desc, name);
-	//return CreateDefaultBuffer(data, size, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, desc, name);
 }
 
 inline ComPtr<ID3D12Resource> D3DSystem::CreateRWTexture3D(int3 dim, DXGI_FORMAT format, wstring name)
@@ -155,8 +143,8 @@ inline ComPtr<ID3D12Resource> D3DSystem::CreateRWTexture3D(int3 dim, DXGI_FORMAT
 	CD3DX12_RESOURCE_DESC textureDesc = CD3DX12_RESOURCE_DESC::Tex3D(format, dim.x, dim.y, dim.z, 0, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	ComPtr<ID3D12Resource> buffer;
 	ThrowIfFailed(m_device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), //A default heap
-		D3D12_HEAP_FLAG_NONE, //No flags
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
 		&textureDesc,
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 		nullptr,
@@ -176,13 +164,14 @@ inline void D3DSystem::CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int 
 {
 	ComPtr<ID3D12Resource> buffer;
 	m_device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK), //A readback heap
-		D3D12_HEAP_FLAG_NONE, //No flags
-		&CD3DX12_RESOURCE_DESC::Buffer(size), //Size of buffer
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(size),
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
 		IID_PPV_ARGS(&buffer));
-	//buffer->SetName(L"Buffer Readback Resource Heap");
+	buffer->SetName(L"Readback heap");
+
 	//m_commandList
 	Reset();
 	m_commandList->CopyResource(buffer.Get(), src.Get());
@@ -200,7 +189,6 @@ inline void D3DSystem::CopyDataFromGPU(ComPtr<ID3D12Resource> src, T * dst, int 
 	buffer->Map(0, nullptr, reinterpret_cast<void**>(&buffData));
 	memcpy(dst, buffData, size);
 	buffer->Unmap(0, nullptr);
-	//buffer->Release();
 }
 
 template<typename T>
@@ -209,17 +197,18 @@ inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int s
 
 	ComPtr<ID3D12Resource> buffer;
 	m_device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), //An upload heap
-		D3D12_HEAP_FLAG_NONE, //No flags
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
 		&CD3DX12_RESOURCE_DESC::Buffer(size),
-		D3D12_RESOURCE_STATE_GENERIC_READ, //GPU will read and copy content to the default heap
+		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&buffer));
-	//buffer->SetName(L"Buffer for upload");
+	buffer->SetName(L"Upload heap");
 	T* buffData;
 	buffer->Map(0, nullptr, reinterpret_cast<void**>(&buffData));
 	memcpy(buffData, data, size);
 	buffer->Unmap(0, nullptr);
+
 	//m_commandList
 	Reset();
 	m_commandList->CopyResource(dst.Get(), buffer.Get());
@@ -233,22 +222,19 @@ inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int s
 		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
-	//buffer->Release();
 }
 
 template<typename T>
 inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int size, ComPtr<ID3D12Resource> uploadBuffer)
 {
 	D3D12_SUBRESOURCE_DATA subResourceData = {};
-	subResourceData.pData = reinterpret_cast<BYTE*>(data); //Pointer to upload data
+	subResourceData.pData = reinterpret_cast<BYTE*>(data);
 	subResourceData.RowPitch = size;
 	subResourceData.SlicePitch = size;
 
 	//m_commandList
 	Reset();
-	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, finalState));
 	UpdateSubresources(m_commandList.Get(), dst.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
-	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, finalState));
 	m_commandList->Close();
 	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
@@ -259,5 +245,4 @@ inline void D3DSystem::CopyDataToGPU(ComPtr<ID3D12Resource> dst, T * data, int s
 		m_fence[m_frameIndex]->SetEventOnCompletion(m_fenceValue[m_frameIndex], m_fenceEvent);
 		WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
-	//bufferUploadHeap->Release();
 }

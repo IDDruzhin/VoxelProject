@@ -25,16 +25,19 @@ void InputController::Update()
 	{
 		delta.x -= m.x;
 		delta.y -= m.y;
-		m_generalModel->RotateCamera(delta);
+		if (kb.LeftShift)
+		{
+			m_generalModel->MoveCamera(delta);
+		}
+		else if (kb.LeftControl)
+		{
+			m_generalModel->ZoomCamera(delta.y);
+		}
+		else
+		{
+			m_generalModel->RotateCamera(delta);
+		}
 		delta.x = m.x;
 		delta.y = m.y;
-	}
-	if (m_keyboardTracker.pressed.Up)
-	{
-		m_generalModel->ZoomCamera(0.1f);
-	}
-	if (m_keyboardTracker.pressed.Down)
-	{
-		m_generalModel->ZoomCamera(-0.1f);
 	}
 }

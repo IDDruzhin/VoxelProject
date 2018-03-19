@@ -4,8 +4,6 @@
 
 __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, unsigned char* segmentationTransferTable, int eps, RGBVoxel* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
 {
-	//unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-	//unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
 	unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
 	if (x >= width || y >= height)
@@ -18,7 +16,6 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 	pixel.z = segmentedImage[curPos];
 	pixel.y = segmentedImage[curPos + 1];
 	pixel.x = segmentedImage[curPos + 2];
-	//pixel.w = 255;
 	if ((pixel.x == segmentationTable[0].color.x) && (pixel.y == segmentationTable[0].color.y) && (pixel.z == segmentationTable[0].color.z))
 	{
 		return;
@@ -43,16 +40,6 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 			}
 		}
 	}
-	/*
-	{
-		int curCount = atomicAdd(count, 1);
-		voxels[curCount].color.w = 1;
-		voxels[curCount].color.z = anatomicalImage[curPos];
-		voxels[curCount].color.y = anatomicalImage[curPos + 1];
-		voxels[curCount].color.x = anatomicalImage[curPos + 2];
-		voxels[curCount].index = width * height*curDepth + width * y + x;
-	}
-	*/
 }
 
 void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, unsigned char* segmentationTransferTable, int eps, RGBVoxel* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
@@ -61,21 +48,6 @@ void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned ch
 	dim3 gridSize((width - 1) / blockSize.x + 1, (height - 1) / blockSize.y + 1);
 	GetVoxelsAnatomicalSegmentationKernel <<<gridSize, blockSize >>> (anatomicalImage, segmentedImage, segmentationTable, segmentsCount, segmentationTransferTable, eps, voxels, width, height, curDepth, depthMultiplier, count);
 }
-
-/*
-__host__ __device__ bool CompareVoxelsRed(const RGBVoxel &a, const RGBVoxel &b)
-{
-	return (a.color.x < b.color.x);
-}
-__host__ __device__ bool CompareVoxelsGreen(const RGBVoxel &a, const RGBVoxel &b)
-{
-	return (a.color.y < b.color.y);
-}
-__host__ __device__ bool CompareVoxelsBlue(const RGBVoxel &a, const RGBVoxel &b)
-{
-	return (a.color.z < b.color.z);
-}
-*/
 
 struct CompareVoxelsRed
 {

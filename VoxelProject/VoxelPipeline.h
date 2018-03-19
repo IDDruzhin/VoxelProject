@@ -37,12 +37,6 @@ enum INTERPOLATION_MODE
 	VoxelPipeline(shared_ptr<D3DSystem> d3dSyst);
 	~VoxelPipeline();
 	void RenderObject(VoxelObject* voxObj, Camera* camera);
-	/*
-	template<typename T>
-	ComPtr<ID3D12Resource> Create3dTextureViews(T* data, int elementsCount);
-	template<typename T>
-	ComPtr<ID3D12Resource> CreateBlocksViews(T* data, int elementsCount);
-	*/
 	ComPtr<ID3D12Resource> RegisterBlocksInfo(vector<BlockInfo>& blocksInfo);
 	ComPtr<ID3D12Resource> RegisterVoxels(vector<Voxel>& voxels);
 	ComPtr<ID3D12Resource> RegisterPalette(vector<uchar4>& palette);
@@ -78,7 +72,6 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_rtvHeapRender;   ///Cpu read/write heap
 	UINT m_srvUavDescriptorSize;
 
-	//ComPtr<ID3D12Resource> m_constantBufferUploadHeapCompute;
 	ComPtr<ID3D12RootSignature> m_blocksComputeRootSignature;
 	ComPtr<ID3D12PipelineState> m_blocksDetectionPipelineState;
 	ComPtr<ID3D12PipelineState> m_blocksFillingPipelineState;
@@ -86,23 +79,6 @@ private:
 
 	float m_background[4];
 	bool m_renderBlocks;
-	//float m_stepSize;
 	ComPtr<ID3D12PipelineState> m_selectedRCPipelineState;
 	
 };
-
-/*
-template<typename T>
-inline ComPtr<ID3D12Resource> VoxelPipeline::Create3dTextureViews(T * data, int elementsCount)
-{
-	//ComPtr<ID3D12Resource> buffer = m_d3dSyst->CreateVertexBuffer(data, elementsCount,L"")
-	return ComPtr<ID3D12Resource>();
-}
-
-template<typename T>
-inline ComPtr<ID3D12Resource> VoxelPipeline::CreateBlocksViews(T * data, int elementsCount)
-{
-	ComPtr<ID3D12Resource> buffer = m_d3dSyst->CreateVertexBuffer(data, elementsCount*sizeof(T), L"Blocks vertex buffer");
-	return buffer;
-}
-*/

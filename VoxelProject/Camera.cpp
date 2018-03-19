@@ -50,3 +50,16 @@ void Camera::Zoom(float dx)
 		m_distance += dx;
 	}
 }
+
+void Camera::Move(Vector3 dt)
+{
+	Matrix inv = m_view.Invert();
+	Vector3 cameraPos = Vector3::Transform(Vector3(0,0,0), inv);
+	Vector3 dir = m_lookPosition - cameraPos;
+	Vector3 up = Vector3::Transform(Vector3(0, 1, 0), inv) - cameraPos;
+	up.Normalize();
+	Vector3 right = dir.Cross(up);
+	right.Normalize();
+	m_lookPosition -= dt.y * up;
+	m_lookPosition -= dt.x * right;
+}

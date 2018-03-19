@@ -14,8 +14,6 @@ cbuffer RenderingConstantBuffer : register(b1)
 	float stepRatio;
 };
 
-//SamplerState s : register(s0);
-
 uint textureIndex : register(b0);
 RWTexture2D<float4> renderTexture : register(u1);
 RWTexture2D<float4> backCoordTexture : register(u2);
@@ -49,7 +47,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 			break;
 		}
 
-		//Linear interpolation
+		//Trilinear interpolation
 		curIndexes = cur;
 		coefs = cur - curIndexes - float3(0.5f, 0.5f, 0.5f);
 		neighborsOffsets = sign(coefs);

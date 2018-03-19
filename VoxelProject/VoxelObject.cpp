@@ -23,27 +23,12 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 	m_s = Vector3(maxSide,maxSide,maxSide);
 	m_t = (Vector3(m_dim.x, m_dim.y, m_dim.z) * m_s) / -2.0f;
 	m_paletteRes = voxPipeline->RegisterPalette(m_palette);
-	//m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
-	
-	for (int i = 0; i < m_segmentsOpacity.size(); i++)
-	{
-		m_segmentsOpacity[i] = 0.01f;
-		//m_segmentsOpacity[i] = 0.1f;
-	}
-	m_segmentsOpacity[0] = 0.0f;
-	//m_segmentsOpacity[1] = 0.0f;
-	//m_segmentsOpacity[2] = 0.1f;
-	//m_segmentsOpacity[27] = 0.0f;
-	//m_segmentsOpacity[m_segmentsOpacity.size()-1] = 0.0f;
 	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
-	
 }
-
 
 VoxelObject::~VoxelObject()
 {
 }
-
 
 void VoxelObject::CreateFromSlices(string path)
 {
@@ -78,11 +63,9 @@ void VoxelObject::CreateFromSlices(string path)
 			while (getline(segmentationTableFile, line))
 			{
 				sep = line.find_first_of("0123456789");
-				//segmentationTableNames.push_back(line.substr(0, sep - 1));
 				line = line.substr(sep, line.length());
 				sS.str(line);
 				sS >> word;
-				//Cur.Color[0] = atoi(Word.c_str());
 				cur.color.x = atoi(word.c_str());
 				sS >> word;
 				cur.color.y = atoi(word.c_str());
@@ -140,7 +123,6 @@ void VoxelObject::CreateFromSlices(string path)
 		{
 			throw std::exception("Can`t open segmentation names file");
 		}
-
 		int eps = 2;
 		CUDACreateFromSlices(anatomicalFolder, segmentedFolder, segmentationTable, segmentationTransfer, depthMulptiplier, eps, m_dim, m_voxels, m_palette);
 	}
@@ -208,10 +190,8 @@ void VoxelObject::LoadBin(string path)
 			f.read((char*)(&tmp[0]), stringSize);
 			m_segmentationTableNames.push_back(tmp);
 		}
-		//m_segmentsOpacity.resize(m_segmentationTableNames.size(),1.0f);
 		m_segmentsOpacity.resize(count);
 		f.read((char*)(&m_segmentsOpacity[0]), sizeof(float)*count);
-		//m_segmentsOpacity[0] = 0.0f;
 		f.close();
 	}
 	else
@@ -235,8 +215,6 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 		{
 			for (int i = 0; i < dimBlocks.x; i++)
 			{
-				//BlockInfo cur = { { i*blockSize, j*blockSize, k*blockSize },{ (i + 1)*blockSize, (j + 1)*blockSize, (k + 1)*blockSize } };
-				//BlockInfo cur = { { (i + 1)*blockSize, (j + 1)*blockSize, (k + 1)*blockSize }, { i*blockSize, j*blockSize, k*blockSize } };
 				BlockInfo cur = { { (i + 1)*blockSize - 1, (j + 1)*blockSize - 1, (k + 1)*blockSize - 1 },{ i*blockSize, j*blockSize, k*blockSize } };
 				blocksInfo.push_back(cur);
 			}
@@ -269,9 +247,7 @@ vector<BlockPriorityInfo> VoxelObject::CalculatePriorities(Vector3 cameraPos)
 	{
 		m_blocksPosInfo[i].distance = Vector3::DistanceSquared(m_blocksPosInfo[i].position, cameraPos);
 	}
-	//sort(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
 	auto first = min_element(m_blocksPosInfo.begin(), m_blocksPosInfo.end(), [](BlockPositionInfo &a, BlockPositionInfo &b) { return (a.distance < b.distance); });
-	//first->priority = 0;
 	for (int i = 0; i < m_blocksPriorInfo.size(); i++)
 	{
 		m_blocksPriorInfo[i].priority = abs(m_blocksPriorInfo[i].block3dIndex.x - first->block3dIndex.x) + abs(m_blocksPriorInfo[i].block3dIndex.y - first->block3dIndex.y) + abs(m_blocksPriorInfo[i].block3dIndex.z - first->block3dIndex.z);
