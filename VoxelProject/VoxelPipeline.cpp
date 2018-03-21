@@ -45,12 +45,12 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(fal
 		ComPtr<ID3DBlob> vertexShader;
 		ComPtr<ID3DBlob> pixelShader;
 #if defined(_DEBUG)
-		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
+		D3DReadFileToBlob(L"shaders_debug\\MeshVS.cso", &vertexShader);
+		D3DReadFileToBlob(L"shaders_debug\\BackFacesPS.cso", &pixelShader);
 #else
-		UINT compileFlags = D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
+		D3DReadFileToBlob(L"shaders\\MeshVS.cso", &vertexShader);
+		D3DReadFileToBlob(L"shaders\\BackFacesPS.cso", &pixelShader);
 #endif
-		ThrowIfFailed(D3DCompileFromFile(L"MeshVS.hlsl", nullptr, nullptr, "main", "vs_5_1", compileFlags, 0, &vertexShader, nullptr));
-		ThrowIfFailed(D3DCompileFromFile(L"BackFacesPS.hlsl", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
 
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 		{
@@ -80,17 +80,29 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(fal
 
 		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_backFacesPipelineState)));
 
-		ThrowIfFailed(D3DCompileFromFile(L"RayCastingPS.hlsl", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
+#if defined(_DEBUG)
+		D3DReadFileToBlob(L"shaders_debug\\RayCastingPS.cso", &pixelShader);
+#else
+		D3DReadFileToBlob(L"shaders\\RayCastingPS.cso", &pixelShader);
+#endif	
 		rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
 		psoDesc.RasterizerState = rasterizerDesc;
 		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_rayCastingPipelineState)));
 
-		ThrowIfFailed(D3DCompileFromFile(L"RayCastingTrilinearPS.hlsl", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
+#if defined(_DEBUG)
+		D3DReadFileToBlob(L"shaders_debug\\RayCastingTrilinearPS.cso", &pixelShader);
+#else
+		D3DReadFileToBlob(L"shaders\\RayCastingTrilinearPS.cso", &pixelShader);
+#endif	
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
 		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_rayCastingTrilinearPipelineState)));
 
-		ThrowIfFailed(D3DCompileFromFile(L"SimpleColorPS.hlsl", nullptr, nullptr, "main", "ps_5_1", compileFlags, 0, &pixelShader, nullptr));
+#if defined(_DEBUG)
+		D3DReadFileToBlob(L"shaders_debug\\SimpleColorPS.cso", &pixelShader);
+#else
+		D3DReadFileToBlob(L"shaders\\SimpleColorPS.cso", &pixelShader);
+#endif	
 		rasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME;
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
 		psoDesc.RasterizerState = rasterizerDesc;
@@ -123,17 +135,20 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(fal
 
 		ComPtr<ID3DBlob> computeShader;
 #if defined(_DEBUG)
-		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
+		D3DReadFileToBlob(L"shaders_debug\\BlocksDetectionCS.cso", &computeShader);
 #else
-		UINT compileFlags = D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
+		D3DReadFileToBlob(L"shaders\\BlocksDetectionCS.cso", &computeShader);
 #endif
-		ThrowIfFailed(D3DCompileFromFile(L"BlocksDetectionCS.hlsl", nullptr, nullptr, "main", "cs_5_1", compileFlags, 0, &computeShader, nullptr));
 		D3D12_COMPUTE_PIPELINE_STATE_DESC computePsoDesc = {};
 		computePsoDesc.pRootSignature = m_blocksComputeRootSignature.Get();
 		computePsoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
 		ThrowIfFailed(d3dSyst->GetDevice()->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_blocksDetectionPipelineState)));
 
-		ThrowIfFailed(D3DCompileFromFile(L"BlocksFillingCS.hlsl", nullptr, nullptr, "main", "cs_5_1", compileFlags, 0, &computeShader, nullptr));
+#if defined(_DEBUG)
+		D3DReadFileToBlob(L"shaders_debug\\BlocksFillingCS.cso", &computeShader);
+#else
+		D3DReadFileToBlob(L"shaders\\BlocksFillingCS.cso", &computeShader);
+#endif
 		computePsoDesc.pRootSignature = m_blocksComputeRootSignature.Get();
 		computePsoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
 		ThrowIfFailed(d3dSyst->GetDevice()->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_blocksFillingPipelineState)));

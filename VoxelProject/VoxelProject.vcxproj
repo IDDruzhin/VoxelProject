@@ -116,6 +116,7 @@
     <FxCompile>
       <ShaderModel>5.1</ShaderModel>
       <EnableUnboundedDescriptorTables>true</EnableUnboundedDescriptorTables>
+      <ObjectFileOutput>shaders_debug\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
@@ -168,6 +169,7 @@
       <DisableOptimizations>false</DisableOptimizations>
       <EnableDebuggingInformation>false</EnableDebuggingInformation>
       <EnableUnboundedDescriptorTables>true</EnableUnboundedDescriptorTables>
+      <ObjectFileOutput>shaders\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
