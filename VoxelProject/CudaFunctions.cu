@@ -2,7 +2,7 @@
 #include "CudaFunctions.cuh"
 
 
-__global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, unsigned char* segmentationTransferTable, int eps, RGBVoxel* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
+__global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, unsigned char* segmentationTransferTable, int eps, RGBVoxel* voxels, int width, int height, int curDepth, int curNumber, int* count)
 {
 	unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
 	unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -11,7 +11,6 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 		return;
 	}
 	int curPos = (y*width + x) * 3;
-	int multipliedDepth = curDepth * depthMultiplier;
 	int4 pixel;
 	pixel.z = segmentedImage[curPos];
 	pixel.y = segmentedImage[curPos + 1];
@@ -22,7 +21,7 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 	}
 	for (int i = 1; i < segmentsCount; i++)
 	{
-		if ((multipliedDepth >= segmentationTable[i].start) && (multipliedDepth <= segmentationTable[i].finish))
+		if ((curDepth >= segmentationTable[i].start) && (curDepth <= segmentationTable[i].finish))
 		{
 			if (abs(pixel.x - segmentationTable[i].color.x)<eps && abs(pixel.y - segmentationTable[i].color.y)<eps && abs(pixel.z - segmentationTable[i].color.z)<eps)
 			{
@@ -35,18 +34,18 @@ __global__ void GetVoxelsAnatomicalSegmentationKernel(unsigned char* anatomicalI
 				voxels[curCount].color.z = anatomicalImage[curPos];
 				voxels[curCount].color.y = anatomicalImage[curPos + 1];
 				voxels[curCount].color.x = anatomicalImage[curPos + 2];
-				voxels[curCount].index = width * height*curDepth + width * y + x;
+				voxels[curCount].index = width * height * curNumber + width * y + x;
 				return;
 			}
 		}
 	}
 }
 
-void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, unsigned char* segmentationTransferTable, int eps, RGBVoxel* voxels, int width, int height, int curDepth, int depthMultiplier, int* count)
+void GetVoxelsAnatomicalSegmentation(unsigned char* anatomicalImage, unsigned char* segmentedImage, SegmentData* segmentationTable, int segmentsCount, unsigned char* segmentationTransferTable, int eps, RGBVoxel* voxels, int width, int height, int curDepth, int curNumber, int* count)
 {
 	dim3 blockSize(32, 32);
 	dim3 gridSize((width - 1) / blockSize.x + 1, (height - 1) / blockSize.y + 1);
-	GetVoxelsAnatomicalSegmentationKernel <<<gridSize, blockSize >>> (anatomicalImage, segmentedImage, segmentationTable, segmentsCount, segmentationTransferTable, eps, voxels, width, height, curDepth, depthMultiplier, count);
+	GetVoxelsAnatomicalSegmentationKernel <<<gridSize, blockSize >>> (anatomicalImage, segmentedImage, segmentationTable, segmentsCount, segmentationTransferTable, eps, voxels, width, height, curDepth, curNumber, count);
 }
 
 struct CompareVoxelsRed
@@ -97,7 +96,7 @@ struct ReduceColors
 	};
 };
 
-void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int depthMulptiplier, int eps, int3& dim, vector<Voxel>& voxels, vector<uchar4>& palette)
+void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int eps, int3& dim, vector<Voxel>& voxels, vector<uchar4>& palette)
 {
 
 	HANDLE hA;
@@ -122,6 +121,7 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	hS = FindFirstFileA((segmentedFolder + "*").c_str(), &fS);  //Find "."
 	FindNextFileA(hS, &fS); //Find ".."
 	int curDepth = 0;
+	int curNumber = 0;
 	unsigned char* hDataA;
 	unsigned char* hDataS;
 	unsigned char* gDataA;
@@ -139,19 +139,19 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 	cudaMalloc((void**)&gSegmentationTransfer, sizeof(SegmentData)*(segmentationTransfer.size()));
 	cudaMemcpy(gSegmentationTransfer, &segmentationTransfer[0], sizeof(SegmentData)*(segmentationTransfer.size()), cudaMemcpyHostToDevice);
 	cudaMalloc((void**)&gCount, sizeof(int));
-	int Time = clock();
 	Mat mA;
 	Mat mS;
 	while (FindNextFileA(hA, &fA) && FindNextFileA(hS, &fS))
 	{
 		mA = imread(anatomicalFolder + fA.cFileName);
 		mS = imread(segmentedFolder + fS.cFileName);
+		curDepth = atoi(fA.cFileName);
 		cudaMemset(gCount, 0, sizeof(int));
 		hDataA = mA.data;
 		hDataS = mS.data;
 		cudaMemcpy(gDataA, hDataA, sizeof(unsigned char)*(dim.x*dim.y) * 3, cudaMemcpyHostToDevice);
 		cudaMemcpy(gDataS, hDataS, sizeof(unsigned char)*(dim.x*dim.y) * 3, cudaMemcpyHostToDevice);
-		GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, thrust::raw_pointer_cast(dVoxelsSlice.data()), dim.x, dim.y, curDepth, depthMulptiplier, gCount);
+		GetVoxelsAnatomicalSegmentation(gDataA, gDataS, gSegmentTable, segmentationTable.size(), gSegmentationTransfer, eps, thrust::raw_pointer_cast(dVoxelsSlice.data()), dim.x, dim.y, curDepth, curNumber, gCount);
 		cudaMemcpy(&hCount, gCount, sizeof(int), cudaMemcpyDeviceToHost);
 		if (hCount > 0)
 		{
@@ -159,9 +159,8 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 			dVoxels.resize(curSize + hCount);
 			thrust::copy(dVoxelsSlice.begin(), dVoxelsSlice.begin()+hCount, dVoxels.begin()+ curSize);
 		}
-		curDepth++;
+		curNumber++;
 	}
-	Time = clock() - Time;
 	cudaFree(gDataA);
 	cudaFree(gDataS);
 	cudaFree(gSegmentTable);

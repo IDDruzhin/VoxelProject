@@ -124,7 +124,7 @@ void VoxelObject::CreateFromSlices(string path)
 			throw std::exception("Can`t open segmentation names file");
 		}
 		int eps = 2;
-		CUDACreateFromSlices(anatomicalFolder, segmentedFolder, segmentationTable, segmentationTransfer, depthMulptiplier, eps, m_dim, m_voxels, m_palette);
+		CUDACreateFromSlices(anatomicalFolder, segmentedFolder, segmentationTable, segmentationTransfer, eps, m_dim, m_voxels, m_palette);
 	}
 	else
 	{
