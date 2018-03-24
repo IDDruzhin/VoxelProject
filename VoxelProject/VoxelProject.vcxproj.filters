@@ -31,6 +31,9 @@
     <Filter Include="CUDA">
       <UniqueIdentifier>{c6d7f1bd-a0b7-4d78-8ade-7c6a17e318fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Skeletal">
+      <UniqueIdentifier>{df4d0022-2499-4270-bc88-ae5173c804f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -75,6 +78,12 @@
     <ClInclude Include="CudaFunctions.cuh">
       <Filter>CUDA</Filter>
     </ClInclude>
+    <ClInclude Include="Bone.h">
+      <Filter>Skeletal</Filter>
+    </ClInclude>
+    <ClInclude Include="Skeleton.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -106,6 +115,12 @@
     </ClCompile>
     <ClCompile Include="Structures.cpp">
       <Filter>Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Bone.cpp">
+      <Filter>Skeletal</Filter>
+    </ClCompile>
+    <ClCompile Include="Skeleton.cpp">
+      <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

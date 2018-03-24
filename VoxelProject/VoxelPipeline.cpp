@@ -226,6 +226,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(fal
 		m_d3dSyst->GetDevice()->CreateUnorderedAccessView(m_renderTexture.Get(), nullptr, &renderUavDesc, cpuWriteUavHandleRender);
 	}
 
+	///Block indexes
 	int blockIndexes[] =
 	{
 		0,6,4,
@@ -245,6 +246,20 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(fal
 	m_blockIndexBufferView.BufferLocation = m_blockIndexBuffer->GetGPUVirtualAddress();
 	m_blockIndexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_blockIndexBufferView.SizeInBytes = sizeof(blockIndexes);
+
+	///Bone mesh
+	float S = sin(XM_PI / 3);
+	vector<Vector3> vertices;
+	vertices.push_back(Vector3(0.0f, -0.5f, -S));
+	vertices.push_back(Vector3(0.0f, 1.0f, 0.0f));
+	vertices.push_back(Vector3(1.0f, 0.0f, 0.0f));
+	vertices.push_back(Vector3(0.0f, -0.5f, S));
+	vertices.push_back(Vector3(0.0f, -0.5f, -S));
+	vertices.push_back(Vector3(0.0f, 1.0f, 0.0f));
+	m_boneVertexBuffer = d3dSyst->CreateVertexBuffer(&vertices[0], vertices.size() * sizeof(Vector3), L"Bone mesh vertex buffer");
+	m_boneVertexBufferView.BufferLocation = m_boneVertexBuffer->GetGPUVirtualAddress();
+	m_boneVertexBufferView.StrideInBytes = sizeof(Vector3);
+	m_boneVertexBufferView.SizeInBytes = vertices.size() * sizeof(Vector3);
 
 	m_background[0] = 0.0f;
 	m_background[1] = 0.0f;

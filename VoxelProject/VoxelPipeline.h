@@ -66,6 +66,9 @@ private:
 	ComPtr<ID3D12Resource> m_blockIndexBuffer;
 	D3D12_INDEX_BUFFER_VIEW m_blockIndexBufferView;
 
+	ComPtr<ID3D12Resource> m_boneVertexBuffer;
+	D3D12_VERTEX_BUFFER_VIEW m_boneVertexBufferView;
+
 	ComPtr<ID3D12Resource> m_backCoordTexture;
 	ComPtr<ID3D12Resource> m_renderTexture;
 	ComPtr<ID3D12DescriptorHeap> m_srvUavHeapRender;  ///Cpu read only heap
