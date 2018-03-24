@@ -80,8 +80,15 @@ private:
 	ComPtr<ID3D12PipelineState> m_blocksFillingPipelineState;
 	ComPtr<ID3D12DescriptorHeap> m_blocksComputeSrvUavHeap;
 
+	ComPtr<ID3D12RootSignature> m_bonesRenderRootSignature;
+	ComPtr<ID3D12PipelineState> m_bonesRenderPipelineState;
+	ComPtr<ID3D12PipelineState> m_bonesEdgesRenderPipelineState;
+	RenderBonesCB m_bonesRenderingCB;
+
 	float m_background[4];
+	bool m_renderVoxels;
 	bool m_renderBlocks;
+	bool m_renderBones;
 	ComPtr<ID3D12PipelineState> m_selectedRCPipelineState;
 	
 };

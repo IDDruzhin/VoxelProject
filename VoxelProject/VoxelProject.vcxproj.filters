@@ -82,7 +82,7 @@
       <Filter>Skeletal</Filter>
     </ClInclude>
     <ClInclude Include="Skeleton.h">
-      <Filter>Файлы заголовков</Filter>
+      <Filter>Skeletal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -120,7 +120,7 @@
       <Filter>Skeletal</Filter>
     </ClCompile>
     <ClCompile Include="Skeleton.cpp">
-      <Filter>Исходные файлы</Filter>
+      <Filter>Skeletal</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +159,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="RayCastingTrilinearPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BonesVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GuidedColorPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

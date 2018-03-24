@@ -9,6 +9,8 @@ public:
 	~Skeleton();
 	void Process();
 	void SetMatricesForDraw(Matrix viewProj);
+	void CopyMatricesForDraw(Matrix* dst);
+	int GetBonesCount();
 private:
 	Bone* m_root;
 	Vector3 m_pos;

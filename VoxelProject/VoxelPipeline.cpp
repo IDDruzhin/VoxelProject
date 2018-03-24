@@ -2,7 +2,7 @@
 #include "VoxelPipeline.h"
 
 
-VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(false)
+VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderVoxels(true), m_renderBlocks(false), m_renderBones(true)
 {
 	m_d3dSyst = d3dSyst;
 	//Viewport
@@ -107,6 +107,61 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderBlocks(fal
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
 		psoDesc.RasterizerState = rasterizerDesc;
 		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_blocksRenderPipelineState)));
+	}
+	/// Bones rendering pipeline
+	{
+		CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+		rootParameters[0].InitAsConstantBufferView(1, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_VERTEX);
+		rootParameters[1].InitAsConstants(4, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+
+		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+		rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+		ID3DBlob *signature;
+		ID3DBlob *error;
+		ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, m_d3dSyst->GetFeatureData().HighestVersion, &signature, &error));
+		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_bonesRenderRootSignature)));
+
+		ComPtr<ID3DBlob> vertexShader;
+		ComPtr<ID3DBlob> pixelShader;
+#if defined(_DEBUG)
+		D3DReadFileToBlob(L"shaders_debug\\BonesVS.cso", &vertexShader);
+		D3DReadFileToBlob(L"shaders_debug\\GuidedColorPS.cso", &pixelShader);
+#else
+		D3DReadFileToBlob(L"shaders\\BonesVS.cso", &vertexShader);
+		D3DReadFileToBlob(L"shaders\\GuidedColorPS.cso", &pixelShader);
+#endif
+
+		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+		};
+
+		CD3DX12_BLEND_DESC blendDesc(D3D12_DEFAULT);
+		CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
+		CD3DX12_RASTERIZER_DESC rasterizerDesc(D3D12_DEFAULT);
+
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+		psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+		psoDesc.pRootSignature = m_bonesRenderRootSignature.Get();
+		psoDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
+		psoDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
+		psoDesc.RasterizerState = rasterizerDesc;
+		psoDesc.BlendState = blendDesc;
+		psoDesc.DepthStencilState = depthStencilDesc;
+		psoDesc.SampleMask = UINT_MAX;
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		psoDesc.SampleDesc.Count = 1;
+
+		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_bonesRenderPipelineState)));
+
+		rasterizerDesc.FillMode = D3D12_FILL_MODE_WIREFRAME;
+		psoDesc.RasterizerState = rasterizerDesc;
+		ThrowIfFailed(m_d3dSyst->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_bonesEdgesRenderPipelineState)));
+
 	}
 
 	/// Blocks detection and filling compute pipeline
@@ -299,73 +354,98 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 		ID3D12DescriptorHeap* heaps[] = { m_srvUavHeapRender.Get() };
 		commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 
-		commandList->SetGraphicsRootSignature(m_renderRootSignature.Get());
 		commandList->RSSetViewports(1, &m_viewport);
 		commandList->RSSetScissorRects(1, &m_scissorRect);
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		memcpy(m_cbvGPUAddress[frameIndex], &m_renderingCB, sizeof(m_renderingCB));
-		commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
-		commandList->SetGraphicsRootDescriptorTable(1, m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE gpuH(m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart(), GRAPHICS_DESCRIPTORS::RENDER_TEXTURE_UAV, m_srvUavDescriptorSize);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE cpuH(m_rtvHeapRender->GetCPUDescriptorHandleForHeapStart(), GRAPHICS_DESCRIPTORS::RENDER_TEXTURE_UAV, m_srvUavDescriptorSize);
-		commandList->ClearUnorderedAccessViewFloat(gpuH, cpuH, m_renderTexture.Get(), &m_background[0],0,nullptr);
+		commandList->ClearUnorderedAccessViewFloat(gpuH, cpuH, m_renderTexture.Get(), &m_background[0], 0, nullptr);
+
+		if (m_renderVoxels)
+		{
+			commandList->SetGraphicsRootSignature(m_renderRootSignature.Get());
+
+			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			memcpy(m_cbvGPUAddress[frameIndex], &m_renderingCB, sizeof(m_renderingCB));
+			commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootDescriptorTable(1, m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
 		
-		
-		commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVBV()));
-		commandList->IASetIndexBuffer(&m_blockIndexBufferView);
+			commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVBV()));
+			commandList->IASetIndexBuffer(&m_blockIndexBufferView);
 
-		Matrix invertWorldView = (voxObj->GetWorld()*camera->GetView()).Invert();
-		Vector3 cameraPos(0.0f,0.0f,0.0f);
-		cameraPos = Vector3::Transform(cameraPos, invertWorldView);
-		vector<BlockPriorityInfo> blocksOrder = voxObj->CalculatePriorities(cameraPos);
-		int priority = blocksOrder[0].priority;
-		int start = 0;
-		for (int i = 0; i < blocksOrder.size(); i++)
-		{
-			if ((priority != blocksOrder[i].priority))
-			{
-				commandList->SetPipelineState(m_backFacesPipelineState.Get());
-				for (int j = start; j < i; j++)
-				{
-					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
-				}
-				commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
-				commandList->SetPipelineState(m_selectedRCPipelineState.Get());
-				for (int j = start; j < i; j++)
-				{
-					commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
-					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
-				}
-				commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
-
-				priority = blocksOrder[i].priority;
-				start = i;
-			}
-		}
-		commandList->SetPipelineState(m_backFacesPipelineState.Get());
-		for (int j = start; j < blocksOrder.size(); j++)
-		{
-			commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
-		}
-		commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
-
-		commandList->SetPipelineState(m_selectedRCPipelineState.Get());
-		for (int j = start; j < blocksOrder.size(); j++)
-		{
-			commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
-			commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
-		}
-		commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
-
-		commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_renderTexture.Get());
-		if (m_renderBlocks)
-		{
-			commandList->SetPipelineState(m_blocksRenderPipelineState.Get());
+			Matrix invertWorldView = (voxObj->GetWorld()*camera->GetView()).Invert();
+			Vector3 cameraPos(0.0f, 0.0f, 0.0f);
+			cameraPos = Vector3::Transform(cameraPos, invertWorldView);
+			vector<BlockPriorityInfo> blocksOrder = voxObj->CalculatePriorities(cameraPos);
+			int priority = blocksOrder[0].priority;
+			int start = 0;
 			for (int i = 0; i < blocksOrder.size(); i++)
 			{
-				commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
+				if ((priority != blocksOrder[i].priority))
+				{
+					commandList->SetPipelineState(m_backFacesPipelineState.Get());
+					for (int j = start; j < i; j++)
+					{
+						commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+					}
+					commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
+					commandList->SetPipelineState(m_selectedRCPipelineState.Get());
+					for (int j = start; j < i; j++)
+					{
+						commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
+						commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+					}
+					commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
+
+					priority = blocksOrder[i].priority;
+					start = i;
+				}
 			}
+			commandList->SetPipelineState(m_backFacesPipelineState.Get());
+			for (int j = start; j < blocksOrder.size(); j++)
+			{
+				commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+			}
+			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
+
+			commandList->SetPipelineState(m_selectedRCPipelineState.Get());
+			for (int j = start; j < blocksOrder.size(); j++)
+			{
+				commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
+				commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+			}
+			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
+			commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_renderTexture.Get());
+			if (m_renderBlocks)
+			{
+				commandList->SetPipelineState(m_blocksRenderPipelineState.Get());
+				for (int i = 0; i < blocksOrder.size(); i++)
+				{
+					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
+				}
+			}
+		}
+		else
+		{
+			commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_renderTexture.Get());
+		}
+		if (m_renderBones)
+		{
+			commandList->SetGraphicsRootSignature(m_bonesRenderRootSignature.Get());
+			commandList->SetPipelineState(m_bonesRenderPipelineState.Get());
+			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+			Vector4 color(0.5f, 0.5f, 0.5f, 1.0f);
+			commandList->SetGraphicsRoot32BitConstants(1, 3, &color, 0);
+			voxObj->CopySkeletonMatricesForDraw(m_bonesRenderingCB.bones);
+			memcpy(m_cbvGPUAddress[frameIndex] + RenderingCBAlignedSize, &m_bonesRenderingCB, sizeof(m_bonesRenderingCB));
+			commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress() + RenderingCBAlignedSize);
+			commandList->IASetVertexBuffers(0, 1, &m_boneVertexBufferView);
+			commandList->DrawInstanced(6, voxObj->GetBonesCount(), 0, 0);
+
+			commandList->SetPipelineState(m_bonesEdgesRenderPipelineState.Get());
+			color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+			commandList->SetGraphicsRoot32BitConstants(1, 3, &color, 0);
+			commandList->DrawInstanced(6, voxObj->GetBonesCount(), 0, 0);
 		}
 
 		m_d3dSyst->Execute();

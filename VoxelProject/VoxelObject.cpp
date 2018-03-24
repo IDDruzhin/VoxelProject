@@ -284,3 +284,18 @@ vector<float> VoxelObject::GetSegmentsOpacity()
 	return m_segmentsOpacity;
 }
 
+void VoxelObject::CopySkeletonMatricesForDraw(Matrix * dst)
+{
+	m_skeleton.CopyMatricesForDraw(dst);
+}
+
+int VoxelObject::GetBonesCount()
+{
+	return m_skeleton.GetBonesCount();
+}
+
+void VoxelObject::SetSkeletonMatricesForDraw(Matrix viewProj)
+{
+	m_skeleton.SetMatricesForDraw(viewProj);
+}
+

@@ -76,3 +76,13 @@ void Skeleton::SetMatricesForDraw(Matrix viewProj)
 		}
 	}
 }
+
+void Skeleton::CopyMatricesForDraw(Matrix * dst)
+{
+	memcpy(dst, &m_matricesForDraw[0], sizeof(Matrix)*m_matricesForDraw.size());
+}
+
+int Skeleton::GetBonesCount()
+{
+	return m_finalTransforms.size();
+}

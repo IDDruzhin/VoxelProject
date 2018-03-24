@@ -27,18 +27,30 @@ void GeneralModel::RotateCamera(Vector3 dr)
 {
 	m_camera->Rotate(dr * m_cameraSens);
 	m_camera->UpdateView();
+	if (m_voxObj != nullptr)
+	{
+		m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
+	}
 }
 
 void GeneralModel::ZoomCamera(float dx)
 {
 	m_camera->Zoom(dx * m_cameraSens * 0.5f);
 	m_camera->UpdateView();
+	if (m_voxObj != nullptr)
+	{
+		m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
+	}
 }
 
 void GeneralModel::MoveCamera(Vector3 dt)
 {
 	m_camera->Move(dt * m_cameraSens * 0.3f);
 	m_camera->UpdateView();
+	if (m_voxObj != nullptr)
+	{
+		m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
+	}
 }
 
 void GeneralModel::LoadBin(string path)

@@ -22,6 +22,12 @@ struct ComputeBlocksCB
 };
 const int ComputeBlocksCBAlignedSize = (sizeof(ComputeBlocksCB) + 255) & ~255;
 
+struct RenderBonesCB
+{
+	Matrix bones[256];
+};
+const int RenderBonesCBAlignedSize = (sizeof(RenderBonesCB) + 255) & ~255;
+
 struct Vertex
 {
 	Vector3 pos;

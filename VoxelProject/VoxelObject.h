@@ -2,6 +2,7 @@
 #include "Object.h"
 #include "Structures.h"
 #include "VoxelPipeline.h"
+#include "Skeleton.h"
 #include <sstream>
 
 
@@ -34,6 +35,10 @@ typedef
 	vector<string> GetSegmentsNames();
 	void SetSegmentsOpacity(VoxelPipeline* voxPipeline, vector<float> &segmentsOpacity);
 	vector<float> GetSegmentsOpacity();
+
+	void CopySkeletonMatricesForDraw(Matrix* dst);
+	int GetBonesCount();
+	void SetSkeletonMatricesForDraw(Matrix viewProj);
 private:
 	string m_name;
 	int3 m_dim;
@@ -42,6 +47,8 @@ private:
 	vector<string> m_segmentationTableNames;
 	vector<float> m_segmentsOpacity;
 	int m_blockSize;
+
+	Skeleton m_skeleton;
 	
 	vector<ComPtr<ID3D12Resource>> m_texturesRes;
 	vector<BlockPriorityInfo> m_blocksPriorInfo;
