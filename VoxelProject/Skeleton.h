@@ -1,5 +1,7 @@
 #pragma once
 
+#define MAX_BONES 256
+
 #include "Bone.h"
 
 class Skeleton
@@ -19,6 +21,7 @@ public:
 	void RotateBone(Vector3 dr, int index);
 	void DeleteBone(int index);
 	void CalculateIndices();
+	void InsertMirroredBones(int index, Vector3 axis);
 private:
 	shared_ptr<Bone> m_root;
 	Vector3 m_pos;

@@ -7,6 +7,16 @@ m_length(0.1f), m_s(0.015f), m_t(parentLength), m_index(index)
 {
 }
 
+Bone::Bone(shared_ptr<Bone> copy)
+{
+	m_t = copy->m_t;
+	m_s = copy->m_s;
+	m_r = copy->m_r;
+	m_length = copy->m_length;
+	m_child = nullptr;
+	m_sibling = nullptr;	
+}
+
 
 Bone::~Bone()
 {
@@ -220,5 +230,41 @@ void Bone::CalculateIndex(int & index)
 	if (m_sibling)
 	{
 		m_sibling->CalculateIndex(index);
+	}
+}
+
+void Bone::Mirror(Vector3 axis)
+{
+	if (axis.x == 1)
+	{
+		m_r.x *= -1;
+		m_r.w *= -1;
+	}
+	if (axis.y == 1)
+	{
+		m_r.y *= -1;
+		m_r.w *= -1;
+	}
+	if (axis.z == 1)
+	{
+		m_r.z *= -1;
+		m_r.w *= -1;
+	}
+}
+
+void Bone::ProcessMirror(Vector3 axis, shared_ptr<Bone> origin)
+{
+	Mirror(axis);
+	if (origin->GetChild())
+	{
+		shared_ptr<Bone> child = make_shared<Bone>(origin->GetChild());
+		SetChild(child);
+		child->ProcessMirror(axis, origin->GetChild());
+	}
+	if (origin->GetSibling())
+	{
+		shared_ptr<Bone> sibling = make_shared<Bone>(origin->GetSibling());
+		SetSibling(sibling);
+		sibling->ProcessMirror(axis, origin->GetSibling());
 	}
 }

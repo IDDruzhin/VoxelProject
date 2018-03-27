@@ -3,6 +3,7 @@ class Bone
 {
 public:
 	Bone(float parentLength = 0, int index = 0);
+	Bone(shared_ptr<Bone> copy);
 	~Bone();
 	shared_ptr<Bone> GetChild();
 	shared_ptr<Bone> GetSibling();
@@ -24,6 +25,8 @@ public:
 	shared_ptr<Bone> FindPrev(shared_ptr<Bone> prev, int index);
 	void Rotate(Vector3 dr);
 	void CalculateIndex(int& index);
+	void Mirror(Vector3 axis);
+	void ProcessMirror(Vector3 axis, shared_ptr<Bone> origin);
 private:
 	shared_ptr<Bone> m_child;
 	shared_ptr<Bone> m_sibling;

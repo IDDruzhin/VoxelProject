@@ -31,6 +31,9 @@ public:
 	void TranslateSkeleton(Vector3 dt);
 	void RotateBone(Vector3 dr);
 	void DeleteBone();
+	void MirrorBonesX();
+	void MirrorBonesY();
+	void MirrorBonesZ();
 private:
 	shared_ptr<Camera> m_camera;
 	Vector3 m_background;

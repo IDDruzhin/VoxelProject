@@ -44,6 +44,7 @@ typedef
 	void TranslateSkeleton(Vector3 dt);
 	void RotateBone(Vector3 dr, int index);
 	void DeleteBone(int index);
+	void InsertMirroredBones(int index, Vector3 axis);
 private:
 	string m_name;
 	int3 m_dim;

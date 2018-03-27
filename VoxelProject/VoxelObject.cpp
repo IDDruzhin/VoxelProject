@@ -324,3 +324,8 @@ void VoxelObject::DeleteBone(int index)
 	m_skeleton.DeleteBone(index);
 }
 
+void VoxelObject::InsertMirroredBones(int index, Vector3 axis)
+{
+	m_skeleton.InsertMirroredBones(index, axis);
+}
+

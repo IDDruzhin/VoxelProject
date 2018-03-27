@@ -25,7 +25,10 @@ void Skeleton::Process()
 
 void Skeleton::SetMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw)
 {
-	m_root->ProcessForDraw(viewProj, matricesForDraw);
+	if (m_bonesCount < MAX_BONES)
+	{
+		m_root->ProcessForDraw(viewProj, matricesForDraw);
+	}
 }
 
 int Skeleton::GetBonesCount()
@@ -148,5 +151,31 @@ void Skeleton::CalculateIndices()
 {
 	m_bonesCount = 0;
 	m_root->CalculateIndex(m_bonesCount);
+}
+
+void Skeleton::InsertMirroredBones(int index, Vector3 axis)
+{
+	if (index == m_root->GetIndex())
+	{
+		/*
+		shared_ptr<Bone> mirr = make_shared<Bone>(m_root);
+		mirr->ProcessMirror(axis, m_root);
+		m_root->SetChild(mirr);
+		*/
+	}
+	else
+	{
+		shared_ptr<Bone> cur = Find(index);
+		shared_ptr<Bone> prev = FindPrev(index);
+		shared_ptr<Bone> mirr = make_shared<Bone>(cur);
+		mirr->ProcessMirror(axis, cur);
+		while (cur->GetSibling())
+		{
+			cur = cur->GetSibling();
+		}
+		cur->SetSibling(mirr);
+	}
+	CalculateIndices();
+	Process();
 }
 

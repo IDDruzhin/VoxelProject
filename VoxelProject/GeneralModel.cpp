@@ -145,3 +145,21 @@ void GeneralModel::DeleteBone()
 	m_voxObj->DeleteBone(m_selectedBone);
 	m_selectedBone = 0;
 }
+
+void GeneralModel::MirrorBonesX()
+{
+	m_voxObj->InsertMirroredBones(m_selectedBone, Vector3(1, 0, 0));
+	m_selectedBone = 0;
+}
+
+void GeneralModel::MirrorBonesY()
+{
+	m_voxObj->InsertMirroredBones(m_selectedBone, Vector3(0, 1, 0));
+	m_selectedBone = 0;
+}
+
+void GeneralModel::MirrorBonesZ()
+{
+	m_voxObj->InsertMirroredBones(m_selectedBone, Vector3(0, 0, 1));
+	m_selectedBone = 0;
+}
