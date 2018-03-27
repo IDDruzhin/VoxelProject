@@ -42,6 +42,11 @@ shared_ptr<Bone> Skeleton::Find(int index)
 	return m_root->Find(index);
 }
 
+shared_ptr<Bone> Skeleton::FindPrev(int index)
+{
+	return m_root->FindPrev(m_root, index);
+}
+
 int Skeleton::PickBone(float x, float y, float eps, Matrix viewProj)
 {
 	Vector4 p0(0.0f, 0.0f, 0.0f, 1.0f);
@@ -114,5 +119,34 @@ void Skeleton::RotateBone(Vector3 dr, int index)
 	shared_ptr<Bone> cur = Find(index);
 	cur->Rotate(dr);
 	Process();
+}
+
+void Skeleton::DeleteBone(int index)
+{
+	if (index == m_root->GetIndex())
+	{
+		m_root->SetChild(nullptr);
+	}
+	else
+	{
+		shared_ptr<Bone> cur = Find(index);
+		shared_ptr<Bone> prev = FindPrev(index);
+		if (cur == prev->GetChild())
+		{
+			prev->SetChild(cur->GetSibling());
+		}
+		else
+		{
+			prev->SetSibling(cur->GetSibling());
+		}
+	}	
+	CalculateIndices();
+	Process();
+}
+
+void Skeleton::CalculateIndices()
+{
+	m_bonesCount = 0;
+	m_root->CalculateIndex(m_bonesCount);
 }
 

@@ -11,11 +11,14 @@ public:
 	void SetMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw);
 	int GetBonesCount();
 	shared_ptr<Bone> Find(int index);
+	shared_ptr<Bone> FindPrev(int index);
 	int PickBone(float x, float y, float eps, Matrix viewProj);
 	int AddBone(int selectedIndex);
 	void SetBoneLength(int selectedIndex, float length);
 	void Translate(Vector3 dt);
 	void RotateBone(Vector3 dr, int index);
+	void DeleteBone(int index);
+	void CalculateIndices();
 private:
 	shared_ptr<Bone> m_root;
 	Vector3 m_pos;

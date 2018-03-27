@@ -8,6 +8,7 @@ public:
 	shared_ptr<Bone> GetSibling();
 	void SetCombined(Matrix parentCombined);
 	void InsertChild(int index);
+	void SetChild(shared_ptr<Bone> child);
 	void SetSibling(shared_ptr<Bone> sibling);
 	void SetLength(float length);
 	void SetTranslation(float t);
@@ -20,7 +21,9 @@ public:
 	void Process(Matrix parentCombined);
 	void ProcessForDraw(Matrix viewProj, Matrix* matricesForDraw);
 	shared_ptr<Bone> Find(int index);
+	shared_ptr<Bone> FindPrev(shared_ptr<Bone> prev, int index);
 	void Rotate(Vector3 dr);
+	void CalculateIndex(int& index);
 private:
 	shared_ptr<Bone> m_child;
 	shared_ptr<Bone> m_sibling;

@@ -319,3 +319,8 @@ void VoxelObject::RotateBone(Vector3 dr, int index)
 	m_skeleton.RotateBone(dr, index);
 }
 
+void VoxelObject::DeleteBone(int index)
+{
+	m_skeleton.DeleteBone(index);
+}
+

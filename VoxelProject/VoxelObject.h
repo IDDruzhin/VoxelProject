@@ -43,6 +43,7 @@ typedef
 	void SetBoneLength(int selectedIndex, float length);
 	void TranslateSkeleton(Vector3 dt);
 	void RotateBone(Vector3 dr, int index);
+	void DeleteBone(int index);
 private:
 	string m_name;
 	int3 m_dim;

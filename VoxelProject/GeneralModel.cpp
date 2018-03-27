@@ -139,3 +139,9 @@ void GeneralModel::RotateBone(Vector3 dr)
 {
 	m_voxObj->RotateBone(dr * XM_PI / 180.0f, m_selectedBone);
 }
+
+void GeneralModel::DeleteBone()
+{
+	m_voxObj->DeleteBone(m_selectedBone);
+	m_selectedBone = 0;
+}

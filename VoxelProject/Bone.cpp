@@ -45,6 +45,11 @@ void Bone::InsertChild(int index)
 	}
 }
 
+void Bone::SetChild(shared_ptr<Bone> child)
+{
+	m_child = move(child);
+}
+
 void Bone::SetSibling(shared_ptr<Bone> sibling)
 {
 	m_sibling = move(sibling);
@@ -163,7 +168,57 @@ shared_ptr<Bone> Bone::Find(int index)
 	return nullptr;
 }
 
+shared_ptr<Bone> Bone::FindPrev(shared_ptr<Bone> prev, int index)
+{
+	if (m_child)
+	{
+		if (m_child->GetIndex() == index)
+		{
+			return prev;
+		}
+		else
+		{
+			shared_ptr<Bone> cur = m_child->FindPrev(m_child, index);
+			if (cur)
+			{
+				return cur;
+			}
+
+		}
+	}
+	if (m_sibling)
+	{
+		if (m_sibling->GetIndex() == index)
+		{
+			return prev;
+		}
+		else
+		{
+			shared_ptr<Bone> cur = m_sibling->FindPrev(m_sibling, index);
+			if (cur)
+			{
+				return cur;
+			}
+		}
+	}
+	return nullptr;
+}
+
 void Bone::Rotate(Vector3 dr)
 {
 	m_r = Quaternion::CreateFromYawPitchRoll(dr.x, dr.y, dr.z) * m_r;
+}
+
+void Bone::CalculateIndex(int & index)
+{
+	m_index = index;
+	index++;
+	if (m_child)
+	{
+		m_child->CalculateIndex(index);
+	}
+	if (m_sibling)
+	{
+		m_sibling->CalculateIndex(index);
+	}
 }
