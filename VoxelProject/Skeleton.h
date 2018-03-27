@@ -8,15 +8,14 @@ public:
 	Skeleton();
 	~Skeleton();
 	void Process();
-	void SetMatricesForDraw(Matrix viewProj);
-	//void CopyMatricesForDraw(Matrix* dst);
+	void SetMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw);
 	int GetBonesCount();
+	shared_ptr<Bone> Find(int index);
 	int AddBone(int selectedIndex);
+	void SetBoneLength(int selectedIndex, float length);
 private:
 	shared_ptr<Bone> m_root;
 	Vector3 m_pos;
 	int m_bonesCount;
-	//vector<Matrix> m_finalTransforms;
-	//vector<Matrix> m_matricesForDraw;
 };
 

@@ -36,10 +36,10 @@ typedef
 	void SetSegmentsOpacity(VoxelPipeline* voxPipeline, vector<float> &segmentsOpacity);
 	vector<float> GetSegmentsOpacity();
 
-	void CopySkeletonMatricesForDraw(Matrix* dst);
 	int GetBonesCount();
-	void SetSkeletonMatricesForDraw(Matrix viewProj);
+	void SetSkeletonMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw);
 	int AddBone(int selectedIndex);
+	void SetBoneLength(int selectedIndex, float length);
 private:
 	string m_name;
 	int3 m_dim;

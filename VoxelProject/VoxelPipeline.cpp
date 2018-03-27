@@ -112,7 +112,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderVoxels(tru
 	{
 		CD3DX12_ROOT_PARAMETER1 rootParameters[2];
 		rootParameters[0].InitAsConstantBufferView(1, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_VERTEX);
-		rootParameters[1].InitAsConstants(4, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParameters[1].InitAsConstants(1, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 		rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -126,10 +126,10 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderVoxels(tru
 		ComPtr<ID3DBlob> pixelShader;
 #if defined(_DEBUG)
 		D3DReadFileToBlob(L"shaders_debug\\BonesVS.cso", &vertexShader);
-		D3DReadFileToBlob(L"shaders_debug\\GuidedColorPS.cso", &pixelShader);
+		D3DReadFileToBlob(L"shaders_debug\\BonesPS.cso", &pixelShader);
 #else
 		D3DReadFileToBlob(L"shaders\\BonesVS.cso", &vertexShader);
-		D3DReadFileToBlob(L"shaders\\GuidedColorPS.cso", &pixelShader);
+		D3DReadFileToBlob(L"shaders\\BonesPS.cso", &pixelShader);
 #endif
 
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -434,21 +434,12 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 			commandList->SetGraphicsRootSignature(m_bonesRenderRootSignature.Get());
 			commandList->SetPipelineState(m_bonesRenderPipelineState.Get());
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-			Vector4 color(0.5f, 0.5f, 0.5f, 1.0f);
-			commandList->SetGraphicsRoot32BitConstants(1, 3, &color, 0);
-			voxObj->CopySkeletonMatricesForDraw(m_bonesRenderingCB.bones);
+			voxObj->SetSkeletonMatricesForDraw((camera->GetView() * camera->GetProjection()), m_bonesRenderingCB.bones);
 			memcpy(m_cbvGPUAddress[frameIndex] + RenderingCBAlignedSize, &m_bonesRenderingCB, sizeof(m_bonesRenderingCB));
 			commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress() + RenderingCBAlignedSize);
 			commandList->IASetVertexBuffers(0, 1, &m_boneVertexBufferView);
-			commandList->DrawInstanced(6, voxObj->GetBonesCount(), 0, 0);
 
-			color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-			commandList->SetGraphicsRoot32BitConstants(1, 3, &color, 0);
-			commandList->DrawInstanced(6, 1, 0, selectedBone);
-
-			commandList->SetPipelineState(m_bonesEdgesRenderPipelineState.Get());
-			color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-			commandList->SetGraphicsRoot32BitConstants(1, 3, &color, 0);
+			commandList->SetGraphicsRoot32BitConstants(1, 1, &selectedBone, 0);
 			commandList->DrawInstanced(6, voxObj->GetBonesCount(), 0, 0);
 		}
 

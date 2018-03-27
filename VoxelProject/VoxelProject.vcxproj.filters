@@ -164,7 +164,7 @@
     <FxCompile Include="BonesVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="GuidedColorPS.hlsl">
+    <FxCompile Include="BonesPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

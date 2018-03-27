@@ -25,6 +25,7 @@ public:
 	void SetInterpolationMode(VoxelPipeline::INTERPOLATION_MODE mode);
 
 	void AddBone();
+	void SetBoneLength(float length);
 private:
 	shared_ptr<Camera> m_camera;
 	Vector3 m_background;

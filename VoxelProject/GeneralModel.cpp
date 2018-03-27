@@ -23,36 +23,23 @@ void GeneralModel::RotateCamera(Vector3 dr)
 {
 	m_camera->Rotate(dr * m_cameraSens);
 	m_camera->UpdateView();
-	if (m_voxObj != nullptr)
-	{
-		m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
-	}
 }
 
 void GeneralModel::ZoomCamera(float dx)
 {
 	m_camera->Zoom(dx * m_cameraSens * 0.5f);
 	m_camera->UpdateView();
-	if (m_voxObj != nullptr)
-	{
-		m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
-	}
 }
 
 void GeneralModel::MoveCamera(Vector3 dt)
 {
 	m_camera->Move(dt * m_cameraSens * 0.3f);
 	m_camera->UpdateView();
-	if (m_voxObj != nullptr)
-	{
-		m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
-	}
 }
 
 void GeneralModel::LoadBin(string path)
 {
 	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
-	m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
 	m_selectedBone = 0;
 }
 
@@ -67,7 +54,6 @@ void GeneralModel::SaveBin(string path)
 void GeneralModel::LoadFromImages(string path)
 {
 	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_SLICES, m_voxPipeline.get());
-	m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
 	m_selectedBone = 0;
 }
 
@@ -123,5 +109,10 @@ void GeneralModel::SetInterpolationMode(VoxelPipeline::INTERPOLATION_MODE mode)
 
 void GeneralModel::AddBone()
 {
-	m_voxObj->AddBone(m_selectedBone);
+	m_selectedBone = m_voxObj->AddBone(m_selectedBone);
+}
+
+void GeneralModel::SetBoneLength(float length)
+{
+	m_voxObj->SetBoneLength(m_selectedBone, length);
 }

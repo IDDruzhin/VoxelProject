@@ -284,23 +284,23 @@ vector<float> VoxelObject::GetSegmentsOpacity()
 	return m_segmentsOpacity;
 }
 
-void VoxelObject::CopySkeletonMatricesForDraw(Matrix * dst)
-{
-	m_skeleton.CopyMatricesForDraw(dst);
-}
-
 int VoxelObject::GetBonesCount()
 {
 	return m_skeleton.GetBonesCount();
 }
 
-void VoxelObject::SetSkeletonMatricesForDraw(Matrix viewProj)
+void VoxelObject::SetSkeletonMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw)
 {
-	m_skeleton.SetMatricesForDraw(viewProj);
+	m_skeleton.SetMatricesForDraw(viewProj, matricesForDraw);
 }
 
 int VoxelObject::AddBone(int selectedIndex)
 {
 	return m_skeleton.AddBone(selectedIndex);
+}
+
+void VoxelObject::SetBoneLength(int selectedIndex, float length)
+{
+	m_skeleton.SetBoneLength(selectedIndex, length);
 }
 

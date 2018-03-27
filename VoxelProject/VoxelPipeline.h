@@ -36,7 +36,7 @@ enum INTERPOLATION_MODE
 
 	VoxelPipeline(shared_ptr<D3DSystem> d3dSyst);
 	~VoxelPipeline();
-	void RenderObject(VoxelObject* voxObj, Camera* camera, int selectedBone = 0);
+	void RenderObject(VoxelObject* voxObj, Camera* camera, int selectedBone);
 	ComPtr<ID3D12Resource> RegisterBlocksInfo(vector<BlockInfo>& blocksInfo);
 	ComPtr<ID3D12Resource> RegisterVoxels(vector<Voxel>& voxels);
 	ComPtr<ID3D12Resource> RegisterPalette(vector<uchar4>& palette);
