@@ -314,3 +314,8 @@ void VoxelObject::TranslateSkeleton(Vector3 dt)
 	m_skeleton.Translate(dt);
 }
 
+void VoxelObject::RotateBone(Vector3 dr, int index)
+{
+	m_skeleton.RotateBone(dr, index);
+}
+

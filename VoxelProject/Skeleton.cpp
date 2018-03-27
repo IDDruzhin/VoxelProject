@@ -109,3 +109,10 @@ void Skeleton::Translate(Vector3 dt)
 	Process();
 }
 
+void Skeleton::RotateBone(Vector3 dr, int index)
+{
+	shared_ptr<Bone> cur = Find(index);
+	cur->Rotate(dr);
+	Process();
+}
+

@@ -2,7 +2,7 @@
 #include "GeneralModel.h"
 
 
-GeneralModel::GeneralModel(HWND hWnd, int width, int height) : m_cameraSens(0.08f), m_width(width), m_height(height), m_background(Vector3(0.5f, 0.7f, 1.0f)), m_selectedBone(0), m_pickEps(0.05f)
+GeneralModel::GeneralModel(HWND hWnd, int width, int height) : m_cameraSens(0.08f), m_width(width), m_height(height), m_background(Vector3(0.5f, 0.7f, 1.0f)), m_selectedBone(0), m_pickEps(0.05f), m_clientSize(Vector2(width, height))
 {
 	m_camera = make_shared<Camera>(m_width, m_height);
 	shared_ptr<D3DSystem> d3dSyst = make_shared<D3DSystem>(hWnd, m_width, m_height);
@@ -137,4 +137,5 @@ void GeneralModel::TranslateSkeleton(Vector3 dt)
 
 void GeneralModel::RotateBone(Vector3 dr)
 {
+	m_voxObj->RotateBone(dr * XM_PI / 180.0f, m_selectedBone);
 }

@@ -162,3 +162,8 @@ shared_ptr<Bone> Bone::Find(int index)
 	}
 	return nullptr;
 }
+
+void Bone::Rotate(Vector3 dr)
+{
+	m_r = Quaternion::CreateFromYawPitchRoll(dr.x, dr.y, dr.z) * m_r;
+}

@@ -20,6 +20,7 @@ public:
 	void Process(Matrix parentCombined);
 	void ProcessForDraw(Matrix viewProj, Matrix* matricesForDraw);
 	shared_ptr<Bone> Find(int index);
+	void Rotate(Vector3 dr);
 private:
 	shared_ptr<Bone> m_child;
 	shared_ptr<Bone> m_sibling;

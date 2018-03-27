@@ -15,6 +15,7 @@ public:
 	int AddBone(int selectedIndex);
 	void SetBoneLength(int selectedIndex, float length);
 	void Translate(Vector3 dt);
+	void RotateBone(Vector3 dr, int index);
 private:
 	shared_ptr<Bone> m_root;
 	Vector3 m_pos;
