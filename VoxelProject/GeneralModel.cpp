@@ -129,3 +129,12 @@ void GeneralModel::SetBoneLength(float length)
 {
 	m_voxObj->SetBoneLength(m_selectedBone, length);
 }
+
+void GeneralModel::TranslateSkeleton(Vector3 dt)
+{
+	m_voxObj->TranslateSkeleton(dt);
+}
+
+void GeneralModel::RotateBone(Vector3 dr)
+{
+}

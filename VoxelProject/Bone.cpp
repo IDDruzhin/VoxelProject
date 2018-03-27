@@ -93,6 +93,7 @@ void Bone::RefreshLocal()
 void Bone::RefreshLocalWithPos(Vector3 pos)
 {
 	m_local = XMMatrixAffineTransformation(Vector3(1.0f, 1.0f, 1.0f), Vector3(0.0f, 0.0f, 0.0f), m_r, pos);
+	m_combined = m_local;
 }
 
 int Bone::GetIndex()

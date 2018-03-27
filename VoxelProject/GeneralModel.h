@@ -28,6 +28,8 @@ public:
 	void PickBone(float x, float y);
 	void AddBone();
 	void SetBoneLength(float length);
+	void TranslateSkeleton(Vector3 dt);
+	void RotateBone(Vector3 dr);
 private:
 	shared_ptr<Camera> m_camera;
 	Vector3 m_background;

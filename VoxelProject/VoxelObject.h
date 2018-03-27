@@ -41,6 +41,7 @@ typedef
 	void SetSkeletonMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw);
 	int AddBone(int selectedIndex);
 	void SetBoneLength(int selectedIndex, float length);
+	void TranslateSkeleton(Vector3 dt);
 private:
 	string m_name;
 	int3 m_dim;

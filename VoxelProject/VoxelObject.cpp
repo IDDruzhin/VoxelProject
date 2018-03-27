@@ -309,3 +309,8 @@ void VoxelObject::SetBoneLength(int selectedIndex, float length)
 	m_skeleton.SetBoneLength(selectedIndex, length);
 }
 
+void VoxelObject::TranslateSkeleton(Vector3 dt)
+{
+	m_skeleton.Translate(dt);
+}
+

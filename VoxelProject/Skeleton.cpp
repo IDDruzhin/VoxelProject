@@ -16,7 +16,11 @@ Skeleton::~Skeleton()
 void Skeleton::Process()
 {
 	m_root->RefreshLocalWithPos(m_pos);
-	m_root->Process(Matrix::Identity);
+	shared_ptr<Bone> cur = m_root->GetChild();
+	if (cur != nullptr)
+	{
+		cur->Process(m_root->GetCombined());
+	}
 }
 
 void Skeleton::SetMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw)
@@ -96,6 +100,12 @@ void Skeleton::SetBoneLength(int selectedIndex, float length)
 {
 	shared_ptr<Bone> cur = Find(selectedIndex);
 	cur->SetLength(length);
+	Process();
+}
+
+void Skeleton::Translate(Vector3 dt)
+{
+	m_pos += dt;
 	Process();
 }
 
