@@ -40,4 +40,8 @@ void InputController::Update()
 		delta.x = m.x;
 		delta.y = m.y;
 	}
+	if ((m_mouseTracker.leftButton == m_mouseTracker.PRESSED))
+	{
+		m_generalModel->PickBone(m.x, m.y);
+	}
 }

@@ -37,6 +37,7 @@ typedef
 	vector<float> GetSegmentsOpacity();
 
 	int GetBonesCount();
+	int PickBone(float x, float y, float eps, Matrix viewProj);
 	void SetSkeletonMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw);
 	int AddBone(int selectedIndex);
 	void SetBoneLength(int selectedIndex, float length);

@@ -289,6 +289,11 @@ int VoxelObject::GetBonesCount()
 	return m_skeleton.GetBonesCount();
 }
 
+int VoxelObject::PickBone(float x, float y, float eps, Matrix viewProj)
+{
+	return m_skeleton.PickBone(x, y, eps, viewProj);
+}
+
 void VoxelObject::SetSkeletonMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw)
 {
 	m_skeleton.SetMatricesForDraw(viewProj, matricesForDraw);

@@ -24,6 +24,8 @@ public:
 	void SetBlocksVisiblity(bool isVisible);
 	void SetInterpolationMode(VoxelPipeline::INTERPOLATION_MODE mode);
 
+	void SetClientSize(Vector2 clientSize);
+	void PickBone(float x, float y);
 	void AddBone();
 	void SetBoneLength(float length);
 private:
@@ -36,5 +38,7 @@ private:
 	shared_ptr<VoxelObject> m_voxObj;
 	unique_ptr<VoxelPipeline> m_voxPipeline;
 	int m_selectedBone;
+	float m_pickEps;
+	Vector2 m_clientSize;
 };
 

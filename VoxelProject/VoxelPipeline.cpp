@@ -110,9 +110,10 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderVoxels(tru
 	}
 	/// Bones rendering pipeline
 	{
-		CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+		CD3DX12_ROOT_PARAMETER1 rootParameters[3];
 		rootParameters[0].InitAsConstantBufferView(1, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_VERTEX);
-		rootParameters[1].InitAsConstants(1, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParameters[1].InitAsConstants(4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+		rootParameters[2].InitAsConstants(1, 2, 0, D3D12_SHADER_VISIBILITY_ALL);
 
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 		rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -439,7 +440,14 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 			commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress() + RenderingCBAlignedSize);
 			commandList->IASetVertexBuffers(0, 1, &m_boneVertexBufferView);
 
-			commandList->SetGraphicsRoot32BitConstants(1, 1, &selectedBone, 0);
+			Vector4 color(0.5f, 0.5f, 0.5f, 1.0f);
+			commandList->SetGraphicsRoot32BitConstants(1, 3, &color, 0);
+			commandList->SetGraphicsRoot32BitConstants(2, 1, &selectedBone, 0);
+			commandList->DrawInstanced(6, voxObj->GetBonesCount(), 0, 0);
+
+			commandList->SetPipelineState(m_bonesEdgesRenderPipelineState.Get());
+			color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+			commandList->SetGraphicsRoot32BitConstants(1, 3, &color, 0);
 			commandList->DrawInstanced(6, voxObj->GetBonesCount(), 0, 0);
 		}
 

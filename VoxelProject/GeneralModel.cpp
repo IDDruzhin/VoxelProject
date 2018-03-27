@@ -2,7 +2,7 @@
 #include "GeneralModel.h"
 
 
-GeneralModel::GeneralModel(HWND hWnd, int width, int height) : m_cameraSens(0.08f), m_width(width), m_height(height), m_background(Vector3(0.5f, 0.7f, 1.0f)), m_selectedBone(-1)
+GeneralModel::GeneralModel(HWND hWnd, int width, int height) : m_cameraSens(0.08f), m_width(width), m_height(height), m_background(Vector3(0.5f, 0.7f, 1.0f)), m_selectedBone(0), m_pickEps(0.05f)
 {
 	m_camera = make_shared<Camera>(m_width, m_height);
 	shared_ptr<D3DSystem> d3dSyst = make_shared<D3DSystem>(hWnd, m_width, m_height);
@@ -105,6 +105,19 @@ void GeneralModel::SetBlocksVisiblity(bool isVisible)
 void GeneralModel::SetInterpolationMode(VoxelPipeline::INTERPOLATION_MODE mode)
 {
 	m_voxPipeline->SetInterpolationMode(mode);
+}
+
+void GeneralModel::SetClientSize(Vector2 clientSize)
+{
+	m_clientSize = clientSize;
+}
+
+void GeneralModel::PickBone(float x, float y)
+{
+	if (m_voxObj != nullptr)
+	{
+		m_selectedBone = m_voxObj->PickBone((x / m_clientSize.x - 0.5f)*2.0f, -(y / m_clientSize.y - 0.5f)*2.0f, m_pickEps, (m_camera->GetView() * m_camera->GetProjection()));
+	}
 }
 
 void GeneralModel::AddBone()

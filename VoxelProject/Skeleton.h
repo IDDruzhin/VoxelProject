@@ -11,6 +11,7 @@ public:
 	void SetMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw);
 	int GetBonesCount();
 	shared_ptr<Bone> Find(int index);
+	int PickBone(float x, float y, float eps, Matrix viewProj);
 	int AddBone(int selectedIndex);
 	void SetBoneLength(int selectedIndex, float length);
 private:
