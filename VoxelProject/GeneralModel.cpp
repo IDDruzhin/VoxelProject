@@ -53,6 +53,7 @@ void GeneralModel::LoadBin(string path)
 {
 	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
 	m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
+	m_selectedBone = 0;
 }
 
 void GeneralModel::SaveBin(string path)
@@ -67,6 +68,7 @@ void GeneralModel::LoadFromImages(string path)
 {
 	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_SLICES, m_voxPipeline.get());
 	m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
+	m_selectedBone = 0;
 }
 
 void GeneralModel::BlocksDecomposition(int blockSize)
@@ -117,4 +119,9 @@ void GeneralModel::SetBlocksVisiblity(bool isVisible)
 void GeneralModel::SetInterpolationMode(VoxelPipeline::INTERPOLATION_MODE mode)
 {
 	m_voxPipeline->SetInterpolationMode(mode);
+}
+
+void GeneralModel::AddBone()
+{
+	m_voxObj->AddBone(m_selectedBone);
 }

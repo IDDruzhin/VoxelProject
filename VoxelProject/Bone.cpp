@@ -100,7 +100,7 @@ int Bone::GetIndex()
 	return m_index;
 }
 
-void Bone::Process(Matrix parentCombined, vector<Matrix>& finalTransforms)
+void Bone::Process(Matrix parentCombined)
 {
 	SetCombined(parentCombined);
 	finalTransforms[m_index] = GetFinal();
@@ -125,4 +125,31 @@ void Bone::ProcessForDraw(Matrix viewProj, vector<Matrix>& matricesForDraw)
 	{
 		m_child->ProcessForDraw(viewProj, matricesForDraw);
 	}
+}
+
+shared_ptr<Bone> Bone::Find(int index)
+{
+	if (m_child)
+	{
+		if (m_child->GetIndex() == index)
+		{
+			return m_child;
+		}
+		else
+		{
+			m_child->Find(index);
+		}
+	}
+	if (m_sibling)
+	{
+		if (m_sibling->GetIndex() == index)
+		{
+			return m_sibling;
+		}
+		else
+		{
+			m_sibling->Find(index);
+		}
+	}
+	return nullptr;
 }

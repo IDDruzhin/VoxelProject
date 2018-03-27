@@ -39,6 +39,7 @@ typedef
 	void CopySkeletonMatricesForDraw(Matrix* dst);
 	int GetBonesCount();
 	void SetSkeletonMatricesForDraw(Matrix viewProj);
+	int AddBone(int selectedIndex);
 private:
 	string m_name;
 	int3 m_dim;

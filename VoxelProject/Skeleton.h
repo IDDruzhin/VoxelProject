@@ -9,12 +9,14 @@ public:
 	~Skeleton();
 	void Process();
 	void SetMatricesForDraw(Matrix viewProj);
-	void CopyMatricesForDraw(Matrix* dst);
+	//void CopyMatricesForDraw(Matrix* dst);
 	int GetBonesCount();
+	int AddBone(int selectedIndex);
 private:
 	shared_ptr<Bone> m_root;
 	Vector3 m_pos;
-	vector<Matrix> m_finalTransforms;
-	vector<Matrix> m_matricesForDraw;
+	int m_bonesCount;
+	//vector<Matrix> m_finalTransforms;
+	//vector<Matrix> m_matricesForDraw;
 };
 

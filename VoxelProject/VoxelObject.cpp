@@ -299,3 +299,8 @@ void VoxelObject::SetSkeletonMatricesForDraw(Matrix viewProj)
 	m_skeleton.SetMatricesForDraw(viewProj);
 }
 
+int VoxelObject::AddBone(int selectedIndex)
+{
+	return m_skeleton.AddBone(selectedIndex);
+}
+

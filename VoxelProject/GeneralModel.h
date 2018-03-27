@@ -23,6 +23,8 @@ public:
 	vector<float> GetSegmentsOpacity();
 	void SetBlocksVisiblity(bool isVisible);
 	void SetInterpolationMode(VoxelPipeline::INTERPOLATION_MODE mode);
+
+	void AddBone();
 private:
 	shared_ptr<Camera> m_camera;
 	Vector3 m_background;

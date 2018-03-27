@@ -17,8 +17,9 @@ public:
 	void RefreshLocal();
 	void RefreshLocalWithPos(Vector3 pos);
 	int GetIndex();
-	void Process(Matrix parentCombined, vector<Matrix>& finalTransforms);
-	void ProcessForDraw(Matrix viewProj, vector<Matrix>& matricesForDraw);
+	void Process(Matrix parentCombined);
+	void ProcessForDraw(Matrix viewProj, Matrix* matricesForDraw);
+	shared_ptr<Bone> Find(int index);
 private:
 	shared_ptr<Bone> m_child;
 	shared_ptr<Bone> m_sibling;

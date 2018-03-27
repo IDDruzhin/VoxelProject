@@ -2,12 +2,12 @@
 #include "Skeleton.h"
 
 
-Skeleton::Skeleton()
+Skeleton::Skeleton() : m_bonesCount(1)
 {
 	m_root = make_shared<Bone>();
 	m_root->SetLength(0.0f);
-	m_finalTransforms.push_back(m_root->GetFinal());
-	m_matricesForDraw.push_back(Matrix::Identity);
+	//m_finalTransforms.push_back(m_root->GetFinal());
+	//m_matricesForDraw.push_back(Matrix::Identity);
 }
 
 
@@ -56,7 +56,7 @@ void Skeleton::Process()
 void Skeleton::Process()
 {
 	m_root->RefreshLocalWithPos(m_pos);
-	m_root->Process(Matrix::Identity, m_finalTransforms);
+	m_root->Process(Matrix::Identity);
 }
 
 void Skeleton::SetMatricesForDraw(Matrix viewProj)
@@ -91,13 +91,31 @@ void Skeleton::SetMatricesForDraw(Matrix viewProj)
 	}
 }
 */
-
+/*
 void Skeleton::CopyMatricesForDraw(Matrix * dst)
 {
 	memcpy(dst, &m_matricesForDraw[0], sizeof(Matrix)*m_matricesForDraw.size());
 }
+*/
 
 int Skeleton::GetBonesCount()
 {
-	return m_finalTransforms.size();
+	//return m_finalTransforms.size();
+	return m_bonesCount;
+}
+
+int Skeleton::AddBone(int selectedIndex)
+{
+	int curIndex = m_bonesCount;
+	if (m_root->GetIndex() == selectedIndex)
+	{
+		m_root->InsertChild(curIndex);
+	}
+	else
+	{
+		shared_ptr<Bone> cur = m_root->Find(selectedIndex);
+		cur->InsertChild(curIndex);
+	}
+	m_bonesCount++;
+	return curIndex;
 }
