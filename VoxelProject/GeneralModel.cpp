@@ -2,14 +2,10 @@
 #include "GeneralModel.h"
 
 
-GeneralModel::GeneralModel(HWND hWnd, int width, int height)
+GeneralModel::GeneralModel(HWND hWnd, int width, int height) : m_cameraSens(0.08f), m_width(width), m_height(height), m_background(Vector3(0.5f, 0.7f, 1.0f)), m_selectedBone(-1)
 {
-	m_cameraSens = 0.08f;
-	m_width = width;
-	m_height = height;
 	m_camera = make_shared<Camera>(m_width, m_height);
 	shared_ptr<D3DSystem> d3dSyst = make_shared<D3DSystem>(hWnd, m_width, m_height);
-	m_background = Vector3(0.5f, 0.7f, 1.0f);
 	m_voxPipeline = make_unique<VoxelPipeline>(d3dSyst);
 }
 
@@ -20,7 +16,7 @@ GeneralModel::~GeneralModel()
 
 void GeneralModel::Render()
 {
-	m_voxPipeline->RenderObject(m_voxObj.get(),m_camera.get());
+	m_voxPipeline->RenderObject(m_voxObj.get(),m_camera.get(),m_selectedBone);
 }
 
 void GeneralModel::RotateCamera(Vector3 dr)
@@ -56,6 +52,7 @@ void GeneralModel::MoveCamera(Vector3 dt)
 void GeneralModel::LoadBin(string path)
 {
 	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_BIN, m_voxPipeline.get());
+	m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
 }
 
 void GeneralModel::SaveBin(string path)
@@ -69,6 +66,7 @@ void GeneralModel::SaveBin(string path)
 void GeneralModel::LoadFromImages(string path)
 {
 	m_voxObj = make_shared<VoxelObject>(path, VoxelObject::LOADING_MODE::LOADING_MODE_SLICES, m_voxPipeline.get());
+	m_voxObj->SetSkeletonMatricesForDraw(m_camera->GetView() * m_camera->GetProjection());
 }
 
 void GeneralModel::BlocksDecomposition(int blockSize)

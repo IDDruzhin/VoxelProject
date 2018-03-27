@@ -12,12 +12,12 @@ Bone::~Bone()
 {
 }
 
-Bone * Bone::GetChild()
+shared_ptr<Bone> Bone::GetChild()
 {
 	return m_child;
 }
 
-Bone * Bone::GetSibling()
+shared_ptr<Bone> Bone::GetSibling()
 {
 	return m_sibling;
 }
@@ -32,22 +32,22 @@ void Bone::InsertChild(int index)
 {
 	if (m_child == nullptr)
 	{
-		m_child = new Bone(m_length, index);
+		m_child = make_shared<Bone>(m_length, index);
 	}
 	else
 	{
-		Bone* cur = m_child;
+		shared_ptr<Bone> cur = m_child;
 		while (cur->GetSibling() != nullptr)
 		{
 			cur = cur->GetSibling();
 		}
-		cur->SetSibling(new Bone(m_length, index));
+		cur->SetSibling(make_shared<Bone>(m_length, index));
 	}
 }
 
-void Bone::SetSibling(Bone * sibling)
+void Bone::SetSibling(shared_ptr<Bone> sibling)
 {
-	m_sibling = sibling;
+	m_sibling = move(sibling);
 }
 
 void Bone::SetLength(float length)
@@ -55,13 +55,11 @@ void Bone::SetLength(float length)
 	if (length >= 0)
 	{
 		m_length = length;
-		if (m_sibling)
+		shared_ptr<Bone> cur = m_child;
+		while (cur != nullptr)
 		{
-			m_sibling->SetTranslation(length);
-		}
-		if (m_child)
-		{
-			m_child->SetTranslation(length);
+			cur->SetTranslation(length);
+			cur = cur->GetSibling();
 		}
 	}
 }
@@ -84,7 +82,7 @@ Matrix Bone::GetCombined()
 Matrix Bone::GetMatrixForDraw()
 {
 	Matrix tmp = Matrix::CreateScale(m_length, m_s, m_s);
-	return (tmp*m_combined);
+	return (tmp * m_combined);
 }
 
 void Bone::RefreshLocal()
@@ -95,10 +93,36 @@ void Bone::RefreshLocal()
 void Bone::RefreshLocalWithPos(Vector3 pos)
 {
 	m_local = XMMatrixAffineTransformation(Vector3(1.0f, 1.0f, 1.0f), Vector3(0.0f, 0.0f, 0.0f), m_r, pos);
-	m_combined = m_local;
 }
 
 int Bone::GetIndex()
 {
 	return m_index;
+}
+
+void Bone::Process(Matrix parentCombined, vector<Matrix>& finalTransforms)
+{
+	SetCombined(parentCombined);
+	finalTransforms[m_index] = GetFinal();
+	if (m_sibling)
+	{
+		m_sibling->Process(parentCombined, finalTransforms);
+	}
+	if (m_child)
+	{
+		m_child->Process(m_combined, finalTransforms);
+	}
+}
+
+void Bone::ProcessForDraw(Matrix viewProj, vector<Matrix>& matricesForDraw)
+{
+	matricesForDraw[m_index] = (GetMatrixForDraw()*viewProj).Transpose();
+	if (m_sibling)
+	{
+		m_sibling->ProcessForDraw(viewProj, matricesForDraw);
+	}
+	if (m_child)
+	{
+		m_child->ProcessForDraw(viewProj, matricesForDraw);
+	}
 }

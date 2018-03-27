@@ -337,7 +337,7 @@ VoxelPipeline::~VoxelPipeline()
 {
 }
 
-void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
+void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selectedBone)
 {
 	
 	if (voxObj != nullptr)
@@ -441,6 +441,10 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera)
 			commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress() + RenderingCBAlignedSize);
 			commandList->IASetVertexBuffers(0, 1, &m_boneVertexBufferView);
 			commandList->DrawInstanced(6, voxObj->GetBonesCount(), 0, 0);
+
+			color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+			commandList->SetGraphicsRoot32BitConstants(1, 3, &color, 0);
+			commandList->DrawInstanced(6, 1, 0, selectedBone);
 
 			commandList->SetPipelineState(m_bonesEdgesRenderPipelineState.Get());
 			color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);

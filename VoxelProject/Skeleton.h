@@ -12,7 +12,7 @@ public:
 	void CopyMatricesForDraw(Matrix* dst);
 	int GetBonesCount();
 private:
-	Bone* m_root;
+	shared_ptr<Bone> m_root;
 	Vector3 m_pos;
 	vector<Matrix> m_finalTransforms;
 	vector<Matrix> m_matricesForDraw;

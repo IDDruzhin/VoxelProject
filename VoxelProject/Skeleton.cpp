@@ -4,7 +4,7 @@
 
 Skeleton::Skeleton()
 {
-	m_root = new Bone();
+	m_root = make_shared<Bone>();
 	m_root->SetLength(0.0f);
 	m_finalTransforms.push_back(m_root->GetFinal());
 	m_matricesForDraw.push_back(Matrix::Identity);
@@ -15,13 +15,14 @@ Skeleton::~Skeleton()
 {
 }
 
+/*
 void Skeleton::Process()
 {
 	m_root->RefreshLocalWithPos(m_pos);
 	m_finalTransforms[m_root->GetIndex()] = m_root->GetFinal();
-	stack<Bone*> bonesSt;
+	stack<shared_ptr<Bone>> bonesSt;
 	stack<Matrix> combinedSt;
-	Bone* cur = m_root->GetChild();
+	shared_ptr<Bone> cur = m_root->GetChild();
 	Matrix parentCombined = m_root->GetCombined();
 	if (cur != nullptr)
 	{
@@ -50,11 +51,24 @@ void Skeleton::Process()
 		}
 	}
 }
+*/
+
+void Skeleton::Process()
+{
+	m_root->RefreshLocalWithPos(m_pos);
+	m_root->Process(Matrix::Identity, m_finalTransforms);
+}
 
 void Skeleton::SetMatricesForDraw(Matrix viewProj)
 {
-	stack<Bone*> bonesSt;
-	Bone* cur = m_root;
+	m_root->ProcessForDraw(viewProj, m_matricesForDraw);
+}
+
+/*
+void Skeleton::SetMatricesForDraw(Matrix viewProj)
+{
+	stack<shared_ptr<Bone>> bonesSt;
+	shared_ptr<Bone> cur = m_root;
 	if (cur != nullptr)
 	{
 		bonesSt.push(cur);
@@ -76,6 +90,7 @@ void Skeleton::SetMatricesForDraw(Matrix viewProj)
 		}
 	}
 }
+*/
 
 void Skeleton::CopyMatricesForDraw(Matrix * dst)
 {

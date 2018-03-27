@@ -32,5 +32,6 @@ private:
 	float m_cameraSens;
 	shared_ptr<VoxelObject> m_voxObj;
 	unique_ptr<VoxelPipeline> m_voxPipeline;
+	int m_selectedBone;
 };
 
