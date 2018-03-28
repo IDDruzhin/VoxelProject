@@ -341,14 +341,5 @@ void VoxelObject::BindBones()
 	}
 	CUDACalculateWeights(m_voxels, m_dim, m_weights, bonesPoints);
 
-	int sum = 0;
-	for (int i = 0; i < m_weights.size(); i++)
-	{
-		if (m_weights[i] == 15)
-		{
-			sum++;
-		}
-	}
-	int lh = 83;
 }
 
