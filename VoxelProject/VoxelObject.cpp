@@ -339,7 +339,16 @@ void VoxelObject::BindBones()
 		bonesPoints[i].first = Vector3::Transform(bonesPoints[i].first, invWorld);
 		bonesPoints[i].second = Vector3::Transform(bonesPoints[i].second, invWorld);
 	}
-	CUDACalculateWeights(m_voxels, m_weights, bonesPoints);
+	CUDACalculateWeights(m_voxels, m_dim, m_weights, bonesPoints);
 
+	int sum = 0;
+	for (int i = 0; i < m_weights.size(); i++)
+	{
+		if (m_weights[i] == 15)
+		{
+			sum++;
+		}
+	}
+	int lh = 83;
 }
 

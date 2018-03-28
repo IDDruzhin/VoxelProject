@@ -96,6 +96,16 @@ struct ReduceColors
 	};
 };
 
+struct DistanceToWeight
+{
+	__host__ __device__ ushort2 operator()(const ushort2 &a)
+	{ 
+		float weight = a.x + a.y;
+		ushort2 res = *reinterpret_cast<ushort2*>(&weight);
+		return res; 
+	};
+};
+
 void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vector<SegmentData>& segmentationTable, vector<unsigned char>& segmentationTransfer, int eps, int3& dim, vector<Voxel>& voxels, vector<uchar4>& palette)
 {
 
@@ -251,10 +261,10 @@ void CUDACreateFromSlices(string anatomicalFolder, string segmentedFolder, vecto
 __device__ void SetMaskElement(uint index, int* mask)
 {
 	int pos = 1 << (index % 32);
-	atomicOr(mask[index / 32], pos);
+	//atomicOr(mask[index / 32], pos);
 }
 
-__global__ void CalculateIntersectingVoxelsKernel(Voxel* voxels, uint3 voxelsDim, int voxelsCount, ushort2* dist, Vector3 invDir, Vector3 dirOrigin, uint boneIndex, int* mask)
+__global__ void CalculateIntersectingVoxelsKernel(Voxel* voxels, int3 voxelsDim, int voxelsCount, ushort2* dist, Vector3 invDir, Vector3 dirOrigin, uint boneIndex, int* mask)
 {
 	uint x = blockIdx.x*blockDim.x + threadIdx.x;
 	uint y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -263,6 +273,9 @@ __global__ void CalculateIntersectingVoxelsKernel(Voxel* voxels, uint3 voxelsDim
 	{
 		return;
 	}
+	dist[index].x = 5;
+	dist[index].y = 10;
+	/*
 	if ((dist[index].x == 0) && (dist[index].y == 0))
 	{
 		return;
@@ -276,8 +289,16 @@ __global__ void CalculateIntersectingVoxelsKernel(Voxel* voxels, uint3 voxelsDim
 	///Intersecting
 	float tmin = (voxPos.x - dirOrigin.x) * invDir.x;
 	float tmax = (voxPos.x + 1 - dirOrigin.x) * invDir.x;
+	if (tmax < tmin)
+	{
+		swap(tmin, tmax);
+	}
 	float t1min = (voxPos.y - dirOrigin.y) * invDir.y;
 	float t1max = (voxPos.y + 1 - dirOrigin.y) * invDir.y;
+	if (t1max < t1min)
+	{
+		swap(t1min, t1max);
+	}
 	if ((tmin > t1max) || (t1min > tmax))
 	{
 		return;
@@ -292,6 +313,10 @@ __global__ void CalculateIntersectingVoxelsKernel(Voxel* voxels, uint3 voxelsDim
 	}
 	t1min = (voxPos.z - dirOrigin.z) * invDir.z;
 	t1max = (voxPos.z + 1 - dirOrigin.z) * invDir.z;
+	if (t1max < t1min)
+	{
+		swap(t1min, t1max);
+	}
 	if ((tmin > t1max) || (t1min > tmax))
 	{
 		return;
@@ -317,34 +342,47 @@ __global__ void CalculateIntersectingVoxelsKernel(Voxel* voxels, uint3 voxelsDim
 			SetMaskElement(index, mask);
 		}
 	}
+	*/
 }
 
-void CalculateIntersectingVoxelsKernel(Voxel* voxels, uint3 voxelsDim, int voxelsCount, ushort2* dist, Vector3 invDir, Vector3 dirOrigin, uint boneIndex, int* mask)
+void CalculateIntersectingVoxels(Voxel* voxels, int3 voxelsDim, int voxelsCount, ushort2* dist, Vector3 invDir, Vector3 dirOrigin, uint boneIndex, int* mask)
 {
 	dim3 blockSize(32, 32);
 	int computeBlocksCount = ceil(sqrt(voxelsCount));
 	computeBlocksCount = ceil(computeBlocksCount / 32.0);
 	dim3 gridSize(computeBlocksCount, computeBlocksCount);
-	CalculateIntersectingVoxelsKernel << <gridSize, blockSize >> > CalculateIntersectingVoxelsKernel(voxels, voxelsDim, voxelsCount, dist, invDir, dirOrigin, boneIndex, mask);
+	CalculateIntersectingVoxelsKernel <<<gridSize, blockSize>>>(voxels, voxelsDim, voxelsCount, dist, invDir, dirOrigin, boneIndex, mask);
 }
 
-void CUDACalculateWeights(vector<Voxel>& voxels, uint3 voxelsDim, vector<float>& weights, vector<pair<Vector3,Vector3>>& bonesPoints)
+void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& weights, vector<pair<Vector3,Vector3>>& bonesPoints)
 {
 	int* dMask00;
 	int* dMask01;
 	int bitsetSize = (voxels.size() - 1) / (sizeof(int) * 8) + 1;
-	cudaMalloc((void**)&dMask00, sizeof(int) * bitsetSize);
-	cudaMalloc((void**)&dMask01, sizeof(int) * bitsetSize);
-	cudaMemset((void**)&dMask00, 0, sizeof(int) * bitsetSize);
-	cudaMemset((void**)&dMask01, 0, sizeof(int) * bitsetSize);
-	thrust::device_vector<ushort2> dDist(voxels.size(), { USHRT_MAX, USHRT_MAX });
-	thrust::device_vector<Voxel> dVoxels(voxels.begin(), voxels.end());
-	for (int i = 0; i < bonesPoints.size(); i++)
+	cudaError_t err;
+	err = cudaMalloc((void**)&dMask00, sizeof(int) * bitsetSize);
+	err = cudaMalloc((void**)&dMask01, sizeof(int) * bitsetSize);
+	err = cudaMemset(dMask00, 0, sizeof(int) * bitsetSize);
+	err = cudaMemset(dMask01, 0, sizeof(int) * bitsetSize);
+	ushort2 distInit;
+	distInit.x = USHRT_MAX;
+	distInit.y = USHRT_MAX;
+	thrust::device_vector<ushort2> dDist(voxels.size(), distInit);
+	//thrust::device_vector<int> diDist;
+	//diDist.resize(1000);
+	//thrust::device_vector<ushort2> dDist(voxels.size());
+	thrust::device_vector<Voxel> dVoxels(voxels);
+	//for (int i = 0; i < bonesPoints.size(); i++)
+	for (int i = 0; i < 1; i++)
 	{
 		Vector3 invDir = bonesPoints[i].second - bonesPoints[i].first;
+		invDir.Normalize();
 		invDir.x = 1.0f / invDir.x;
 		invDir.y = 1.0f / invDir.y;
 		invDir.z = 1.0f / invDir.z;
-		CalculateIntersectingVoxelsKernel(thrust::raw_pointer_cast(dVoxels), voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist), invDir, bonesPoints[i].first, i, dMask00);
+		CalculateIntersectingVoxels(thrust::raw_pointer_cast(dVoxels.data()), voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist.data()), invDir, bonesPoints[i].first, i, dMask00);
 	}
+	DistanceToWeight curTransform;
+	thrust::transform(dDist.begin(), dDist.end(), dDist.begin(), curTransform);
+	cudaMemcpy(&weights[0], thrust::raw_pointer_cast(dDist.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
 }

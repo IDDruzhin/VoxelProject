@@ -168,3 +168,8 @@ void GeneralModel::SetBonesVisiblity(bool isVisible)
 {
 	m_voxPipeline->SetBonesVisiblity(isVisible);
 }
+
+void GeneralModel::BindBones()
+{
+	m_voxObj->BindBones();
+}
