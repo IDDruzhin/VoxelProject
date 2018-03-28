@@ -48,6 +48,7 @@ enum INTERPOLATION_MODE
 	void SetStepSize(float voxelSize, float ratio = 1.0f);
 	void SetInterpolationMode(INTERPOLATION_MODE mode);
 	void SetBlocksVisiblity(bool isVisible);
+	void SetBonesVisiblity(bool isVisible);
 private:
 	shared_ptr<D3DSystem> m_d3dSyst;
 	ComPtr<ID3D12RootSignature> m_renderRootSignature;

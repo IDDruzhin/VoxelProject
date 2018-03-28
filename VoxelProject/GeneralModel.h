@@ -34,6 +34,7 @@ public:
 	void MirrorBonesX();
 	void MirrorBonesY();
 	void MirrorBonesZ();
+	void SetBonesVisiblity(bool isVisible);
 private:
 	shared_ptr<Camera> m_camera;
 	Vector3 m_background;

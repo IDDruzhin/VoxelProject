@@ -39,8 +39,8 @@ struct Voxel
 	UINT index;
 	BYTE color;
 	BYTE segment;
-	//BYTE padding1
-	//BYTE padding2
+	BYTE bone01;
+	BYTE bone02;
 	Voxel(){};
 	Voxel(UINT _index, BYTE _color, BYTE _segment) : index(_index), color(_color), segment(_segment) {};
 };

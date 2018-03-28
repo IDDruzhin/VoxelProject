@@ -163,3 +163,8 @@ void GeneralModel::MirrorBonesZ()
 	m_voxObj->InsertMirroredBones(m_selectedBone, Vector3(0, 0, 1));
 	m_selectedBone = 0;
 }
+
+void GeneralModel::SetBonesVisiblity(bool isVisible)
+{
+	m_voxPipeline->SetBonesVisiblity(isVisible);
+}

@@ -696,3 +696,8 @@ void VoxelPipeline::SetBlocksVisiblity(bool isVisible)
 	m_renderBlocks = isVisible;
 }
 
+void VoxelPipeline::SetBonesVisiblity(bool isVisible)
+{
+	m_renderBones = isVisible;
+}
+

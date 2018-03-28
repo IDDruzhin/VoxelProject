@@ -55,6 +55,7 @@ private:
 	int m_blockSize;
 
 	Skeleton m_skeleton;
+	vector<float> m_weights;
 	
 	vector<ComPtr<ID3D12Resource>> m_texturesRes;
 	vector<BlockPriorityInfo> m_blocksPriorInfo;
