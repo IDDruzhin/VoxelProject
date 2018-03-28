@@ -27,6 +27,7 @@ public:
 	void CalculateIndex(int& index);
 	void Mirror(Vector3 axis);
 	void ProcessMirror(Vector3 axis, shared_ptr<Bone> origin);
+	void SetBonePoints(pair<Vector3, Vector3>* bonesPoints);
 private:
 	shared_ptr<Bone> m_child;
 	shared_ptr<Bone> m_sibling;

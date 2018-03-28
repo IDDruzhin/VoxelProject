@@ -179,3 +179,10 @@ void Skeleton::InsertMirroredBones(int index, Vector3 axis)
 	Process();
 }
 
+vector<pair<Vector3, Vector3>> Skeleton::GetBonesPoints()
+{
+	vector<pair<Vector3, Vector3>> bonesPoints(m_bonesCount);
+	m_root->SetBonePoints(&bonesPoints[0]);
+	return bonesPoints;
+}
+

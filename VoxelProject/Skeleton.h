@@ -22,6 +22,7 @@ public:
 	void DeleteBone(int index);
 	void CalculateIndices();
 	void InsertMirroredBones(int index, Vector3 axis);
+	vector<pair<Vector3, Vector3>> GetBonesPoints();
 private:
 	shared_ptr<Bone> m_root;
 	Vector3 m_pos;

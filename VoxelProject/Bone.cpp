@@ -268,3 +268,21 @@ void Bone::ProcessMirror(Vector3 axis, shared_ptr<Bone> origin)
 		sibling->ProcessMirror(axis, origin->GetSibling());
 	}
 }
+
+void Bone::SetBonePoints(pair<Vector3, Vector3> * bonesPoints)
+{
+	pair<Vector3, Vector3> p;
+	p.first = Vector3(0.0f, 0.0f, 0.0f);
+	p.second = Vector3(1.0f, 0.0f, 0.0f);
+	p.first = Vector3::Transform(p.first, GetMatrixForDraw());
+	p.second = Vector3::Transform(p.second, GetMatrixForDraw());
+	bonesPoints[m_index] = p;
+	if (m_child)
+	{
+		m_child->SetBonePoints(bonesPoints);
+	}
+	if (m_sibling)
+	{
+		m_sibling->SetBonePoints(bonesPoints);
+	}
+}

@@ -329,3 +329,17 @@ void VoxelObject::InsertMirroredBones(int index, Vector3 axis)
 	m_skeleton.InsertMirroredBones(index, axis);
 }
 
+void VoxelObject::BindBones()
+{
+	m_weights.resize(m_voxels.size());
+	vector<pair<Vector3, Vector3>> bonesPoints = m_skeleton.GetBonesPoints();
+	Matrix invWorld = GetWorld().Invert();
+	for (int i = 0; i < bonesPoints.size(); i++)
+	{
+		bonesPoints[i].first = Vector3::Transform(bonesPoints[i].first, invWorld);
+		bonesPoints[i].second = Vector3::Transform(bonesPoints[i].second, invWorld);
+	}
+	CUDACalculateWeights(m_voxels, m_weights, bonesPoints);
+
+}
+
