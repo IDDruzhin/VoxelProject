@@ -57,6 +57,7 @@ private:
 
 	Skeleton m_skeleton;
 	vector<float> m_weights;
+	bool m_isSkeletonBinded;
 	
 	vector<ComPtr<ID3D12Resource>> m_texturesRes;
 	vector<BlockPriorityInfo> m_blocksPriorInfo;

@@ -2,7 +2,7 @@
 #include "Skeleton.h"
 
 
-Skeleton::Skeleton() : m_bonesCount(1)
+Skeleton::Skeleton() : m_bonesCount(1), m_boneThickness(10.0f)
 {
 	m_root = make_shared<Bone>();
 	m_root->SetLength(0.0f);
@@ -25,10 +25,7 @@ void Skeleton::Process()
 
 void Skeleton::SetMatricesForDraw(Matrix worldViewProj, Matrix* matricesForDraw)
 {
-	if (m_bonesCount < MAX_BONES)
-	{
-		m_root->ProcessForDraw(worldViewProj, matricesForDraw);
-	}
+	m_root->ProcessForDraw(worldViewProj, matricesForDraw, m_boneThickness);
 }
 
 int Skeleton::GetBonesCount()
@@ -50,7 +47,7 @@ shared_ptr<Bone> Skeleton::FindPrev(int index)
 	return m_root->FindPrev(m_root, index);
 }
 
-int Skeleton::PickBone(float x, float y, float eps, Matrix viewProj)
+int Skeleton::PickBone(float x, float y, float eps, Matrix worldViewProj)
 {
 	Vector4 p0(0.0f, 0.0f, 0.0f, 1.0f);
 	Vector4 p1(1.0f, 0.0f, 0.0f, 1.0f);
@@ -64,7 +61,7 @@ int Skeleton::PickBone(float x, float y, float eps, Matrix viewProj)
 	vector<int> candidatesID;
 	vector<Matrix> matricesForDraw;
 	matricesForDraw.resize(m_bonesCount);
-	SetMatricesForDraw(viewProj, &matricesForDraw[0]);
+	SetMatricesForDraw(worldViewProj, &matricesForDraw[0]);
 	for (int i = 0; i < m_bonesCount; i++)
 	{
 		rP0 = Vector4::Transform(p0, matricesForDraw[i].Transpose());
@@ -96,12 +93,16 @@ int Skeleton::PickBone(float x, float y, float eps, Matrix viewProj)
 
 int Skeleton::AddBone(int selectedIndex)
 {
-	int curIndex = m_bonesCount;
-	shared_ptr<Bone> cur = Find(selectedIndex);
-	cur->InsertChild(curIndex);
-	m_bonesCount++;
-	Process();
-	return curIndex;
+	if (m_bonesCount < MAX_BONES)
+	{
+		int curIndex = m_bonesCount;
+		shared_ptr<Bone> cur = Find(selectedIndex);
+		cur->InsertChild(curIndex);
+		m_bonesCount++;
+		Process();
+		return curIndex;
+	}
+	return 0;
 }
 
 void Skeleton::SetBoneLength(int selectedIndex, float length)
@@ -155,28 +156,23 @@ void Skeleton::CalculateIndices()
 
 void Skeleton::InsertMirroredBones(int index, Vector3 axis)
 {
-	if (index == m_root->GetIndex())
-	{
-		/*
-		shared_ptr<Bone> mirr = make_shared<Bone>(m_root);
-		mirr->ProcessMirror(axis, m_root);
-		m_root->SetChild(mirr);
-		*/
-	}
-	else
+	if (index != m_root->GetIndex())
 	{
 		shared_ptr<Bone> cur = Find(index);
-		shared_ptr<Bone> prev = FindPrev(index);
-		shared_ptr<Bone> mirr = make_shared<Bone>(cur);
-		mirr->ProcessMirror(axis, cur);
-		while (cur->GetSibling())
+		if ((m_bonesCount + cur->GetBranchBonesCount()) < MAX_BONES)
 		{
-			cur = cur->GetSibling();
-		}
-		cur->SetSibling(mirr);
+			shared_ptr<Bone> prev = FindPrev(index);
+			shared_ptr<Bone> mirr = make_shared<Bone>(cur);
+			mirr->ProcessMirror(axis, cur);
+			while (cur->GetSibling())
+			{
+				cur = cur->GetSibling();
+			}
+			cur->SetSibling(mirr);
+			CalculateIndices();
+			Process();
+		}	
 	}
-	CalculateIndices();
-	Process();
 }
 
 vector<pair<Vector3, Vector3>> Skeleton::GetBonesPoints()
@@ -184,5 +180,94 @@ vector<pair<Vector3, Vector3>> Skeleton::GetBonesPoints()
 	vector<pair<Vector3, Vector3>> bonesPoints(m_bonesCount);
 	m_root->SetBonePoints(&bonesPoints[0]);
 	return bonesPoints;
+}
+
+void Skeleton::SetBonesThickness(float thickness)
+{
+	m_boneThickness = thickness;
+}
+
+void Skeleton::SetRootPos(Vector3 pos)
+{
+	m_pos = pos;
+	Process();
+}
+
+void Skeleton::SaveBin(ofstream & f)
+{
+	if (f.is_open())
+	{
+		f.write((char*)(&m_pos), sizeof(Vector3));
+		f.write((char*)(&m_boneThickness), sizeof(Vector3));
+		f.write((char*)(&m_bonesCount), sizeof(Vector3));
+		int childsCount = 0;
+		stack<shared_ptr<Bone>> bonesSt;
+		shared_ptr<Bone> cur = m_root;
+		bonesSt.push(cur);
+		childsCount = cur->GetChildsCount();
+		f.write((char*)(&childsCount), sizeof(int));
+		cur->WriteBin(f);
+		while (!bonesSt.empty())
+		{
+			cur = bonesSt.top();
+			bonesSt.pop();
+			cur = cur->GetChild();
+			while (cur)
+			{
+				bonesSt.push(cur);
+				childsCount = cur->GetChildsCount();
+				f.write((char*)(&childsCount), sizeof(int));
+				cur->WriteBin(f);
+				cur = cur->GetSibling();
+			}
+		}
+	}
+	else
+	{
+		throw std::exception("Can`t open file");
+	}
+}
+
+void Skeleton::LoadBin(ifstream & f)
+{
+	if (f.is_open())
+	{
+		f.read((char*)(&m_pos), sizeof(Vector3));
+		f.read((char*)(&m_boneThickness), sizeof(Vector3));
+		f.read((char*)(&m_bonesCount), sizeof(Vector3));
+
+		int N = 0;
+		stack<shared_ptr<Bone>> bonesSt;
+		stack<int> childsCountSt;
+		shared_ptr<Bone> cur = m_root;
+		shared_ptr<Bone> tmp;
+		int childsCount = 0;
+		int tmpChildsCount;
+		f.read((char*)(&childsCount), sizeof(int));
+		cur->LoadBin(f);
+		bonesSt.push(cur);
+		childsCountSt.push(childsCount);
+		while (!bonesSt.empty())
+		{
+			childsCount = childsCountSt.top();
+			childsCountSt.pop();
+			cur = bonesSt.top();
+			bonesSt.pop();
+			for (int i = 0; i < childsCount; i++)
+			{
+				f.read((char*)(&tmpChildsCount), sizeof(int));
+				childsCountSt.push(tmpChildsCount);
+				tmp = make_shared<Bone>();
+				tmp->LoadBin(f);
+				cur->InsertChild(tmp);
+				bonesSt.push(tmp);
+			}
+		}
+		Process();
+	}
+	else
+	{
+		throw std::exception("Can`t open file");
+	}
 }
 

@@ -17,11 +17,6 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 	{
 		LoadBin(path);
 	}
-	float maxSide = (m_dim.x > m_dim.y) ? m_dim.x : m_dim.y;
-	maxSide = (maxSide > m_dim.z) ? maxSide : m_dim.z;
-	maxSide = 1.0f / maxSide;
-	m_s = Vector3(maxSide,maxSide,maxSide);
-	m_t = (Vector3(m_dim.x, m_dim.y, m_dim.z) * m_s) / -2.0f;
 	m_paletteRes = voxPipeline->RegisterPalette(m_palette);
 	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
 }
@@ -125,6 +120,15 @@ void VoxelObject::CreateFromSlices(string path)
 		}
 		int eps = 2;
 		CUDACreateFromSlices(anatomicalFolder, segmentedFolder, segmentationTable, segmentationTransfer, eps, m_dim, m_voxels, m_palette);
+
+		float maxSide = (m_dim.x > m_dim.y) ? m_dim.x : m_dim.y;
+		maxSide = (maxSide > m_dim.z) ? maxSide : m_dim.z;
+		m_skeleton.SetBonesThickness(0.02f * maxSide);
+		m_skeleton.SetRootPos(Vector3(m_dim.x, m_dim.y, m_dim.z) / 2.0f);
+		maxSide = 1.0f / maxSide;
+		m_s = Vector3(maxSide, maxSide, maxSide);
+		m_t = (Vector3(m_dim.x, m_dim.y, m_dim.z) * m_s) / -2.0f;
+		m_isSkeletonBinded = false;
 	}
 	else
 	{
@@ -158,6 +162,16 @@ void VoxelObject::SaveBin(string path, string name)
 			f.write((char*)(&tmp[0]), stringSize);
 		}
 		f.write((char*)(&m_segmentsOpacity[0]), sizeof(float)*count);
+		f.write((char*)(&m_s), sizeof(Vector3));
+		f.write((char*)(&m_t), sizeof(Vector3));
+		f.write((char*)(&m_isSkeletonBinded), sizeof(bool));
+		if (m_isSkeletonBinded)
+		{
+			count = m_weights.size();
+			f.write((char*)(&count), sizeof(int));
+			f.write((char*)(&m_weights[0]), sizeof(float)*count);
+		}
+		m_skeleton.SaveBin(f);
 		f.close();
 	}
 	else
@@ -192,6 +206,16 @@ void VoxelObject::LoadBin(string path)
 		}
 		m_segmentsOpacity.resize(count);
 		f.read((char*)(&m_segmentsOpacity[0]), sizeof(float)*count);
+		f.read((char*)(&m_s), sizeof(Vector3));
+		f.read((char*)(&m_t), sizeof(Vector3));
+		f.read((char*)(&m_isSkeletonBinded), sizeof(bool));
+		if (m_isSkeletonBinded)
+		{
+			f.read((char*)(&count), sizeof(int));
+			m_weights.resize(count);
+			f.read((char*)(&m_weights[0]), sizeof(float)*count);
+		}
+		m_skeleton.LoadBin(f);
 		f.close();
 	}
 	else
@@ -291,7 +315,7 @@ int VoxelObject::GetBonesCount()
 
 int VoxelObject::PickBone(float x, float y, float eps, Matrix viewProj)
 {
-	return m_skeleton.PickBone(x, y, eps, viewProj);
+	return m_skeleton.PickBone(x, y, eps, (GetWorld() * viewProj));
 }
 
 void VoxelObject::SetSkeletonMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw)

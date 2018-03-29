@@ -4,14 +4,13 @@
 
 Bone::Bone(float parentLength, int index) : m_child(nullptr), m_sibling(nullptr), m_local(Matrix::Identity), m_combined(Matrix::Identity), m_offset(Matrix::Identity),
 //m_length(100.0f), m_s(0.015f), m_t(parentLength), m_index(index)
-m_length(100.0f), m_s(1.0f), m_t(parentLength), m_index(index)
+m_length(100.0f), m_t(parentLength), m_index(index)
 {
 }
 
 Bone::Bone(shared_ptr<Bone> copy)
 {
 	m_t = copy->m_t;
-	m_s = copy->m_s;
 	m_r = copy->m_r;
 	m_length = copy->m_length;
 	m_child = nullptr;
@@ -56,14 +55,31 @@ void Bone::InsertChild(int index)
 	}
 }
 
+void Bone::InsertChild(shared_ptr<Bone> child)
+{
+	if (m_child == nullptr)
+	{
+		m_child = child;
+	}
+	else
+	{
+		shared_ptr<Bone> cur = m_child;
+		while (cur->GetSibling() != nullptr)
+		{
+			cur = cur->GetSibling();
+		}
+		cur->SetSibling(child);
+	}
+}
+
 void Bone::SetChild(shared_ptr<Bone> child)
 {
-	m_child = move(child);
+	m_child = child;
 }
 
 void Bone::SetSibling(shared_ptr<Bone> sibling)
 {
-	m_sibling = move(sibling);
+	m_sibling = sibling;
 }
 
 void Bone::SetLength(float length)
@@ -95,9 +111,9 @@ Matrix Bone::GetCombined()
 	return m_combined;
 }
 
-Matrix Bone::GetMatrixForDraw()
+Matrix Bone::GetMatrixForDraw(float thickness)
 {
-	Matrix tmp = Matrix::CreateScale(m_length, m_s, m_s);
+	Matrix tmp = Matrix::CreateScale(m_length, thickness, thickness);
 	return (tmp * m_combined);
 }
 
@@ -130,16 +146,16 @@ void Bone::Process(Matrix parentCombined)
 	}
 }
 
-void Bone::ProcessForDraw(Matrix worldViewProj, Matrix* matricesForDraw)
+void Bone::ProcessForDraw(Matrix worldViewProj, Matrix* matricesForDraw, float thickness)
 {
-	matricesForDraw[m_index] = (GetMatrixForDraw()*worldViewProj).Transpose();
+	matricesForDraw[m_index] = (GetMatrixForDraw(thickness)*worldViewProj).Transpose();
 	if (m_sibling)
 	{
-		m_sibling->ProcessForDraw(worldViewProj, matricesForDraw);
+		m_sibling->ProcessForDraw(worldViewProj, matricesForDraw, thickness);
 	}
 	if (m_child)
 	{
-		m_child->ProcessForDraw(worldViewProj, matricesForDraw);
+		m_child->ProcessForDraw(worldViewProj, matricesForDraw, thickness);
 	}
 }
 
@@ -274,9 +290,9 @@ void Bone::SetBonePoints(pair<Vector3, Vector3> * bonesPoints)
 {
 	pair<Vector3, Vector3> p;
 	p.first = Vector3(0.0f, 0.0f, 0.0f);
-	p.second = Vector3(1.0f, 0.0f, 0.0f);
-	p.first = Vector3::Transform(p.first, GetMatrixForDraw());
-	p.second = Vector3::Transform(p.second, GetMatrixForDraw());
+	p.second = Vector3(m_length, 0.0f, 0.0f);
+	p.first = Vector3::Transform(p.first, m_combined);
+	p.second = Vector3::Transform(p.second, m_combined);
 	bonesPoints[m_index] = p;
 	if (m_child)
 	{
@@ -286,4 +302,46 @@ void Bone::SetBonePoints(pair<Vector3, Vector3> * bonesPoints)
 	{
 		m_sibling->SetBonePoints(bonesPoints);
 	}
+}
+
+int Bone::GetChildsCount()
+{
+	int count = 0;
+	shared_ptr<Bone> cur = m_child;
+	while (cur)
+	{
+		count++;
+		cur = cur->GetSibling();
+	}
+	return count;
+}
+
+int Bone::GetBranchBonesCount()
+{
+	int count = 1;
+	shared_ptr<Bone> cur = m_child;
+	while (cur)
+	{
+		count += cur->GetBranchBonesCount();
+		cur = cur->GetSibling();
+	}
+	return count;
+}
+
+void Bone::WriteBin(ofstream & f)
+{
+	f.write((char*)(&m_index), sizeof(int));
+	f.write((char*)(&m_length), sizeof(float));
+	f.write((char*)(&m_t), sizeof(float));
+	f.write((char*)(&m_r), sizeof(Quaternion));
+	f.write((char*)(&m_offset), sizeof(Matrix));
+}
+
+void Bone::LoadBin(ifstream & f)
+{
+	f.read((char*)(&m_index), sizeof(int));
+	f.read((char*)(&m_length), sizeof(float));
+	f.read((char*)(&m_t), sizeof(float));
+	f.read((char*)(&m_r), sizeof(Quaternion));
+	f.read((char*)(&m_offset), sizeof(Matrix));
 }
