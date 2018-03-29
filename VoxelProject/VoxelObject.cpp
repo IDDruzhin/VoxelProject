@@ -341,5 +341,7 @@ void VoxelObject::BindBones()
 	}
 	CUDACalculateWeights(m_voxels, m_dim, m_weights, bonesPoints);
 
+	int kj = 984;
+	kj += 39;
 }
 
