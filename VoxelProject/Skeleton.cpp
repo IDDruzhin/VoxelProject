@@ -23,11 +23,11 @@ void Skeleton::Process()
 	}
 }
 
-void Skeleton::SetMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw)
+void Skeleton::SetMatricesForDraw(Matrix worldViewProj, Matrix* matricesForDraw)
 {
 	if (m_bonesCount < MAX_BONES)
 	{
-		m_root->ProcessForDraw(viewProj, matricesForDraw);
+		m_root->ProcessForDraw(worldViewProj, matricesForDraw);
 	}
 }
 

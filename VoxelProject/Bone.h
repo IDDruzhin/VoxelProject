@@ -20,7 +20,7 @@ public:
 	void RefreshLocalWithPos(Vector3 pos);
 	int GetIndex();
 	void Process(Matrix parentCombined);
-	void ProcessForDraw(Matrix viewProj, Matrix* matricesForDraw);
+	void ProcessForDraw(Matrix worldViewProj, Matrix* matricesForDraw);
 	shared_ptr<Bone> Find(int index);
 	shared_ptr<Bone> FindPrev(shared_ptr<Bone> prev, int index);
 	void Rotate(Vector3 dr);

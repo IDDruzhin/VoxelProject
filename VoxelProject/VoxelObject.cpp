@@ -296,7 +296,8 @@ int VoxelObject::PickBone(float x, float y, float eps, Matrix viewProj)
 
 void VoxelObject::SetSkeletonMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw)
 {
-	m_skeleton.SetMatricesForDraw(viewProj, matricesForDraw);
+	Matrix worldViewProj = GetWorld() * viewProj;
+	m_skeleton.SetMatricesForDraw(worldViewProj, matricesForDraw);
 }
 
 int VoxelObject::AddBone(int selectedIndex)
@@ -333,12 +334,14 @@ void VoxelObject::BindBones()
 {
 	m_weights.resize(m_voxels.size());
 	vector<pair<Vector3, Vector3>> bonesPoints = m_skeleton.GetBonesPoints();
+	/*
 	Matrix invWorld = GetWorld().Invert();
 	for (int i = 0; i < bonesPoints.size(); i++)
 	{
 		bonesPoints[i].first = Vector3::Transform(bonesPoints[i].first, invWorld);
 		bonesPoints[i].second = Vector3::Transform(bonesPoints[i].second, invWorld);
 	}
+	*/
 	CUDACalculateWeights(m_voxels, m_dim, m_weights, bonesPoints);
 
 	float maxWeight = -2.0f;

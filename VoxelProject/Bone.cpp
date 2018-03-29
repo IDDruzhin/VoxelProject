@@ -3,7 +3,8 @@
 
 
 Bone::Bone(float parentLength, int index) : m_child(nullptr), m_sibling(nullptr), m_local(Matrix::Identity), m_combined(Matrix::Identity), m_offset(Matrix::Identity),
-m_length(0.1f), m_s(0.015f), m_t(parentLength), m_index(index)
+//m_length(100.0f), m_s(0.015f), m_t(parentLength), m_index(index)
+m_length(100.0f), m_s(1.0f), m_t(parentLength), m_index(index)
 {
 }
 
@@ -129,16 +130,16 @@ void Bone::Process(Matrix parentCombined)
 	}
 }
 
-void Bone::ProcessForDraw(Matrix viewProj, Matrix* matricesForDraw)
+void Bone::ProcessForDraw(Matrix worldViewProj, Matrix* matricesForDraw)
 {
-	matricesForDraw[m_index] = (GetMatrixForDraw()*viewProj).Transpose();
+	matricesForDraw[m_index] = (GetMatrixForDraw()*worldViewProj).Transpose();
 	if (m_sibling)
 	{
-		m_sibling->ProcessForDraw(viewProj, matricesForDraw);
+		m_sibling->ProcessForDraw(worldViewProj, matricesForDraw);
 	}
 	if (m_child)
 	{
-		m_child->ProcessForDraw(viewProj, matricesForDraw);
+		m_child->ProcessForDraw(worldViewProj, matricesForDraw);
 	}
 }
 

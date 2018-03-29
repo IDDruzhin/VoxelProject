@@ -10,7 +10,7 @@ public:
 	Skeleton();
 	~Skeleton();
 	void Process();
-	void SetMatricesForDraw(Matrix viewProj, Matrix* matricesForDraw);
+	void SetMatricesForDraw(Matrix worldViewProj, Matrix* matricesForDraw);
 	int GetBonesCount();
 	shared_ptr<Bone> Find(int index);
 	shared_ptr<Bone> FindPrev(int index);
