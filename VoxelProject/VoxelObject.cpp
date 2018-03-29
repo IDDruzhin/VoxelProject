@@ -341,6 +341,23 @@ void VoxelObject::BindBones()
 	}
 	CUDACalculateWeights(m_voxels, m_dim, m_weights, bonesPoints);
 
+	float maxWeight = -2.0f;
+	float minWeight = 2.0f;
+	int maxInd = -1;
+	int minInd = -1;
+	for (int i = 0; i < m_weights.size(); i++)
+	{
+		if (maxWeight < m_weights[i])
+		{
+			maxWeight = m_weights[i];
+			maxInd = i;
+		}
+		if (minWeight > m_weights[i])
+		{
+			minWeight = m_weights[i];
+			minInd = i;
+		}
+	}
 	int kj = 984;
 	kj += 39;
 }
