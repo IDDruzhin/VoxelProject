@@ -96,6 +96,11 @@ void Bone::SetLength(float length)
 	}
 }
 
+float Bone::GetLength()
+{
+	return m_length;
+}
+
 void Bone::SetTranslation(float t)
 {
 	m_t = t;
@@ -233,7 +238,9 @@ shared_ptr<Bone> Bone::FindPrev(shared_ptr<Bone> prev, int index)
 
 void Bone::Rotate(Vector3 dr)
 {
-	m_r = Quaternion::CreateFromYawPitchRoll(dr.x, dr.y, dr.z) * m_r;
+	//m_r = Quaternion::CreateFromYawPitchRoll(dr.x, dr.y, dr.z) * m_r;
+	m_r = Quaternion::CreateFromYawPitchRoll(dr.y, dr.x, dr.z) * m_r;
+	//m_r = m_r * Quaternion::CreateFromYawPitchRoll(dr.y, dr.x, dr.z) * m_r;
 }
 
 void Bone::CalculateIndex(int & index)
@@ -250,39 +257,38 @@ void Bone::CalculateIndex(int & index)
 	}
 }
 
-void Bone::Mirror(Vector3 axis)
+void Bone::ProcessCopy(shared_ptr<Bone> origin)
 {
-	if (axis.x == 1)
-	{
-		m_r.x *= -1;
-		m_r.w *= -1;
-	}
-	if (axis.y == 1)
-	{
-		m_r.y *= -1;
-		m_r.w *= -1;
-	}
-	if (axis.z == 1)
-	{
-		m_r.z *= -1;
-		m_r.w *= -1;
-	}
-}
-
-void Bone::ProcessMirror(Vector3 axis, shared_ptr<Bone> origin)
-{
-	Mirror(axis);
 	if (origin->GetChild())
 	{
 		shared_ptr<Bone> child = make_shared<Bone>(origin->GetChild());
 		SetChild(child);
-		child->ProcessMirror(axis, origin->GetChild());
+		child->ProcessCopy(origin->GetChild());
 	}
 	if (origin->GetSibling())
 	{
 		shared_ptr<Bone> sibling = make_shared<Bone>(origin->GetSibling());
 		SetSibling(sibling);
-		sibling->ProcessMirror(axis, origin->GetSibling());
+		sibling->ProcessCopy(origin->GetSibling());
+	}
+}
+
+void Bone::MirrorRotation(Vector3 axis)
+{
+	if (axis.x == 1)
+	{
+		m_r.x *= -1;
+		//m_r.w *= -1;
+	}
+	if (axis.y == 1)
+	{
+		m_r.y *= -1;
+		//m_r.w *= -1;
+	}
+	if (axis.z == 1)
+	{
+		m_r.z *= -1;
+		//m_r.w *= -1;
 	}
 }
 

@@ -31,9 +31,10 @@ public:
 	void TranslateSkeleton(Vector3 dt);
 	void RotateBone(Vector3 dr);
 	void DeleteBone();
-	void MirrorBonesX();
-	void MirrorBonesY();
-	void MirrorBonesZ();
+	void CopyBones();
+	void MirrorRotationX();
+	void MirrorRotationY();
+	void MirrorRotationZ();
 	void SetBonesVisiblity(bool isVisible);
 	void BindBones();
 private:

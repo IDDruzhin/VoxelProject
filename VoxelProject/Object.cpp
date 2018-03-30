@@ -23,7 +23,8 @@ void Object::Scale(Vector3 ds)
 
 void Object::Rotate(Vector3 dr)
 {
-	Quaternion tmp = Quaternion::CreateFromYawPitchRoll(dr.x, dr.y, dr.z);
+	//Quaternion tmp = Quaternion::CreateFromYawPitchRoll(dr.x, dr.y, dr.z);
+	Quaternion tmp = Quaternion::CreateFromYawPitchRoll(dr.y, dr.x, dr.z);
 	m_r = tmp * m_r;
 }
 

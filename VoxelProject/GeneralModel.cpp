@@ -146,23 +146,26 @@ void GeneralModel::DeleteBone()
 	m_selectedBone = 0;
 }
 
-void GeneralModel::MirrorBonesX()
+void GeneralModel::CopyBones()
 {
-	m_voxObj->InsertMirroredBones(m_selectedBone, Vector3(1, 0, 0));
-	m_selectedBone = 0;
+	m_selectedBone = m_voxObj->CopyBones(m_selectedBone);
 }
 
-void GeneralModel::MirrorBonesY()
+void GeneralModel::MirrorRotationX()
 {
-	m_voxObj->InsertMirroredBones(m_selectedBone, Vector3(0, 1, 0));
-	m_selectedBone = 0;
+	m_voxObj->MirrorRotation(m_selectedBone, Vector3(1, 0, 0));
 }
 
-void GeneralModel::MirrorBonesZ()
+void GeneralModel::MirrorRotationY()
 {
-	m_voxObj->InsertMirroredBones(m_selectedBone, Vector3(0, 0, 1));
-	m_selectedBone = 0;
+	m_voxObj->MirrorRotation(m_selectedBone, Vector3(0, 1, 0));
 }
+
+void GeneralModel::MirrorRotationZ()
+{
+	m_voxObj->MirrorRotation(m_selectedBone, Vector3(0, 0, 1));
+}
+
 
 void GeneralModel::SetBonesVisiblity(bool isVisible)
 {

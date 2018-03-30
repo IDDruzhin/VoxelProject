@@ -13,6 +13,7 @@ public:
 	void SetChild(shared_ptr<Bone> child);
 	void SetSibling(shared_ptr<Bone> sibling);
 	void SetLength(float length);
+	float GetLength();
 	void SetTranslation(float t);
 	Matrix GetFinal();
 	Matrix GetCombined();
@@ -26,8 +27,8 @@ public:
 	shared_ptr<Bone> FindPrev(shared_ptr<Bone> prev, int index);
 	void Rotate(Vector3 dr);
 	void CalculateIndex(int& index);
-	void Mirror(Vector3 axis);
-	void ProcessMirror(Vector3 axis, shared_ptr<Bone> origin);
+	void ProcessCopy(shared_ptr<Bone> origin);
+	void MirrorRotation(Vector3 axis);
 	void SetBonePoints(pair<Vector3, Vector3>* bonesPoints);
 	int GetChildsCount();
 	int GetBranchBonesCount();

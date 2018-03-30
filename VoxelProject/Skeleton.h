@@ -22,7 +22,8 @@ public:
 	void RotateBone(Vector3 dr, int index);
 	void DeleteBone(int index);
 	void CalculateIndices();
-	void InsertMirroredBones(int index, Vector3 axis);
+	int CopyBones(int index);
+	void MirrorRotation(int index, Vector3 axis);
 	vector<pair<Vector3, Vector3>> GetBonesPoints();
 	void SetBonesThickness(float thickness);
 	void SetRootPos(Vector3 pos);

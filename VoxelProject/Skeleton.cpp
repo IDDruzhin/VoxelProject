@@ -159,7 +159,7 @@ void Skeleton::CalculateIndices()
 	m_root->CalculateIndex(m_bonesCount);
 }
 
-void Skeleton::InsertMirroredBones(int index, Vector3 axis)
+int Skeleton::CopyBones(int index)
 {
 	if (index != m_root->GetIndex())
 	{
@@ -168,7 +168,7 @@ void Skeleton::InsertMirroredBones(int index, Vector3 axis)
 		{
 			shared_ptr<Bone> prev = FindPrev(index);
 			shared_ptr<Bone> mirr = make_shared<Bone>(cur);
-			mirr->ProcessMirror(axis, cur);
+			mirr->ProcessCopy(cur);			
 			while (cur->GetSibling())
 			{
 				cur = cur->GetSibling();
@@ -176,8 +176,20 @@ void Skeleton::InsertMirroredBones(int index, Vector3 axis)
 			cur->SetSibling(mirr);
 			CalculateIndices();
 			Process();
+			return mirr->GetIndex();
 		}	
 	}
+	else
+	{
+		return 0;
+	}
+}
+
+void Skeleton::MirrorRotation(int index, Vector3 axis)
+{
+	shared_ptr<Bone> cur = Find(index);
+	cur->MirrorRotation(axis);
+	Process();
 }
 
 vector<pair<Vector3, Vector3>> Skeleton::GetBonesPoints()
