@@ -31,6 +31,7 @@ public:
 	void SetBonePoints(pair<Vector3, Vector3>* bonesPoints);
 	int GetChildsCount();
 	int GetBranchBonesCount();
+	void ProcessOffset();
 	void WriteBin(ofstream& f);
 	void LoadBin(ifstream& f);
 private:

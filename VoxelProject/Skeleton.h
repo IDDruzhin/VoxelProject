@@ -25,6 +25,7 @@ public:
 	vector<pair<Vector3, Vector3>> GetBonesPoints();
 	void SetBonesThickness(float thickness);
 	void SetRootPos(Vector3 pos);
+	void SetOffsets();
 	void SaveBin(ofstream& f);
 	void LoadBin(ifstream& f);
 private:

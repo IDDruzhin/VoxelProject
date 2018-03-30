@@ -193,6 +193,11 @@ void Skeleton::SetRootPos(Vector3 pos)
 	Process();
 }
 
+void Skeleton::SetOffsets()
+{
+	m_root->ProcessOffset();
+}
+
 void Skeleton::SaveBin(ofstream & f)
 {
 	if (f.is_open())

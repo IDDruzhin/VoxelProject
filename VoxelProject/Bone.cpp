@@ -328,6 +328,19 @@ int Bone::GetBranchBonesCount()
 	return count;
 }
 
+void Bone::ProcessOffset()
+{
+	m_offset = m_combined.Invert();
+	if (m_sibling)
+	{
+		m_sibling->ProcessOffset();
+	}
+	if (m_child)
+	{
+		m_child->ProcessOffset();
+	}
+}
+
 void Bone::WriteBin(ofstream & f)
 {
 	f.write((char*)(&m_index), sizeof(int));
