@@ -246,7 +246,19 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	}
 	ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(m_voxels);
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
-	voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
+	ComPtr<ID3D12Resource> weightsRes;
+	if (m_isSkeletonBinded)
+	{
+		weightsRes = voxPipeline->RegisterBonesWeights(m_weights);
+	}
+	if (m_isSkeletonBinded)
+	{
+		voxPipeline->ComputePoseDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes, m_skeleton);
+	}
+	else
+	{
+		voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
+	}
 	int count = 0;
 	for (int i = 0; i < blocksInfo.size(); i++)
 	{
@@ -262,7 +274,14 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	m_blocksBufferView.BufferLocation = m_blocksRes->GetGPUVirtualAddress();
 	m_blocksBufferView.StrideInBytes = sizeof(Vertex);
 	m_blocksBufferView.SizeInBytes = sizeof(Block)*m_texturesRes.size();
-	voxPipeline->ComputeFillBlocks(m_voxels.size(), m_texturesRes.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes);
+	if (m_isSkeletonBinded)
+	{
+		voxPipeline->ComputePoseFillBlocks(m_voxels.size(), m_texturesRes.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes, m_skeleton);
+	}
+	else
+	{
+		voxPipeline->ComputeFillBlocks(m_voxels.size(), m_texturesRes.size(), m_dim, m_blockSize, dimBlocks, min, max, overlap, m_texturesRes);
+	}
 }
 
 vector<BlockPriorityInfo> VoxelObject::CalculatePriorities(Vector3 cameraPos)
@@ -360,7 +379,8 @@ void VoxelObject::BindBones()
 	m_skeleton.SetOffsets();
 	vector<pair<Vector3, Vector3>> bonesPoints = m_skeleton.GetBonesPoints();
 	CUDACalculateWeights(m_voxels, m_dim, m_weights, bonesPoints);
-
+	m_isSkeletonBinded = true;
+	/*
 	float maxWeight = -2.0f;
 	float minWeight = 2.0f;
 	int maxInd = -1;
@@ -380,5 +400,6 @@ void VoxelObject::BindBones()
 	}
 	int kj = 984;
 	kj += 39;
+	*/
 }
 

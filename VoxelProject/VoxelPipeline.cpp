@@ -174,7 +174,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderVoxels(tru
 		d3dSyst->GetDevice()->CreateDescriptorHeap(&srvUavHeapDesc, IID_PPV_ARGS(&m_blocksComputeSrvUavHeap));
 
 		CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
-		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE); //t0-t2
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE); //t0-t3
 		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE); //u1-...
 
 		CD3DX12_ROOT_PARAMETER1 rootParameters[2];
@@ -201,6 +201,15 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderVoxels(tru
 		ThrowIfFailed(d3dSyst->GetDevice()->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_blocksDetectionPipelineState)));
 
 #if defined(_DEBUG)
+		D3DReadFileToBlob(L"shaders_debug\\PoseBlocksDetectionCS.cso", &computeShader);
+#else
+		D3DReadFileToBlob(L"shaders\\PoseBlocksDetectionCS.cso", &computeShader);
+#endif
+		computePsoDesc.pRootSignature = m_blocksComputeRootSignature.Get();
+		computePsoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
+		ThrowIfFailed(d3dSyst->GetDevice()->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_poseBlocksDetectionPipelineState)));
+
+#if defined(_DEBUG)
 		D3DReadFileToBlob(L"shaders_debug\\BlocksFillingCS.cso", &computeShader);
 #else
 		D3DReadFileToBlob(L"shaders\\BlocksFillingCS.cso", &computeShader);
@@ -208,6 +217,15 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderVoxels(tru
 		computePsoDesc.pRootSignature = m_blocksComputeRootSignature.Get();
 		computePsoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
 		ThrowIfFailed(d3dSyst->GetDevice()->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_blocksFillingPipelineState)));
+
+#if defined(_DEBUG)
+		D3DReadFileToBlob(L"shaders_debug\\PoseBlocksFillingCS.cso", &computeShader);
+#else
+		D3DReadFileToBlob(L"shaders\\PoseBlocksFillingCS.cso", &computeShader);
+#endif
+		computePsoDesc.pRootSignature = m_blocksComputeRootSignature.Get();
+		computePsoDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader.Get());
+		ThrowIfFailed(d3dSyst->GetDevice()->CreateComputePipelineState(&computePsoDesc, IID_PPV_ARGS(&m_poseBlocksFillingPipelineState)));
 	}
 
 	///Constant buffer
@@ -532,6 +550,23 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterSegmentsOpacity(vector<float>& seg
 	return segmentsOpacityRes;
 }
 
+ComPtr<ID3D12Resource> VoxelPipeline::RegisterBonesWeights(vector<float>& weights)
+{
+	ComPtr<ID3D12Resource> weightsRes = m_d3dSyst->CreateStructuredBuffer(&weights[0], sizeof(float)*weights.size(), L"Bones weights");
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	srvDesc.Buffer.FirstElement = 0;
+	srvDesc.Buffer.NumElements = weights.size();
+	srvDesc.Buffer.StructureByteStride = sizeof(float);
+	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::BONES_WEIGHTS_SRV, m_srvUavDescriptorSize);
+	m_d3dSyst->GetDevice()->CreateShaderResourceView(weightsRes.Get(), &srvDesc, srvHandle);
+	return weightsRes;
+}
+
 void VoxelPipeline::SetSegmentsOpacity(vector<float>& segmentsOpacity, ComPtr<ID3D12Resource>& segmentsOpacityRes)
 {
 	m_d3dSyst->CopyDataToGPU(segmentsOpacityRes, &segmentsOpacity[0], sizeof(float)*segmentsOpacity.size(),m_opacityUploadBuffer);
@@ -555,6 +590,39 @@ void VoxelPipeline::ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize
 	computeConstantBuffer.dimBlocks = { dimBlocks.x, dimBlocks.y, dimBlocks.z, 0 };
 	computeConstantBuffer.voxelsCount = voxelsCount;
 	computeConstantBuffer.blockSize = blockSize;
+	int computeBlocksCount = ceil(sqrt(voxelsCount));
+	computeBlocksCount = ceil(computeBlocksCount / 32.0);
+	computeConstantBuffer.computeBlocksCount = computeBlocksCount;
+
+	memcpy(m_cbvGPUAddress[frameIndex], &computeConstantBuffer, sizeof(computeConstantBuffer));
+	commandList->SetComputeRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
+	commandList->SetComputeRootDescriptorTable(1, m_blocksComputeSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
+	commandList->Dispatch(computeBlocksCount, computeBlocksCount, 1);
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(blocksInfoRes.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+
+	m_d3dSyst->Execute();
+	m_d3dSyst->Wait();
+	m_d3dSyst->CopyDataFromGPU(blocksInfoRes, &blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size());
+}
+
+void VoxelPipeline::ComputePoseDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes, Skeleton & skeleton)
+{
+	m_d3dSyst->Reset();
+	int frameIndex = m_d3dSyst->GetFrameIndex();
+	ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
+	commandList->SetPipelineState(m_poseBlocksDetectionPipelineState.Get());
+	commandList->SetComputeRootSignature(m_blocksComputeRootSignature.Get());
+	ID3D12DescriptorHeap* heaps[] = { m_blocksComputeSrvUavHeap.Get() };
+	commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+	ComputeBlocksCB computeConstantBuffer;
+	computeConstantBuffer.min = { min.x, min.y, min.z, 0 };
+	computeConstantBuffer.max = { max.x, max.y, max.z, 0 };
+	computeConstantBuffer.dim = { dim.x, dim.y, dim.z, 0 };
+	computeConstantBuffer.dimBlocks = { dimBlocks.x, dimBlocks.y, dimBlocks.z, 0 };
+	computeConstantBuffer.voxelsCount = voxelsCount;
+	computeConstantBuffer.blockSize = blockSize;
+	skeleton.SetFinalMatrices(computeConstantBuffer.bones);
 	int computeBlocksCount = ceil(sqrt(voxelsCount));
 	computeBlocksCount = ceil(computeBlocksCount / 32.0);
 	computeConstantBuffer.computeBlocksCount = computeBlocksCount;
@@ -656,6 +724,41 @@ void VoxelPipeline::ComputeFillBlocks(int voxelsCount, int texturesCount, int3 d
 	computeConstantBuffer.blockSize = blockSize;
 	computeConstantBuffer.computeBlocksCount = computeBlocksCount;
 	computeConstantBuffer.overlap = overlap;
+	memcpy(m_cbvGPUAddress[frameIndex], &computeConstantBuffer, sizeof(computeConstantBuffer));
+	commandList->SetComputeRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
+	commandList->SetComputeRootDescriptorTable(1, m_blocksComputeSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
+	commandList->Dispatch(computeBlocksCount, computeBlocksCount, 1);
+	vector<CD3DX12_RESOURCE_BARRIER> transitions;
+	for (int i = 0; i < texturesCount; i++)
+	{
+		transitions.push_back(CD3DX12_RESOURCE_BARRIER::Transition(texturesRes[i].Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+	}
+	commandList->ResourceBarrier(texturesCount, &transitions[0]);
+	m_d3dSyst->Execute();
+	m_d3dSyst->Wait();
+}
+
+void VoxelPipeline::ComputePoseFillBlocks(int voxelsCount, int texturesCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes, Skeleton & skeleton)
+{
+	m_d3dSyst->Reset();
+	int frameIndex = m_d3dSyst->GetFrameIndex();
+	ComPtr<ID3D12GraphicsCommandList> commandList = m_d3dSyst->GetCommandList();
+	commandList->SetPipelineState(m_poseBlocksFillingPipelineState.Get());
+	commandList->SetComputeRootSignature(m_blocksComputeRootSignature.Get());
+	ID3D12DescriptorHeap* heaps[] = { m_blocksComputeSrvUavHeap.Get() };
+	commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+	int computeBlocksCount = ceil(sqrt(voxelsCount));
+	computeBlocksCount = ceil(computeBlocksCount / 32.0);
+	ComputeBlocksCB computeConstantBuffer;
+	computeConstantBuffer.min = { min.x, min.y, min.z, 0 };
+	computeConstantBuffer.max = { max.x, max.y, max.z, 0 };
+	computeConstantBuffer.dim = { dim.x, dim.y, dim.z, 0 };
+	computeConstantBuffer.dimBlocks = { dimBlocks.x, dimBlocks.y, dimBlocks.z, 0 };
+	computeConstantBuffer.voxelsCount = voxelsCount;
+	computeConstantBuffer.blockSize = blockSize;
+	computeConstantBuffer.computeBlocksCount = computeBlocksCount;
+	computeConstantBuffer.overlap = overlap;
+	skeleton.SetFinalMatrices(computeConstantBuffer.bones);
 	memcpy(m_cbvGPUAddress[frameIndex], &computeConstantBuffer, sizeof(computeConstantBuffer));
 	commandList->SetComputeRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
 	commandList->SetComputeRootDescriptorTable(1, m_blocksComputeSrvUavHeap->GetGPUDescriptorHandleForHeapStart());

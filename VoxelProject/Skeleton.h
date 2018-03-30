@@ -11,6 +11,7 @@ public:
 	~Skeleton();
 	void Process();
 	void SetMatricesForDraw(Matrix worldViewProj, Matrix* matricesForDraw);
+	void SetFinalMatrices(Matrix* finalMatrices);
 	int GetBonesCount();
 	shared_ptr<Bone> Find(int index);
 	shared_ptr<Bone> FindPrev(int index);

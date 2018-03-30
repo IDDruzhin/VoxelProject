@@ -32,6 +32,7 @@ public:
 	int GetChildsCount();
 	int GetBranchBonesCount();
 	void ProcessOffset();
+	void ProcessFinal(Matrix * finalMatrices);
 	void WriteBin(ofstream& f);
 	void LoadBin(ifstream& f);
 private:

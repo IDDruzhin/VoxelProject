@@ -28,6 +28,11 @@ void Skeleton::SetMatricesForDraw(Matrix worldViewProj, Matrix* matricesForDraw)
 	m_root->ProcessForDraw(worldViewProj, matricesForDraw, m_boneThickness);
 }
 
+void Skeleton::SetFinalMatrices(Matrix * finalMatrices)
+{
+	m_root->ProcessFinal(finalMatrices);
+}
+
 int Skeleton::GetBonesCount()
 {
 	return m_bonesCount;

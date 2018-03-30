@@ -4,6 +4,7 @@
 #include "Camera.h"
 
 class VoxelObject;
+class Skeleton;
 
 class VoxelPipeline
 {
@@ -12,19 +13,20 @@ typedef
 	enum GRAPHICS_DESCRIPTORS
 	{
 		RENDER_TEXTURE_UAV = 0,
-		BACK_COORD_TEXTURE_UAV = 1,
-		PALETTE_SRV = 2,
-		SEGMENTS_OPACITY_SRV = 3,
-		TEXTURES_3D_SRV_ARRAY = 4
+		BACK_COORD_TEXTURE_UAV = RENDER_TEXTURE_UAV + 1,
+		PALETTE_SRV = BACK_COORD_TEXTURE_UAV + 1,
+		SEGMENTS_OPACITY_SRV = PALETTE_SRV + 1,
+		TEXTURES_3D_SRV_ARRAY = SEGMENTS_OPACITY_SRV + 1
 	} 	GRAPHICS_DESCRIPTORS;
 typedef
 	enum COMPUTE_DESCRIPTORS
 	{
 		VOXELS_SRV = 0,
-		BLOCKS_INFO_SRV = 1,
-		BLOCKS_INDEXES_SRV = 2,
-		BLOCKS_INFO_UAV = 3,
-		TEXTURES_3D_UAV_ARRAY = 4
+		BLOCKS_INFO_SRV = VOXELS_SRV + 1,
+		BLOCKS_INDEXES_SRV = BLOCKS_INFO_SRV + 1,
+		BONES_WEIGHTS_SRV = BLOCKS_INDEXES_SRV + 1,
+		BLOCKS_INFO_UAV = BONES_WEIGHTS_SRV + 1,
+		TEXTURES_3D_UAV_ARRAY = BLOCKS_INFO_UAV + 1
 	} 	COMPUTE_DESCRIPTORS;
 
 typedef
@@ -41,10 +43,13 @@ enum INTERPOLATION_MODE
 	ComPtr<ID3D12Resource> RegisterVoxels(vector<Voxel>& voxels);
 	ComPtr<ID3D12Resource> RegisterPalette(vector<uchar4>& palette);
 	ComPtr<ID3D12Resource> RegisterSegmentsOpacity(vector<float>& segmentsOpacity);
+	ComPtr<ID3D12Resource> RegisterBonesWeights(vector<float>& weights);
 	void SetSegmentsOpacity(vector<float>& segmentsOpacity, ComPtr<ID3D12Resource>& segmentsOpacityRes);
 	void ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes);
+	void ComputePoseDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes, Skeleton& skeleton);
 	void RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo, vector<BlockPriorityInfo>& blocksPriorInfo);
 	void ComputeFillBlocks(int voxelsCount, int texturesCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes);
+	void ComputePoseFillBlocks(int voxelsCount, int texturesCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, int overlap, vector<ComPtr<ID3D12Resource>>& texturesRes, Skeleton& skeleton);
 	void SetStepSize(float voxelSize, float ratio = 1.0f);
 	void SetInterpolationMode(INTERPOLATION_MODE mode);
 	void SetBlocksVisiblity(bool isVisible);
@@ -79,6 +84,8 @@ private:
 	ComPtr<ID3D12RootSignature> m_blocksComputeRootSignature;
 	ComPtr<ID3D12PipelineState> m_blocksDetectionPipelineState;
 	ComPtr<ID3D12PipelineState> m_blocksFillingPipelineState;
+	ComPtr<ID3D12PipelineState> m_poseBlocksDetectionPipelineState;
+	ComPtr<ID3D12PipelineState> m_poseBlocksFillingPipelineState;
 	ComPtr<ID3D12DescriptorHeap> m_blocksComputeSrvUavHeap;
 
 	ComPtr<ID3D12RootSignature> m_bonesRenderRootSignature;

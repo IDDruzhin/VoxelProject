@@ -19,6 +19,7 @@ struct ComputeBlocksCB
 	int blockSize;
 	int computeBlocksCount;
 	int overlap;
+	Matrix bones[256];
 };
 const int ComputeBlocksCBAlignedSize = (sizeof(ComputeBlocksCB) + 255) & ~255;
 

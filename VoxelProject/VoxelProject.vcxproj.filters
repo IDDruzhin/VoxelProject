@@ -167,6 +167,12 @@
     <FxCompile Include="BonesPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="PoseBlocksDetectionCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PoseBlocksFillingCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CudaFunctions.cu">

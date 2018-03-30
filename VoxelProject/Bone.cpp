@@ -341,6 +341,19 @@ void Bone::ProcessOffset()
 	}
 }
 
+void Bone::ProcessFinal(Matrix * finalMatrices)
+{
+	finalMatrices[m_index] = m_offset * m_combined;
+	if (m_sibling)
+	{
+		m_sibling->ProcessFinal(finalMatrices);
+	}
+	if (m_child)
+	{
+		m_child->ProcessFinal(finalMatrices);
+	}
+}
+
 void Bone::WriteBin(ofstream & f)
 {
 	f.write((char*)(&m_index), sizeof(int));
