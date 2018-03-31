@@ -167,9 +167,7 @@ void VoxelObject::SaveBin(string path, string name)
 		f.write((char*)(&m_isSkeletonBinded), sizeof(bool));
 		if (m_isSkeletonBinded)
 		{
-			count = m_weights.size();
-			f.write((char*)(&count), sizeof(int));
-			f.write((char*)(&m_weights[0]), sizeof(float)*count);
+			f.write((char*)(&m_weights[0]), sizeof(float)*m_weights.size());
 		}
 		m_skeleton.SaveBin(f);
 		f.close();
@@ -211,9 +209,8 @@ void VoxelObject::LoadBin(string path)
 		f.read((char*)(&m_isSkeletonBinded), sizeof(bool));
 		if (m_isSkeletonBinded)
 		{
-			f.read((char*)(&count), sizeof(int));
-			m_weights.resize(count);
-			f.read((char*)(&m_weights[0]), sizeof(float)*count);
+			m_weights.resize(m_voxels.size());
+			f.read((char*)(&m_weights[0]), sizeof(float)*m_weights.size());
 		}
 		m_skeleton.LoadBin(f);
 		f.close();
@@ -224,10 +221,21 @@ void VoxelObject::LoadBin(string path)
 	}
 }
 
-void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlap, int3 min, int3 max)
+//void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlap, int3 min, int3 max)
+void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlap)
 {
-	if (max.x == 0 && max.y == 0 && max.z == 0)
+	int3 min;
+	int3 max;
+	if (m_isSkeletonBinded)
 	{
+		int maxSide = (m_dim.x > m_dim.y) ? m_dim.x : m_dim.y;
+		maxSide = (maxSide > m_dim.z) ? maxSide : m_dim.z;
+		min = { -2 * maxSide, -2 * maxSide, -2 * maxSide };
+		max = { 2 * maxSide, 2 * maxSide, 2 * maxSide };
+	}
+	else
+	{
+		min = { 0, 0, 0 };
 		max = m_dim;
 	}
 	m_blockSize = blockSize;
@@ -239,7 +247,7 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 		{
 			for (int i = 0; i < dimBlocks.x; i++)
 			{
-				BlockInfo cur = { { (i + 1)*blockSize - 1, (j + 1)*blockSize - 1, (k + 1)*blockSize - 1 },{ i*blockSize, j*blockSize, k*blockSize } };
+				BlockInfo cur = { { min.x + (i + 1)*blockSize - 1, min.y + (j + 1)*blockSize - 1, min.z + (k + 1)*blockSize - 1 },{ min.x + i*blockSize, min.y + j*blockSize, min.z + k*blockSize } };
 				blocksInfo.push_back(cur);
 			}
 		}
@@ -259,17 +267,9 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	{
 		voxPipeline->ComputeDetectBlocks(m_voxels.size(), m_dim, m_blockSize, dimBlocks, min, max, blocksInfo, blocksInfoRes);
 	}
-	int count = 0;
-	for (int i = 0; i < blocksInfo.size(); i++)
-	{
-		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
-		{
-			count++;
-		}		
-	}
 	
 	ComPtr<ID3D12Resource> blocksIndexesRes;
-	voxPipeline->RegisterBlocks(overlap, dimBlocks, m_blockSize, blocksInfo, m_blocksRes, m_texturesRes, blocksIndexesRes, m_blocksPosInfo, m_blocksPriorInfo);
+	voxPipeline->RegisterBlocks(overlap, dimBlocks, m_blockSize, min, blocksInfo, m_blocksRes, m_texturesRes, blocksIndexesRes, m_blocksPosInfo, m_blocksPriorInfo);
 
 	m_blocksBufferView.BufferLocation = m_blocksRes->GetGPUVirtualAddress();
 	m_blocksBufferView.StrideInBytes = sizeof(Vertex);

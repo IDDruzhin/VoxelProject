@@ -28,7 +28,7 @@ typedef
 	void CreateFromSlices(string path);
 	void SaveBin(string path, string name);
 	void LoadBin(string path);
-	void BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlay = 0, int3 min = { 0,0,0 }, int3 max = { 0,0,0 });
+	void BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlay = 0);
 	vector<BlockPriorityInfo> CalculatePriorities(Vector3 cameraPos);
 	D3D12_VERTEX_BUFFER_VIEW GetBlocksVBV();
 	float GetVoxelSize();

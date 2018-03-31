@@ -220,8 +220,8 @@ void Skeleton::SaveBin(ofstream & f)
 	if (f.is_open())
 	{
 		f.write((char*)(&m_pos), sizeof(Vector3));
-		f.write((char*)(&m_boneThickness), sizeof(Vector3));
-		f.write((char*)(&m_bonesCount), sizeof(Vector3));
+		f.write((char*)(&m_boneThickness), sizeof(float));
+		f.write((char*)(&m_bonesCount), sizeof(int));
 		int childsCount = 0;
 		stack<shared_ptr<Bone>> bonesSt;
 		shared_ptr<Bone> cur = m_root;
@@ -252,44 +252,35 @@ void Skeleton::SaveBin(ofstream & f)
 
 void Skeleton::LoadBin(ifstream & f)
 {
-	if (f.is_open())
+	f.read((char*)(&m_pos), sizeof(Vector3));
+	f.read((char*)(&m_boneThickness), sizeof(float));
+	f.read((char*)(&m_bonesCount), sizeof(int));
+	stack<shared_ptr<Bone>> bonesSt;
+	stack<int> childsCountSt;
+	shared_ptr<Bone> cur = m_root;
+	shared_ptr<Bone> tmp;
+	int childsCount = 0;
+	int tmpChildsCount;
+	f.read((char*)(&childsCount), sizeof(int));
+	cur->LoadBin(f);
+	bonesSt.push(cur);
+	childsCountSt.push(childsCount);
+	while (!bonesSt.empty())
 	{
-		f.read((char*)(&m_pos), sizeof(Vector3));
-		f.read((char*)(&m_boneThickness), sizeof(Vector3));
-		f.read((char*)(&m_bonesCount), sizeof(Vector3));
-
-		int N = 0;
-		stack<shared_ptr<Bone>> bonesSt;
-		stack<int> childsCountSt;
-		shared_ptr<Bone> cur = m_root;
-		shared_ptr<Bone> tmp;
-		int childsCount = 0;
-		int tmpChildsCount;
-		f.read((char*)(&childsCount), sizeof(int));
-		cur->LoadBin(f);
-		bonesSt.push(cur);
-		childsCountSt.push(childsCount);
-		while (!bonesSt.empty())
+		childsCount = childsCountSt.top();
+		childsCountSt.pop();
+		cur = bonesSt.top();
+		bonesSt.pop();
+		for (int i = 0; i < childsCount; i++)
 		{
-			childsCount = childsCountSt.top();
-			childsCountSt.pop();
-			cur = bonesSt.top();
-			bonesSt.pop();
-			for (int i = 0; i < childsCount; i++)
-			{
-				f.read((char*)(&tmpChildsCount), sizeof(int));
-				childsCountSt.push(tmpChildsCount);
-				tmp = make_shared<Bone>();
-				tmp->LoadBin(f);
-				cur->InsertChild(tmp);
-				bonesSt.push(tmp);
-			}
+			f.read((char*)(&tmpChildsCount), sizeof(int));
+			childsCountSt.push(tmpChildsCount);
+			tmp = make_shared<Bone>();
+			tmp->LoadBin(f);
+			cur->InsertChild(tmp);
+			bonesSt.push(tmp);
 		}
-		Process();
 	}
-	else
-	{
-		throw std::exception("Can`t open file");
-	}
+	Process();
 }
 

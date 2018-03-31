@@ -638,7 +638,7 @@ void VoxelPipeline::ComputePoseDetectBlocks(int voxelsCount, int3 dim, int block
 	m_d3dSyst->CopyDataFromGPU(blocksInfoRes, &blocksInfo[0], sizeof(BlockInfo)*blocksInfo.size());
 }
 
-void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo, vector<BlockPriorityInfo>& blocksPriorInfo)
+void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, int3 min, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource>& blocksRes, vector<ComPtr<ID3D12Resource>>& texturesRes, ComPtr<ID3D12Resource>& blocksIndexesRes, vector<BlockPositionInfo>& blocksPosInfo, vector<BlockPriorityInfo>& blocksPriorInfo)
 {
 	texturesRes.clear();
 	blocksPosInfo.clear();
@@ -665,7 +665,7 @@ void VoxelPipeline::RegisterBlocks(int overlap, int3 dimBlocks, int blockSize, v
 		BlockPositionInfo blockPositionInfo;
 		blockPositionInfo.block3dIndex = block3dIndex;
 		blockPositionInfo.distance = 0;
-		blockPositionInfo.position = Vector3(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f) * blockSize;
+		blockPositionInfo.position = Vector3(min.x, min.y, min.z) + Vector3(block3dIndex.x + 0.5f, block3dIndex.y + 0.5f, block3dIndex.z + 0.5f) * blockSize;
 		blocksPosInfo.push_back(blockPositionInfo);
 		if ((blocksInfo[i].max.x >= blocksInfo[i].min.x) && (blocksInfo[i].max.y >= blocksInfo[i].min.y) && (blocksInfo[i].max.z >= blocksInfo[i].min.z))
 		{
