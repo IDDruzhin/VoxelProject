@@ -584,15 +584,18 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 		//int kjs = 83;
 		//kjs += 2;
 	}
-
+	/*
 	vector<uint> hDist00(voxels.size());
 	cudaMemcpy(&hDist00[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(uint)*voxels.size(), cudaMemcpyDeviceToHost);
 	vector<uint> hDist01(voxels.size());
 	cudaMemcpy(&hDist01[0], thrust::raw_pointer_cast(dDist01.data()), sizeof(uint)*voxels.size(), cudaMemcpyDeviceToHost);
+	*/
 
 	float a = 0.7f;
 	DistancesToWeights(voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()), a);
 	cudaMemcpy(&voxels[0], dVoxels, sizeof(Voxel)*voxels.size(), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&weights[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
+	/*
 	cudaMemcpy(&weights[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
 	int find = -1;
 	for (int i = 0; i < hDist01.size(); i++)
@@ -606,6 +609,7 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 			find = i;
 		}
 	}
+	*/
 	/*
 	vector<uint> hDist00(voxels.size());
 	cudaMemcpy(&hDist00[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(uint)*voxels.size(), cudaMemcpyDeviceToHost);

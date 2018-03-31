@@ -349,7 +349,7 @@ void Bone::ProcessOffset()
 
 void Bone::ProcessFinal(Matrix * finalMatrices)
 {
-	finalMatrices[m_index] = m_offset * m_combined;
+	finalMatrices[m_index] = (m_offset * m_combined).Transpose();
 	if (m_sibling)
 	{
 		m_sibling->ProcessFinal(finalMatrices);
