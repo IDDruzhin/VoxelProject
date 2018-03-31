@@ -24,8 +24,10 @@ typedef
 		VOXELS_SRV = 0,
 		BLOCKS_INFO_SRV = VOXELS_SRV + 1,
 		BLOCKS_INDEXES_SRV = BLOCKS_INFO_SRV + 1,
-		BONES_WEIGHTS_SRV = BLOCKS_INDEXES_SRV + 1,
-		BLOCKS_INFO_UAV = BONES_WEIGHTS_SRV + 1,
+		BONES_WEIGHTS00_SRV = BLOCKS_INDEXES_SRV + 1,
+		BONES_WEIGHTS01_SRV = BONES_WEIGHTS00_SRV +1,
+		ADDITIONAL_BONES_INDICES = BONES_WEIGHTS01_SRV + 1,
+		BLOCKS_INFO_UAV = ADDITIONAL_BONES_INDICES + 1,
 		TEXTURES_3D_UAV_ARRAY = BLOCKS_INFO_UAV + 1
 	} 	COMPUTE_DESCRIPTORS;
 
@@ -43,7 +45,8 @@ enum INTERPOLATION_MODE
 	ComPtr<ID3D12Resource> RegisterVoxels(vector<Voxel>& voxels);
 	ComPtr<ID3D12Resource> RegisterPalette(vector<uchar4>& palette);
 	ComPtr<ID3D12Resource> RegisterSegmentsOpacity(vector<float>& segmentsOpacity);
-	ComPtr<ID3D12Resource> RegisterBonesWeights(vector<float>& weights);
+	ComPtr<ID3D12Resource> RegisterBonesWeights(vector<float>& weights00, int num);
+	ComPtr<ID3D12Resource> RegisterAdditionalBonesIndices(vector<unsigned char>& additionalBonesIndices);
 	void SetSegmentsOpacity(vector<float>& segmentsOpacity, ComPtr<ID3D12Resource>& segmentsOpacityRes);
 	void ComputeDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes);
 	void ComputePoseDetectBlocks(int voxelsCount, int3 dim, int blockSize, int3 dimBlocks, int3 min, int3 max, vector<BlockInfo>& blocksInfo, ComPtr<ID3D12Resource> blocksInfoRes, Skeleton& skeleton);

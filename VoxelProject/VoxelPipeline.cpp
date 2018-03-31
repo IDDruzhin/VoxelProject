@@ -174,7 +174,7 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderVoxels(tru
 		d3dSyst->GetDevice()->CreateDescriptorHeap(&srvUavHeapDesc, IID_PPV_ARGS(&m_blocksComputeSrvUavHeap));
 
 		CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
-		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE); //t0-t3
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE); //t0-t5
 		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, -1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE); //u1-...
 
 		CD3DX12_ROOT_PARAMETER1 rootParameters[2];
@@ -550,7 +550,7 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterSegmentsOpacity(vector<float>& seg
 	return segmentsOpacityRes;
 }
 
-ComPtr<ID3D12Resource> VoxelPipeline::RegisterBonesWeights(vector<float>& weights)
+ComPtr<ID3D12Resource> VoxelPipeline::RegisterBonesWeights(vector<float>& weights, int num)
 {
 	ComPtr<ID3D12Resource> weightsRes = m_d3dSyst->CreateStructuredBuffer(&weights[0], sizeof(float)*weights.size(), L"Bones weights");
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -562,9 +562,26 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterBonesWeights(vector<float>& weight
 	srvDesc.Buffer.StructureByteStride = sizeof(float);
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::BONES_WEIGHTS_SRV, m_srvUavDescriptorSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::BONES_WEIGHTS00_SRV + num, m_srvUavDescriptorSize);
 	m_d3dSyst->GetDevice()->CreateShaderResourceView(weightsRes.Get(), &srvDesc, srvHandle);
 	return weightsRes;
+}
+
+ComPtr<ID3D12Resource> VoxelPipeline::RegisterAdditionalBonesIndices(vector<unsigned char>& additionalBonesIndices)
+{
+	ComPtr<ID3D12Resource> additionalBonesIndicesRes = m_d3dSyst->CreateStructuredBuffer(&additionalBonesIndices[0], sizeof(int) * (additionalBonesIndices.size() / sizeof(int) + 1), L"Additional bones indices");
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	srvDesc.Buffer.FirstElement = 0;
+	srvDesc.Buffer.NumElements = additionalBonesIndices.size() / sizeof(int) + 1;
+	srvDesc.Buffer.StructureByteStride = sizeof(int);
+	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::ADDITIONAL_BONES_INDICES, m_srvUavDescriptorSize);
+	m_d3dSyst->GetDevice()->CreateShaderResourceView(additionalBonesIndicesRes.Get(), &srvDesc, srvHandle);
+	return additionalBonesIndicesRes;
 }
 
 void VoxelPipeline::SetSegmentsOpacity(vector<float>& segmentsOpacity, ComPtr<ID3D12Resource>& segmentsOpacityRes)

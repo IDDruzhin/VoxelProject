@@ -57,7 +57,9 @@ private:
 	int m_blockSize;
 
 	Skeleton m_skeleton;
-	vector<float> m_weights;
+	vector<float> m_weights00;
+	vector<float> m_weights01;
+	vector<uchar> m_additionalBonesIndices;
 	bool m_isSkeletonBinded;
 	
 	vector<ComPtr<ID3D12Resource>> m_texturesRes;

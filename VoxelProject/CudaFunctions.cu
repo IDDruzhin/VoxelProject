@@ -302,7 +302,7 @@ __device__ int VoxelBinSearch(uint voxelIndex, Voxel* voxels, uint voxelsCount)
 	return (-1);
 }
 
-__global__ void CalculateIntersectingVoxelsKernel(Voxel* voxels, int3 voxelsDim, uint voxelsCount, uint* dist01, float3 invDir, float3 dirOrigin, int* mask, int* count)
+__global__ void CalculateIntersectingVoxelsKernel(Voxel* voxels, int3 voxelsDim, uint voxelsCount, uint* dist01, int boneIndex, float3 invDir, float3 dirOrigin, int* mask, int* count)
 {
 	uint x = blockIdx.x*blockDim.x + threadIdx.x;
 	uint y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -376,16 +376,17 @@ __global__ void CalculateIntersectingVoxelsKernel(Voxel* voxels, int3 voxelsDim,
 		dist01[index] = 0;
 		atomicAdd(count, 1);
 		SetMaskElement(index, mask);
+		voxels[index].bone01 = boneIndex;
 	}
 }
 
-void CalculateIntersectingVoxels(Voxel* voxels, int3 voxelsDim, uint voxelsCount, uint* dist01, float3 invDir, float3 dirOrigin, int* mask, int* count)
+void CalculateIntersectingVoxels(Voxel* voxels, int3 voxelsDim, uint voxelsCount, uint* dist01, int boneIndex, float3 invDir, float3 dirOrigin, int* mask, int* count)
 {
 	dim3 blockSize(32, 32);
 	int computeBlocksCount = ceil(sqrt(voxelsCount));
 	computeBlocksCount = ceil(computeBlocksCount / 32.0);
 	dim3 gridSize(computeBlocksCount, computeBlocksCount);
-	CalculateIntersectingVoxelsKernel <<<gridSize, blockSize>>>(voxels, voxelsDim, voxelsCount, dist01, invDir, dirOrigin, mask, count);
+	CalculateIntersectingVoxelsKernel <<<gridSize, blockSize>>>(voxels, voxelsDim, voxelsCount, dist01, boneIndex, invDir, dirOrigin, mask, count);
 }
 
 __global__ void CalculateGeodesicDistancesKernel(Voxel* voxels, int3 voxelsDim, uint voxelsCount, uint* dist01, int boneIndex, int* readMask, int* writeMask, int* count)
@@ -475,7 +476,7 @@ void CalculateGeodesicDistances(Voxel* voxels, int3 voxelsDim, uint voxelsCount,
 	CalculateGeodesicDistancesKernel << <gridSize, blockSize >> > (voxels, voxelsDim, voxelsCount, dist01, boneIndex, readMask, writeMask, count);
 }
 
-__global__ void SwapDistancesKernel(Voxel* voxels, uint voxelsCount, uint* dist00, uint* dist01)
+__global__ void SwapDistancesKernel(Voxel* voxels, uint voxelsCount, uint* dist00, uint* dist01, uint* dist02, uchar* additionalBones)
 {
 	uint x = blockIdx.x*blockDim.x + threadIdx.x;
 	uint y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -484,6 +485,7 @@ __global__ void SwapDistancesKernel(Voxel* voxels, uint voxelsCount, uint* dist0
 	{
 		return;
 	}
+	/*
 	if (dist01[index] < dist00[index])
 	{
 		uint tmp = dist00[index];
@@ -493,18 +495,40 @@ __global__ void SwapDistancesKernel(Voxel* voxels, uint voxelsCount, uint* dist0
 		voxels[index].bone01 = voxels[index].bone00;
 		voxels[index].bone00 = tmp;
 	}
+	*/
+	if (dist01[index] < dist02[index])
+	{
+		uint tmp = dist02[index];
+		dist02[index] = dist01[index];
+		dist01[index] = tmp;
+		tmp = additionalBones[index];
+		additionalBones[index] = voxels[index].bone01;
+		voxels[index].bone01 = tmp;
+	}
+	if (dist02[index] < dist00[index])
+	{
+		uint tmp = dist00[index];
+		dist00[index] = dist02[index];
+		dist02[index] = tmp;
+		tmp = voxels[index].bone00;
+		voxels[index].bone00 = additionalBones[index];
+		additionalBones[index] = tmp;
+	}
+	/// dist00 - 1
+	/// dist02 - 2 - additional bone
+	/// dist01 - 3
 }
 
-void SwapDistances(Voxel* voxels, uint voxelsCount, uint* dist00, uint* dist01)
+void SwapDistances(Voxel* voxels, uint voxelsCount, uint* dist00, uint* dist01, uint* dist02, uchar* additionalBones)
 {
 	dim3 blockSize(32, 32);
 	int computeBlocksCount = ceil(sqrt(voxelsCount));
 	computeBlocksCount = ceil(computeBlocksCount / 32.0);
 	dim3 gridSize(computeBlocksCount, computeBlocksCount);
-	SwapDistancesKernel << <gridSize, blockSize >> > (voxels, voxelsCount, dist00, dist01);
+	SwapDistancesKernel << <gridSize, blockSize >> > (voxels, voxelsCount, dist00, dist01, dist02, additionalBones);
 }
 
-__global__ void DistancesToWeightsKernel(int3 voxelsDim, uint voxelsCount, uint* dist00, uint* dist01, float a)
+__global__ void DistancesToWeightsKernel(int3 voxelsDim, uint voxelsCount, uint* dist00, uint* dist01, uint* dist02, float a)
 {
 	uint x = blockIdx.x*blockDim.x + threadIdx.x;
 	uint y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -521,8 +545,14 @@ __global__ void DistancesToWeightsKernel(int3 voxelsDim, uint voxelsCount, uint*
 	float weight01 = boxVolumeInv * (0.1f + dist01[index]);
 	weight01 = 1.0f / ((1.0f - a) * weight01 + a * weight01 * weight01);
 	weight01 *= weight01;
-	weight00 = weight00 / (weight00 + weight01);
+	float weight02 = boxVolumeInv * (0.1f + dist02[index]);
+	weight02 = 1.0f / ((1.0f - a) * weight02 + a * weight02 * weight02);
+	weight02 *= weight02;
+	float sum = (weight00 + weight01 + weight02);
+	weight00 = weight00 / sum;
 	dist00[index] = *reinterpret_cast<uint*>(&weight00);
+	weight01 = weight01 / sum;
+	dist01[index] = *reinterpret_cast<uint*>(&weight01);
 	
 	/*
 	float weight = dist00[index];
@@ -539,16 +569,16 @@ __global__ void DistancesToWeightsKernel(int3 voxelsDim, uint voxelsCount, uint*
 	*/
 }
 
-void DistancesToWeights(int3 voxelsDim, uint voxelsCount, uint* dist00, uint* dist01, float a)
+void DistancesToWeights(int3 voxelsDim, uint voxelsCount, uint* dist00, uint* dist01, uint* dist02, float a)
 {
 	dim3 blockSize(32, 32);
 	int computeBlocksCount = ceil(sqrt(voxelsCount));
 	computeBlocksCount = ceil(computeBlocksCount / 32.0);
 	dim3 gridSize(computeBlocksCount, computeBlocksCount);
-	DistancesToWeightsKernel << <gridSize, blockSize >> > (voxelsDim, voxelsCount, dist00, dist01, a);
+	DistancesToWeightsKernel << <gridSize, blockSize >> > (voxelsDim, voxelsCount, dist00, dist01, dist02, a);
 }
 
-void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& weights, vector<pair<Vector3,Vector3>>& bonesPoints)
+void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& weights00, vector<float>& weights01, vector<uchar>& additionalBonesIndices, vector<pair<Vector3,Vector3>>& bonesPoints)
 {
 	int hCount;
 	int* dCount;
@@ -564,6 +594,8 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 	uint distInit = UINT_MAX;
 	thrust::device_vector<uint> dDist00(voxels.size(), distInit);
 	thrust::device_vector<uint> dDist01(voxels.size(), distInit);
+	thrust::device_vector<uint> dDist02(voxels.size(), distInit);
+	thrust::device_vector<uchar> dAdditionalBones(voxels.size());
 	Voxel* dVoxels;
 	cudaMalloc((void**)&dVoxels, sizeof(Voxel) * voxels.size());
 	cudaMemcpy(dVoxels, &voxels[0], sizeof(Voxel) * voxels.size(), cudaMemcpyHostToDevice);
@@ -577,7 +609,7 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 		invDir.z = 1.0f / invDir.z;
 		float3 invDirF = { invDir.x, invDir.y, invDir.z };
 		float3 dirOriginF = { bonesPoints[i].first.x, bonesPoints[i].first.y, bonesPoints[i].first.z };
-		CalculateIntersectingVoxels(dVoxels, voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist01.data()), invDirF, dirOriginF, dMask00, dCount);
+		CalculateIntersectingVoxels(dVoxels, voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist01.data()), i, invDirF, dirOriginF, dMask00, dCount);
 		cudaMemcpy(&hCount, dCount, sizeof(int), cudaMemcpyDeviceToHost);
 		bool isFirstMask = true;
 		//int stepsCount = 0;
@@ -599,7 +631,7 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 			cudaMemcpy(&hCount, dCount, sizeof(int), cudaMemcpyDeviceToHost);
 			//stepsCount++;
 		}
-		SwapDistances(dVoxels, voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()));
+		SwapDistances(dVoxels, voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()), thrust::raw_pointer_cast(dDist02.data()), thrust::raw_pointer_cast(dAdditionalBones.data()));
 		//int kjs = 83;
 		//kjs += 2;
 	}
@@ -612,9 +644,11 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 
 	//float a = 0.7f;
 	float a = 1.0f;
-	DistancesToWeights(voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()), a);
+	DistancesToWeights(voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()), thrust::raw_pointer_cast(dDist02.data()), a);
 	cudaMemcpy(&voxels[0], dVoxels, sizeof(Voxel)*voxels.size(), cudaMemcpyDeviceToHost);
-	cudaMemcpy(&weights[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&weights00[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&weights01[0], thrust::raw_pointer_cast(dDist01.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&additionalBonesIndices[0], thrust::raw_pointer_cast(dAdditionalBones.data()), sizeof(uchar)*voxels.size(), cudaMemcpyDeviceToHost);
 	/*
 	cudaMemcpy(&weights[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
 	int find = -1;

@@ -180,7 +180,9 @@ void VoxelObject::SaveBin(string path, string name)
 		f.write((char*)(&m_isSkeletonBinded), sizeof(bool));
 		if (m_isSkeletonBinded)
 		{
-			f.write((char*)(&m_weights[0]), sizeof(float)*m_weights.size());
+			f.write((char*)(&m_weights00[0]), sizeof(float)*m_weights00.size());
+			f.write((char*)(&m_weights01[0]), sizeof(float)*m_weights00.size());
+			f.write((char*)(&m_additionalBonesIndices[0]), sizeof(uchar)*m_weights00.size());
 		}
 		m_skeleton.SaveBin(f);
 		f.close();
@@ -222,8 +224,12 @@ void VoxelObject::LoadBin(string path)
 		f.read((char*)(&m_isSkeletonBinded), sizeof(bool));
 		if (m_isSkeletonBinded)
 		{
-			m_weights.resize(m_voxels.size());
-			f.read((char*)(&m_weights[0]), sizeof(float)*m_weights.size());
+			m_weights00.resize(m_voxels.size());
+			m_weights01.resize(m_voxels.size());
+			m_additionalBonesIndices.resize(m_voxels.size());
+			f.read((char*)(&m_weights00[0]), sizeof(float)*m_weights00.size());
+			f.read((char*)(&m_weights01[0]), sizeof(float)*m_weights00.size());
+			f.read((char*)(&m_additionalBonesIndices[0]), sizeof(uchar)*m_weights00.size());
 		}
 		m_skeleton.LoadBin(f);
 		f.close();
@@ -267,10 +273,14 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	}
 	ComPtr<ID3D12Resource> voxelsRes = voxPipeline->RegisterVoxels(m_voxels);
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
-	ComPtr<ID3D12Resource> weightsRes;
+	ComPtr<ID3D12Resource> weights00Res;
+	ComPtr<ID3D12Resource> weights01Res;
+	ComPtr<ID3D12Resource> additionalBonesIndicesRes;
 	if (m_isSkeletonBinded)
 	{
-		weightsRes = voxPipeline->RegisterBonesWeights(m_weights);
+		weights00Res = voxPipeline->RegisterBonesWeights(m_weights00, 0);
+		weights01Res = voxPipeline->RegisterBonesWeights(m_weights01, 1);
+		additionalBonesIndicesRes = voxPipeline->RegisterAdditionalBonesIndices(m_additionalBonesIndices);
 	}
 	if (m_isSkeletonBinded)
 	{
@@ -394,10 +404,12 @@ void VoxelObject::MirrorRotation(int index, Vector3 axis)
 
 void VoxelObject::BindBones()
 {
-	m_weights.resize(m_voxels.size());
+	m_weights00.resize(m_voxels.size());
+	m_weights01.resize(m_voxels.size());
+	m_additionalBonesIndices.resize(m_voxels.size());
 	m_skeleton.SetOffsets();
 	vector<pair<Vector3, Vector3>> bonesPoints = m_skeleton.GetBonesPoints();
-	CUDACalculateWeights(m_voxels, m_dim, m_weights, bonesPoints);
+	CUDACalculateWeights(m_voxels, m_dim, m_weights00, m_weights01, m_additionalBonesIndices, bonesPoints);
 	m_isSkeletonBinded = true;
 	/*
 	float maxWeight = -2.0f;
