@@ -69,14 +69,18 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	uint index = DTid.y*computeBlocksCount*blocksize_x + DTid.x;
 	if (index < voxelsCount)
 	{
-		float3 pos;
 		Voxel voxel = voxels[index];
+		uint bone00 = ((voxel.info >> 16) & 255);
+		if (bone00 == 0)
+		{
+			return;
+		}
+		uint bone01 = ((voxel.info >> 24) & 255);
+		float3 pos;
 		int tmp = voxel.index % (dim.x*dim.y);
 		pos.z = voxel.index / (dim.x*dim.y);
 		pos.y = tmp / dim.x;
 		pos.x = tmp % dim.x;
-		uint bone00 = ((voxel.info >> 16) & 255);
-		uint bone01 = ((voxel.info >> 24) & 255);
 		float4x4 poseMatrix = lerp(bones[bone01], bones[bone00], bonesWeights[index]);
 		int color = (voxel.info & 255);
 		int segment = ((voxel.info >> 8) & 255);

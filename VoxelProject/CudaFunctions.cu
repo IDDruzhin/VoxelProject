@@ -513,6 +513,7 @@ __global__ void DistancesToWeightsKernel(int3 voxelsDim, uint voxelsCount, uint*
 	{
 		return;
 	}
+	
 	float boxVolumeInv = 1.0f / (voxelsDim.x * voxelsDim.y * voxelsDim.z);
 	float weight00 = boxVolumeInv * (0.1f + dist00[index]);
 	weight00 = 1.0f / ((1.0f - a) * weight00 + a * weight00 * weight00);
@@ -522,6 +523,20 @@ __global__ void DistancesToWeightsKernel(int3 voxelsDim, uint voxelsCount, uint*
 	weight01 *= weight01;
 	weight00 = weight00 / (weight00 + weight01);
 	dist00[index] = *reinterpret_cast<uint*>(&weight00);
+	
+	/*
+	float weight = dist00[index];
+	float tmp = weight + dist01[index];
+	if (tmp == 0)
+	{
+		weight = 0.5f;
+	}
+	else
+	{
+		weight /= tmp;
+	}
+	dist00[index] = *reinterpret_cast<uint*>(&weight);
+	*/
 }
 
 void DistancesToWeights(int3 voxelsDim, uint voxelsCount, uint* dist00, uint* dist01, float a)
@@ -595,7 +610,8 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 	cudaMemcpy(&hDist01[0], thrust::raw_pointer_cast(dDist01.data()), sizeof(uint)*voxels.size(), cudaMemcpyDeviceToHost);
 	*/
 
-	float a = 0.7f;
+	//float a = 0.7f;
+	float a = 1.0f;
 	DistancesToWeights(voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()), a);
 	cudaMemcpy(&voxels[0], dVoxels, sizeof(Voxel)*voxels.size(), cudaMemcpyDeviceToHost);
 	cudaMemcpy(&weights[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
