@@ -389,7 +389,7 @@ void CalculateIntersectingVoxels(Voxel* voxels, int3 voxelsDim, uint voxelsCount
 	CalculateIntersectingVoxelsKernel <<<gridSize, blockSize>>>(voxels, voxelsDim, voxelsCount, dist01, boneIndex, invDir, dirOrigin, mask, count);
 }
 
-__global__ void CalculateGeodesicDistancesKernel(Voxel* voxels, int3 voxelsDim, uint voxelsCount, uint* dist01, int boneIndex, int* readMask, int* writeMask, int* count)
+__global__ void CalculateGeodesicDistancesKernel(Voxel* voxels, int3 voxelsDim, uint voxelsCount, uint* dist01, int borderSegment, int boneIndex, int* readMask, int* writeMask, int* count)
 {
 	uint x = blockIdx.x*blockDim.x + threadIdx.x;
 	uint y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -399,6 +399,10 @@ __global__ void CalculateGeodesicDistancesKernel(Voxel* voxels, int3 voxelsDim, 
 		return;
 	}
 	if (!GetMaskElement(index, readMask))
+	{
+		return;
+	}
+	if (voxels[index].segment == borderSegment)
 	{
 		return;
 	}
@@ -467,13 +471,13 @@ __global__ void CalculateGeodesicDistancesKernel(Voxel* voxels, int3 voxelsDim, 
 	}
 }
 
-void CalculateGeodesicDistances(Voxel* voxels, int3 voxelsDim, uint voxelsCount, uint* dist01, int boneIndex, int* readMask, int* writeMask, int* count)
+void CalculateGeodesicDistances(Voxel* voxels, int3 voxelsDim, uint voxelsCount, uint* dist01, int borderSegment, int boneIndex, int* readMask, int* writeMask, int* count)
 {
 	dim3 blockSize(32, 32);
 	int computeBlocksCount = ceil(sqrt(voxelsCount));
 	computeBlocksCount = ceil(computeBlocksCount / 32.0);
 	dim3 gridSize(computeBlocksCount, computeBlocksCount);
-	CalculateGeodesicDistancesKernel << <gridSize, blockSize >> > (voxels, voxelsDim, voxelsCount, dist01, boneIndex, readMask, writeMask, count);
+	CalculateGeodesicDistancesKernel << <gridSize, blockSize >> > (voxels, voxelsDim, voxelsCount, dist01, borderSegment, boneIndex, readMask, writeMask, count);
 }
 
 __global__ void SwapDistancesKernel(Voxel* voxels, uint voxelsCount, uint* dist00, uint* dist01, uint* dist02, uchar* additionalBones)
@@ -578,7 +582,7 @@ void DistancesToWeights(int3 voxelsDim, uint voxelsCount, uint* dist00, uint* di
 	DistancesToWeightsKernel << <gridSize, blockSize >> > (voxelsDim, voxelsCount, dist00, dist01, dist02, a);
 }
 
-void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& weights00, vector<float>& weights01, vector<uchar>& additionalBonesIndices, vector<pair<Vector3,Vector3>>& bonesPoints)
+void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& weights00, vector<float>& weights01, vector<uchar>& additionalBonesIndices, int borderSegment, vector<pair<Vector3,Vector3>>& bonesPoints)
 {
 	int hCount;
 	int* dCount;
@@ -618,13 +622,13 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 			cudaMemset(dCount, 0, sizeof(int));
 			if (isFirstMask)
 			{
-				CalculateGeodesicDistances(dVoxels, voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist01.data()), i, dMask00, dMask01, dCount);
+				CalculateGeodesicDistances(dVoxels, voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist01.data()), borderSegment, i, dMask00, dMask01, dCount);
 				isFirstMask = !isFirstMask;
 				cudaMemset(dMask00, 0, sizeof(int) * bitsetSize);
 			}
 			else
 			{
-				CalculateGeodesicDistances(dVoxels, voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist01.data()), i, dMask01, dMask00, dCount);
+				CalculateGeodesicDistances(dVoxels, voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist01.data()), borderSegment, i, dMask01, dMask00, dCount);
 				isFirstMask = !isFirstMask;
 				cudaMemset(dMask01, 0, sizeof(int) * bitsetSize);
 			}
@@ -642,8 +646,8 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 	cudaMemcpy(&hDist01[0], thrust::raw_pointer_cast(dDist01.data()), sizeof(uint)*voxels.size(), cudaMemcpyDeviceToHost);
 	*/
 
-	float a = 0.7f;
-	//float a = 1.0f;
+	//float a = 0.7f;
+	float a = 1.0f;
 	DistancesToWeights(voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()), thrust::raw_pointer_cast(dDist02.data()), a);
 	cudaMemcpy(&voxels[0], dVoxels, sizeof(Voxel)*voxels.size(), cudaMemcpyDeviceToHost);
 	cudaMemcpy(&weights00[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);

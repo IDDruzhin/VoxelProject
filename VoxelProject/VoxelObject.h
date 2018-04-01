@@ -46,7 +46,7 @@ typedef
 	void DeleteBone(int index);
 	int CopyBones(int index);
 	void MirrorRotation(int index, Vector3 axis);
-	void BindBones();
+	void BindBones(int borderSegment);
 private:
 	string m_name;
 	int3 m_dim;

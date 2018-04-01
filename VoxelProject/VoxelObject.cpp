@@ -402,14 +402,14 @@ void VoxelObject::MirrorRotation(int index, Vector3 axis)
 }
 
 
-void VoxelObject::BindBones()
+void VoxelObject::BindBones(int borderSegment)
 {
 	m_weights00.resize(m_voxels.size());
 	m_weights01.resize(m_voxels.size());
 	m_additionalBonesIndices.resize(m_voxels.size());
 	m_skeleton.SetOffsets();
 	vector<pair<Vector3, Vector3>> bonesPoints = m_skeleton.GetBonesPoints();
-	CUDACalculateWeights(m_voxels, m_dim, m_weights00, m_weights01, m_additionalBonesIndices, bonesPoints);
+	CUDACalculateWeights(m_voxels, m_dim, m_weights00, m_weights01, m_additionalBonesIndices, borderSegment, bonesPoints);
 	m_isSkeletonBinded = true;
 	/*
 	float maxWeight = -2.0f;

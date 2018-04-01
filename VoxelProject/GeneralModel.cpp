@@ -172,7 +172,7 @@ void GeneralModel::SetBonesVisiblity(bool isVisible)
 	m_voxPipeline->SetBonesVisiblity(isVisible);
 }
 
-void GeneralModel::BindBones()
+void GeneralModel::BindBones(int borderSegment)
 {
-	m_voxObj->BindBones();
+	m_voxObj->BindBones(borderSegment);
 }
