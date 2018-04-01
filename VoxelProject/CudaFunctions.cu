@@ -642,8 +642,8 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 	cudaMemcpy(&hDist01[0], thrust::raw_pointer_cast(dDist01.data()), sizeof(uint)*voxels.size(), cudaMemcpyDeviceToHost);
 	*/
 
-	//float a = 0.7f;
-	float a = 1.0f;
+	float a = 0.7f;
+	//float a = 1.0f;
 	DistancesToWeights(voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()), thrust::raw_pointer_cast(dDist02.data()), a);
 	cudaMemcpy(&voxels[0], dVoxels, sizeof(Voxel)*voxels.size(), cudaMemcpyDeviceToHost);
 	cudaMemcpy(&weights00[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
