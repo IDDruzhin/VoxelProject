@@ -84,7 +84,6 @@ void main(uint3 DTid : SV_DispatchThreadID)
 		pos.z = voxel.index / (dim.x*dim.y);
 		pos.y = tmp / dim.x;
 		pos.x = tmp % dim.x;
-		//float4x4 poseMatrix = lerp(bones[bone01], bones[bone00], bonesWeights[index]);
 		float4x4 poseMatrix = mul(bones[bone00], bonesWeights00[index]) + mul(bones[bone01], bonesWeights01[index]) + mul(bones[bone02], (1.0f - bonesWeights00[index] - bonesWeights01[index]));
 		int color = (voxel.info & 255);
 		int segment = ((voxel.info >> 8) & 255);
