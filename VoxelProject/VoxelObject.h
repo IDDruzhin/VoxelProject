@@ -47,6 +47,8 @@ typedef
 	int CopyBones(int index);
 	void MirrorRotation(int index, Vector3 axis);
 	void BindBones(int borderSegment);
+	bool IsSkeletonBinded();
+	void UnbindSkeleton();
 private:
 	string m_name;
 	int3 m_dim;

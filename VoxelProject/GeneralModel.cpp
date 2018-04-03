@@ -176,3 +176,13 @@ void GeneralModel::BindBones(int borderSegment)
 {
 	m_voxObj->BindBones(borderSegment);
 }
+
+bool GeneralModel::IsBonesBinded()
+{
+	return m_voxObj->IsSkeletonBinded();
+}
+
+void GeneralModel::UnbindBones()
+{
+	m_voxObj->UnbindSkeleton();
+}

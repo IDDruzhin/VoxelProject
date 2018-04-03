@@ -413,3 +413,19 @@ void VoxelObject::BindBones(int borderSegment)
 	m_isSkeletonBinded = true;
 }
 
+bool VoxelObject::IsSkeletonBinded()
+{
+	return m_isSkeletonBinded;
+}
+
+void VoxelObject::UnbindSkeleton()
+{
+	m_isSkeletonBinded = false;
+	m_weights00.clear();
+	m_weights00.shrink_to_fit();
+	m_weights01.clear();
+	m_weights01.shrink_to_fit();
+	m_bones02.clear();
+	m_bones02.shrink_to_fit();
+}
+
