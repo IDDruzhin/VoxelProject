@@ -182,7 +182,7 @@ void VoxelObject::SaveBin(string path, string name)
 		{
 			f.write((char*)(&m_weights00[0]), sizeof(float)*m_weights00.size());
 			f.write((char*)(&m_weights01[0]), sizeof(float)*m_weights00.size());
-			f.write((char*)(&m_additionalBonesIndices[0]), sizeof(uchar)*m_weights00.size());
+			f.write((char*)(&m_bones02[0]), sizeof(uchar)*m_weights00.size());
 		}
 		m_skeleton.SaveBin(f);
 		f.close();
@@ -226,10 +226,10 @@ void VoxelObject::LoadBin(string path)
 		{
 			m_weights00.resize(m_voxels.size());
 			m_weights01.resize(m_voxels.size());
-			m_additionalBonesIndices.resize(m_voxels.size());
+			m_bones02.resize(m_voxels.size());
 			f.read((char*)(&m_weights00[0]), sizeof(float)*m_weights00.size());
 			f.read((char*)(&m_weights01[0]), sizeof(float)*m_weights00.size());
-			f.read((char*)(&m_additionalBonesIndices[0]), sizeof(uchar)*m_weights00.size());
+			f.read((char*)(&m_bones02[0]), sizeof(uchar)*m_weights00.size());
 		}
 		m_skeleton.LoadBin(f);
 		f.close();
@@ -275,12 +275,12 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	ComPtr<ID3D12Resource> blocksInfoRes = voxPipeline->RegisterBlocksInfo(blocksInfo);
 	ComPtr<ID3D12Resource> weights00Res;
 	ComPtr<ID3D12Resource> weights01Res;
-	ComPtr<ID3D12Resource> additionalBonesIndicesRes;
+	ComPtr<ID3D12Resource> bones02Res;
 	if (m_isSkeletonBinded)
 	{
 		weights00Res = voxPipeline->RegisterBonesWeights(m_weights00, 0);
 		weights01Res = voxPipeline->RegisterBonesWeights(m_weights01, 1);
-		additionalBonesIndicesRes = voxPipeline->RegisterAdditionalBonesIndices(m_additionalBonesIndices);
+		bones02Res = voxPipeline->RegisterAdditionalBonesIndices(m_bones02);
 	}
 	if (m_isSkeletonBinded)
 	{
@@ -406,31 +406,10 @@ void VoxelObject::BindBones(int borderSegment)
 {
 	m_weights00.resize(m_voxels.size());
 	m_weights01.resize(m_voxels.size());
-	m_additionalBonesIndices.resize(m_voxels.size());
+	m_bones02.resize(m_voxels.size());
 	m_skeleton.SetOffsets();
 	vector<pair<Vector3, Vector3>> bonesPoints = m_skeleton.GetBonesPoints();
-	CUDACalculateWeights(m_voxels, m_dim, m_weights00, m_weights01, m_additionalBonesIndices, borderSegment, bonesPoints);
+	CUDACalculateWeights(m_voxels, m_dim, m_weights00, m_weights01, m_bones02, borderSegment, bonesPoints);
 	m_isSkeletonBinded = true;
-	/*
-	float maxWeight = -2.0f;
-	float minWeight = 2.0f;
-	int maxInd = -1;
-	int minInd = -1;
-	for (int i = 0; i < m_weights.size(); i++)
-	{
-		if (maxWeight < m_weights[i])
-		{
-			maxWeight = m_weights[i];
-			maxInd = i;
-		}
-		if (minWeight > m_weights[i])
-		{
-			minWeight = m_weights[i];
-			minInd = i;
-		}
-	}
-	int kj = 984;
-	kj += 39;
-	*/
 }
 
