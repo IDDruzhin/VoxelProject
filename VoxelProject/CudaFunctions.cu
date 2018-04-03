@@ -557,7 +557,6 @@ __global__ void DistancesToWeightsKernel(uint voxelsCount, uint* dist00, uint* d
 	dist00[index] = *reinterpret_cast<uint*>(&weight00);
 	weight01 = weight01 / sum;
 	dist01[index] = *reinterpret_cast<uint*>(&weight01);
-
 }
 
 void DistancesToWeights(uint voxelsCount, uint* dist00, uint* dist01, uint* dist02)
