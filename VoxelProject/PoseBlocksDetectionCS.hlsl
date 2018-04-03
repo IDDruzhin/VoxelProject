@@ -44,6 +44,10 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	{
 		Voxel voxel = voxels[index];
 		uint bone00 = ((voxel.info >> 16) & 255);
+		if (bone00 == 0)
+		{
+			return;
+		}
 		uint bone01 = ((voxel.info >> 24) & 255);
 		uint bone02 = ((additionalBones[index / 4] >> ((index % 4) * 8)) & 255);
 		float3 pos;

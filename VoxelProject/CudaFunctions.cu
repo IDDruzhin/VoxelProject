@@ -532,7 +532,7 @@ void SwapDistances(Voxel* voxels, uint voxelsCount, uint* dist00, uint* dist01, 
 	SwapDistancesKernel << <gridSize, blockSize >> > (voxels, voxelsCount, dist00, dist01, dist02, additionalBones);
 }
 
-__global__ void DistancesToWeightsKernel(int3 voxelsDim, uint voxelsCount, uint* dist00, uint* dist01, uint* dist02, float a)
+__global__ void DistancesToWeightsKernel(uint voxelsCount, uint* dist00, uint* dist01, uint* dist02, float boxVolumeInv, float a)
 {
 	uint x = blockIdx.x*blockDim.x + threadIdx.x;
 	uint y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -542,17 +542,50 @@ __global__ void DistancesToWeightsKernel(int3 voxelsDim, uint voxelsCount, uint*
 		return;
 	}
 	
-	float boxVolumeInv = 1.0f / (voxelsDim.x * voxelsDim.y * voxelsDim.z);
+	//float boxVolumeInv = 1.0f / (voxelsDim.x * voxelsDim.y * voxelsDim.z);
+	//float boxVolumeInv = dist00[index] + dist01[index] + dist02[index] + 0.3f;
+	/*
 	float weight00 = boxVolumeInv * (0.1f + dist00[index]);
-	weight00 = 1.0f / ((1.0f - a) * weight00 + a * weight00 * weight00);
+	//weight00 = 1.0f / ((1.0f - a) * weight00 + a * weight00 * weight00);
+	weight00 = 1.0f / ((1.0f - a) * weight00 * weight00 * weight00 + a * weight00 * weight00);
+	//weight00 = 1.0f / ((1.0f - a) * weight00 + a * weight00 * weight00 * weight00);
 	weight00 *= weight00;
 	float weight01 = boxVolumeInv * (0.1f + dist01[index]);
-	weight01 = 1.0f / ((1.0f - a) * weight01 + a * weight01 * weight01);
+	//weight01 = 1.0f / ((1.0f - a) * weight01 + a * weight01 * weight01);
+	weight01 = 1.0f / ((1.0f - a) * weight01 * weight01 * weight01 + a * weight01 * weight01);
+	//weight01 = 1.0f / ((1.0f - a) * weight01 + a * weight01 * weight01 * weight01);
 	weight01 *= weight01;
 	float weight02 = boxVolumeInv * (0.1f + dist02[index]);
-	weight02 = 1.0f / ((1.0f - a) * weight02 + a * weight02 * weight02);
+	//weight02 = 1.0f / ((1.0f - a) * weight02 + a * weight02 * weight02);
+	weight02 = 1.0f / ((1.0f - a) * weight02 * weight02 * weight02 + a * weight02 * weight02);
+	//weight02 = 1.0f / ((1.0f - a) * weight02 + a * weight02 * weight02 * weight02);
 	weight02 *= weight02;
 	float sum = (weight00 + weight01 + weight02);
+	weight00 = weight00 / sum;
+	dist00[index] = *reinterpret_cast<uint*>(&weight00);
+	weight01 = weight01 / sum;
+	dist01[index] = *reinterpret_cast<uint*>(&weight01);
+	*/
+	float weight00 = (0.1f + dist00[index]);
+	float weight01 = (0.1f + dist01[index]);
+	float weight02 = (0.1f + dist02[index]);
+	float sum = (weight00 + weight01 + weight02);
+	weight00 = weight00 / sum;
+	weight01 = weight01 / sum;
+	weight02 = weight02 / sum;
+	weight00 = 1.0f / ((1.0f - a) * weight00 + a * weight00 * weight00);
+	//weight00 = 1.0f / ((1.0f - a) * weight00 * weight00 * weight00 + a * weight00 * weight00);
+	//weight00 = 1.0f / ((1.0f - a) * weight00 + a * weight00 * weight00 * weight00);
+	weight00 *= weight00;
+	weight01 = 1.0f / ((1.0f - a) * weight01 + a * weight01 * weight01);
+	//weight01 = 1.0f / ((1.0f - a) * weight01 * weight01 * weight01 + a * weight01 * weight01);
+	//weight01 = 1.0f / ((1.0f - a) * weight01 + a * weight01 * weight01 * weight01);
+	weight01 *= weight01;
+	weight02 = 1.0f / ((1.0f - a) * weight02 + a * weight02 * weight02);
+	//weight02 = 1.0f / ((1.0f - a) * weight02 * weight02 * weight02 + a * weight02 * weight02);
+	//weight02 = 1.0f / ((1.0f - a) * weight02 + a * weight02 * weight02 * weight02);
+	weight02 *= weight02;
+	sum = (weight00 + weight01 + weight02);
 	weight00 = weight00 / sum;
 	dist00[index] = *reinterpret_cast<uint*>(&weight00);
 	weight01 = weight01 / sum;
@@ -573,13 +606,13 @@ __global__ void DistancesToWeightsKernel(int3 voxelsDim, uint voxelsCount, uint*
 	*/
 }
 
-void DistancesToWeights(int3 voxelsDim, uint voxelsCount, uint* dist00, uint* dist01, uint* dist02, float a)
+void DistancesToWeights(uint voxelsCount, uint* dist00, uint* dist01, uint* dist02, float boxVolumeInv, float a)
 {
 	dim3 blockSize(32, 32);
 	int computeBlocksCount = ceil(sqrt(voxelsCount));
 	computeBlocksCount = ceil(computeBlocksCount / 32.0);
 	dim3 gridSize(computeBlocksCount, computeBlocksCount);
-	DistancesToWeightsKernel << <gridSize, blockSize >> > (voxelsDim, voxelsCount, dist00, dist01, dist02, a);
+	DistancesToWeightsKernel << <gridSize, blockSize >> > (voxelsCount, dist00, dist01, dist02, boxVolumeInv, a);
 }
 
 void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& weights00, vector<float>& weights01, vector<uchar>& additionalBonesIndices, int borderSegment, vector<pair<Vector3,Vector3>>& bonesPoints)
@@ -646,9 +679,14 @@ void CUDACalculateWeights(vector<Voxel>& voxels, int3 voxelsDim, vector<float>& 
 	cudaMemcpy(&hDist01[0], thrust::raw_pointer_cast(dDist01.data()), sizeof(uint)*voxels.size(), cudaMemcpyDeviceToHost);
 	*/
 
-	//float a = 0.7f;
-	float a = 1.0f;
-	DistancesToWeights(voxelsDim, voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()), thrust::raw_pointer_cast(dDist02.data()), a);
+	float a = 0.7f;
+	//float a = 1.0f;
+	//float a = 0.5f;
+	//float a = 0.3f;
+	//float a = 0.1f;
+	//float a = 0.0f;
+	float boxVolumeInv = 1.0f / (voxelsDim.x * voxelsDim.y * voxelsDim.z);
+	DistancesToWeights(voxels.size(), thrust::raw_pointer_cast(dDist00.data()), thrust::raw_pointer_cast(dDist01.data()), thrust::raw_pointer_cast(dDist02.data()), boxVolumeInv, a);
 	cudaMemcpy(&voxels[0], dVoxels, sizeof(Voxel)*voxels.size(), cudaMemcpyDeviceToHost);
 	cudaMemcpy(&weights00[0], thrust::raw_pointer_cast(dDist00.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
 	cudaMemcpy(&weights01[0], thrust::raw_pointer_cast(dDist01.data()), sizeof(float)*voxels.size(), cudaMemcpyDeviceToHost);
