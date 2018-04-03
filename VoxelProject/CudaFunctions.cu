@@ -489,17 +489,6 @@ __global__ void SwapDistancesKernel(Voxel* voxels, uint voxelsCount, uint* dist0
 	{
 		return;
 	}
-	/*
-	if (dist01[index] < dist00[index])
-	{
-		uint tmp = dist00[index];
-		dist00[index] = dist01[index];
-		dist01[index] = tmp;
-		tmp = voxels[index].bone01;
-		voxels[index].bone01 = voxels[index].bone00;
-		voxels[index].bone00 = tmp;
-	}
-	*/
 	if (dist01[index] < dist02[index])
 	{
 		uint tmp = dist02[index];
