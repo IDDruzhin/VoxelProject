@@ -49,6 +49,7 @@ typedef
 	void BindBones(int borderSegment);
 	bool IsSkeletonBinded();
 	void UnbindSkeleton();
+	void SetBonesThickness(float thickness);
 private:
 	string m_name;
 	int3 m_dim;

@@ -186,3 +186,8 @@ void GeneralModel::UnbindBones()
 {
 	m_voxObj->UnbindSkeleton();
 }
+
+void GeneralModel::SetBonesThickness(float thickness)
+{
+	m_voxObj->SetBonesThickness(thickness);
+}

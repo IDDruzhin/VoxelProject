@@ -39,6 +39,7 @@ public:
 	void BindBones(int borderSegment);
 	bool IsBonesBinded();
 	void UnbindBones();
+	void SetBonesThickness(float thickness);
 private:
 	shared_ptr<Camera> m_camera;
 	Vector3 m_background;

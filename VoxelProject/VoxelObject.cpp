@@ -429,3 +429,8 @@ void VoxelObject::UnbindSkeleton()
 	m_bones02.shrink_to_fit();
 }
 
+void VoxelObject::SetBonesThickness(float thickness)
+{
+	m_skeleton.SetBonesThickness(thickness);
+}
+
