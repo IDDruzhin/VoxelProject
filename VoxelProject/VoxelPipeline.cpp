@@ -579,7 +579,7 @@ ComPtr<ID3D12Resource> VoxelPipeline::RegisterAdditionalBonesIndices(vector<unsi
 	srvDesc.Buffer.StructureByteStride = sizeof(int);
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::ADDITIONAL_BONES_INDICES, m_srvUavDescriptorSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_blocksComputeSrvUavHeap->GetCPUDescriptorHandleForHeapStart(), COMPUTE_DESCRIPTORS::BONES02_SRV, m_srvUavDescriptorSize);
 	m_d3dSyst->GetDevice()->CreateShaderResourceView(additionalBonesIndicesRes.Get(), &srvDesc, srvHandle);
 	return additionalBonesIndicesRes;
 }
