@@ -1,16 +1,19 @@
-# Описание
+# VoxelProject
 
-Программа для визуализации сегментированных воксельных моделей в RGB цвете.
+Программа для визуализации и скелетной деформации сегментированных воксельных моделей.
 
-В качестве графического API используется DirectX 12. Для загрузки исходных данных используется CUDA.
+## Детали
+
+В качестве графического API используется DirectX 12. Для загрузки исходных данных и для привязки модели к скелету используется CUDA.
 
 Множество цветов модели переводится в палитру из 256 цветов. Для хранения модели в видеопамяти используются трехмерные текстуры.
-Число и размер текстур определяется исходя из блочной декомпозиции исходного объема модели. Определение границ блоков и заполнение текстур происходит через вычислительные шейдеры.
+Число и размер текстур определяется исходя из блочной декомпозиции объема модели с указанным размером блока. Определение границ блоков и заполнение текстур происходит через вычислительные шейдеры.
 Для визуализации используется метод испускания лучей с ранним завершением луча и отсечением полигональной сеткой.
+Для привязки вокселей модели к костям используется аналог метода [«Geodesic Voxel Binding»](https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2016/ENU/Maya/files/GUID-5EFDB81B-E332-4D6C-B1BB-0B989AD2F2C7-htm.html). 
 
 Собранная программа находится в папке App.
 
-# Входные данные
+## Входные данные
 
 Исходные данные должны представлять из себя следующий набор:
 * Набор изображений, определяющих цвет модели
@@ -41,12 +44,26 @@
 
 Загруженную модель можно сохранить в бинарный формат через меню **File – Save binary file**, для ускорения загрузки в дальнейшем. Загрузка модели в бинарном формате осуществляется через меню **File – Load binary file**.
 
-Предобработанные данные проекта «Visible Korean» (http://vkh3.kisti.re.kr/), сохраненные в бинарном формате, доступны по сслыке: https://drive.google.com/open?id=1ajh99S2NLHVhM4vD4E6t0xVy7lOsqnw-
+[Ссылка](https://drive.google.com/open?id=19FUD6hrs_z3mLmgqyIOtP_gQnThE5psU) на предобработанные данные проекта [«Visible Korean»](http://vkh3.kisti.re.kr/), сохраненные в бинарном формате.
 
-# Примеры визуализации
+[Ссылка](https://drive.google.com/open?id=1Q_XoxQAD-lv_Q-jBWNU7Q6vnLbP21yJz) на те же данные с привязанным скелетом.
+
+## Примеры визуализации
 
 ![alt text](https://github.com/IDDruzhin/VoxelProject/blob/master/Samples/Sample_001.jpg)
 
 ![alt text](https://github.com/IDDruzhin/VoxelProject/blob/master/Samples/Sample_002.jpg)
 
 ![alt text](https://github.com/IDDruzhin/VoxelProject/blob/master/Samples/Sample_003.jpg)
+
+## Примеры скелетной деформации
+
+![alt text](https://github.com/IDDruzhin/VoxelProject/blob/master/Samples/Sample_004.jpg)
+
+![alt text](https://github.com/IDDruzhin/VoxelProject/blob/master/Samples/Sample_005.jpg)
+
+![alt text](https://github.com/IDDruzhin/VoxelProject/blob/master/Samples/Sample_006.jpg)
+
+![alt text](https://github.com/IDDruzhin/VoxelProject/blob/master/Samples/Sample_007.jpg)
+
+![alt text](https://github.com/IDDruzhin/VoxelProject/blob/master/Samples/Sample_008.jpg)
