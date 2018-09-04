@@ -293,6 +293,8 @@ void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize,
 	
 	ComPtr<ID3D12Resource> blocksIndexesRes;
 	voxPipeline->RegisterBlocks(overlap, dimBlocks, m_blockSize, min, blocksInfo, m_blocksRes, m_texturesRes, blocksIndexesRes, m_blocksPosInfo, m_blocksPriorInfo);
+	m_blocksVis.resize(m_blocksPriorInfo.size());
+	UpdateBlocksVis();
 
 	m_blocksBufferView.BufferLocation = m_blocksRes->GetGPUVirtualAddress();
 	m_blocksBufferView.StrideInBytes = sizeof(Vertex);
@@ -432,5 +434,20 @@ void VoxelObject::UnbindSkeleton()
 void VoxelObject::SetBonesThickness(float thickness)
 {
 	m_skeleton.SetBonesThickness(thickness);
+}
+
+void VoxelObject::UpdateBlocksVis()
+{
+	int act = 0;
+	for (int i = 0; i < m_blocksVis.size(); i++)
+	{
+		act = rand() % 3;
+		m_blocksVis[i] = act;
+	}
+}
+
+vector<int> VoxelObject::GetBlocksVis()
+{
+	return m_blocksVis;
 }
 

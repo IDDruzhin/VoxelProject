@@ -191,3 +191,8 @@ void GeneralModel::SetBonesThickness(float thickness)
 {
 	m_voxObj->SetBonesThickness(thickness);
 }
+
+void GeneralModel::UpdateBlocksVis()
+{
+	m_voxObj->UpdateBlocksVis();
+}

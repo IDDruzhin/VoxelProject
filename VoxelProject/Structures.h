@@ -8,6 +8,8 @@ struct RenderingCB
 	float stepRatio;
 	float randomX;
 	float randomY;
+	int randomMainSegment;
+	int randomMiscSegments;
 };
 const int RenderingCBAlignedSize = (sizeof(RenderingCB) + 255) & ~255;
 

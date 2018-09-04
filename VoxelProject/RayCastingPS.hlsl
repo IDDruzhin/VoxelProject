@@ -14,6 +14,8 @@ cbuffer RenderingConstantBuffer : register(b1)
 	float stepRatio;
 	float randomX;
 	float randomY;
+	int randomMainSegment;
+	int randomMiscSegments;
 };
 
 uint textureIndex : register(b0);
@@ -45,18 +47,18 @@ float4 main(PS_INPUT input) : SV_TARGET
 		smp = textures[textureIndex][cur];
 		if (smp.y == 25)
 		{
-			float4 noise = float4(0.0f, 0.0f, 0.0f, 0.0f);
-			/*
-			noise.x = frac(sin(input.pos.x * randomX + input.pos.y * randomY) * 43758.5453);
-			noise.y = frac(sin(noise.x) * 43758.5453);
-			noise.z = frac(sin(noise.y) * 43758.5453);
-			*/
-			noise.x = frac(sin(input.pos.x * randomX + input.pos.y * randomY) * 12345.6789);
-			noise.y = frac(sin(noise.x) * 98765.4321);
-			noise.z = frac(sin(noise.y) * 67892.777);
-			//noise.y = noise.x;
-			//noise.z = noise.x;
-			renderTexture[input.pos.xy] = noise;
+			if (color.w > 0.9f && !randomMainSegment)
+			{
+				float4 noise = float4(0.0f, 0.0f, 0.0f, 0.0f);
+				noise.x = frac(sin(input.pos.x * randomX + input.pos.y * randomY) * 12345.6789);
+				noise.y = frac(sin(noise.x) * 98765.4321);
+				noise.z = frac(sin(noise.y) * 67892.777);
+				renderTexture[input.pos.xy] = noise;
+				discard;
+			}
+		}
+		else if (!randomMiscSegments)
+		{
 			discard;
 		}
 		color.xyz = color.xyz + color.w * palette[smp.x] * segmentsOpacity[smp.y];

@@ -372,6 +372,8 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 
 		m_renderingCB.randomX = rand();
 		m_renderingCB.randomY = rand();
+		m_renderingCB.randomMainSegment = rand() % 10;
+		m_renderingCB.randomMiscSegments = rand() % 10;
 		
 		ID3D12DescriptorHeap* heaps[] = { m_srvUavHeapRender.Get() };
 		commandList->SetDescriptorHeaps(_countof(heaps), heaps);
@@ -391,7 +393,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 			memcpy(m_cbvGPUAddress[frameIndex], &m_renderingCB, sizeof(m_renderingCB));
 			commandList->SetGraphicsRootConstantBufferView(0, m_constantBufferUploadHeaps[frameIndex]->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootDescriptorTable(1, m_srvUavHeapRender->GetGPUDescriptorHandleForHeapStart());
-		
+
 			commandList->IASetVertexBuffers(0, 1, &(voxObj->GetBlocksVBV()));
 			commandList->IASetIndexBuffer(&m_blockIndexBufferView);
 
@@ -401,6 +403,8 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 			vector<BlockPriorityInfo> blocksOrder = voxObj->CalculatePriorities(cameraPos);
 			int priority = blocksOrder[0].priority;
 			int start = 0;
+
+			vector<int> act = voxObj->GetBlocksVis();
 			for (int i = 0; i < blocksOrder.size(); i++)
 			{
 				if ((priority != blocksOrder[i].priority))
@@ -408,14 +412,20 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 					commandList->SetPipelineState(m_backFacesPipelineState.Get());
 					for (int j = start; j < i; j++)
 					{
-						commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+						if (act[j])
+						{
+							commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+						}
 					}
 					commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
 					commandList->SetPipelineState(m_selectedRCPipelineState.Get());
 					for (int j = start; j < i; j++)
 					{
-						commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
-						commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+						if (act[j])
+						{
+							commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
+							commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+						}
 					}
 					commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 
@@ -426,15 +436,21 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 			commandList->SetPipelineState(m_backFacesPipelineState.Get());
 			for (int j = start; j < blocksOrder.size(); j++)
 			{
-				commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+				if (act[j])
+				{
+					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+				}
 			}
 			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_backCoordTexture.Get()));
 
 			commandList->SetPipelineState(m_selectedRCPipelineState.Get());
 			for (int j = start; j < blocksOrder.size(); j++)
 			{
-				commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
-				commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+				if (act[j])
+				{
+					commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
+					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
+				}	
 			}
 			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 			commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_renderTexture.Get());
@@ -443,7 +459,11 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 				commandList->SetPipelineState(m_blocksRenderPipelineState.Get());
 				for (int i = 0; i < blocksOrder.size(); i++)
 				{
-					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
+					if (!act[i])
+					{
+						commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
+					}
+					//commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[i].blockIndex, 0);
 				}
 			}
 		}

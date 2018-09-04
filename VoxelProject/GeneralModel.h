@@ -40,6 +40,8 @@ public:
 	bool IsBonesBinded();
 	void UnbindBones();
 	void SetBonesThickness(float thickness);
+
+	void UpdateBlocksVis();
 private:
 	shared_ptr<Camera> m_camera;
 	Vector3 m_background;
