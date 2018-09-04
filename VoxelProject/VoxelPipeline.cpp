@@ -25,10 +25,11 @@ VoxelPipeline::VoxelPipeline(shared_ptr<D3DSystem> d3dSyst) : m_renderVoxels(tru
 		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, -1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
 
-		CD3DX12_ROOT_PARAMETER1 rootParameters[3];
+		CD3DX12_ROOT_PARAMETER1 rootParameters[4];
 		rootParameters[0].InitAsConstantBufferView(1, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_ALL);
 		rootParameters[1].InitAsDescriptorTable(2, &ranges[0], D3D12_SHADER_VISIBILITY_PIXEL);
 		rootParameters[2].InitAsConstants(1, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParameters[3].InitAsConstants(1, 2, 0, D3D12_SHADER_VISIBILITY_PIXEL);
 
 		CD3DX12_STATIC_SAMPLER_DESC sampler(0, D3D12_FILTER_MIN_MAG_MIP_POINT, D3D12_TEXTURE_ADDRESS_MODE_BORDER, D3D12_TEXTURE_ADDRESS_MODE_BORDER, D3D12_TEXTURE_ADDRESS_MODE_BORDER,
 			0.0f, 0, D3D12_COMPARISON_FUNC_NEVER, D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK, 0.0f, D3D12_FLOAT32_MAX, D3D12_SHADER_VISIBILITY_PIXEL, 0);
@@ -412,7 +413,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 					commandList->SetPipelineState(m_backFacesPipelineState.Get());
 					for (int j = start; j < i; j++)
 					{
-						if (act[j])
+						//if (act[j])
 						{
 							commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
 						}
@@ -421,9 +422,10 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 					commandList->SetPipelineState(m_selectedRCPipelineState.Get());
 					for (int j = start; j < i; j++)
 					{
-						if (act[j])
+						//if (act[j])
 						{
 							commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
+							commandList->SetGraphicsRoot32BitConstant(3, act[j], 0);
 							commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
 						}
 					}
@@ -436,7 +438,7 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 			commandList->SetPipelineState(m_backFacesPipelineState.Get());
 			for (int j = start; j < blocksOrder.size(); j++)
 			{
-				if (act[j])
+				//if (act[j])
 				{
 					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
 				}
@@ -446,9 +448,10 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 			commandList->SetPipelineState(m_selectedRCPipelineState.Get());
 			for (int j = start; j < blocksOrder.size(); j++)
 			{
-				if (act[j])
+				//if (act[j])
 				{
 					commandList->SetGraphicsRoot32BitConstant(2, blocksOrder[j].blockIndex, 0);
+					commandList->SetGraphicsRoot32BitConstant(3, act[j], 0);
 					commandList->DrawIndexedInstanced(36, 1, 0, 8 * blocksOrder[j].blockIndex, 0);
 				}	
 			}

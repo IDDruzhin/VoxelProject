@@ -19,6 +19,7 @@ cbuffer RenderingConstantBuffer : register(b1)
 };
 
 uint textureIndex : register(b0);
+uint blockVis : register(b2);
 RWTexture2D<float4> renderTexture : register(u1);
 RWTexture2D<float4> backCoordTexture : register(u2);
 Texture1D<float4> palette : register(t0);
@@ -56,13 +57,18 @@ float4 main(PS_INPUT input) : SV_TARGET
 				renderTexture[input.pos.xy] = noise;
 				discard;
 			}
+			else
+			{
+				color.xyz = color.xyz + color.w * palette[smp.x] * segmentsOpacity[smp.y];
+				color.w = color.w * (1.0f - segmentsOpacity[smp.y]);
+			}
 		}
-		else if (!randomMiscSegments)
+		//else if (!randomMiscSegments || !blockVis)
+		else if (blockVis && randomMiscSegments)
 		{
-			discard;
-		}
-		color.xyz = color.xyz + color.w * palette[smp.x] * segmentsOpacity[smp.y];
-		color.w = color.w * (1.0f - segmentsOpacity[smp.y]);
+			color.xyz = color.xyz + color.w * palette[smp.x] * segmentsOpacity[smp.y];
+			color.w = color.w * (1.0f - segmentsOpacity[smp.y]);
+		}	
 		cur += dir;
 	}
 	renderTexture[input.pos.xy] = color;
