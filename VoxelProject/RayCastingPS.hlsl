@@ -12,6 +12,8 @@ cbuffer RenderingConstantBuffer : register(b1)
 	float4x4 WorldView;
 	float stepSize;
 	float stepRatio;
+	float randomX;
+	float randomY;
 };
 
 uint textureIndex : register(b0);
@@ -41,11 +43,27 @@ float4 main(PS_INPUT input) : SV_TARGET
 			break;
 		}
 		smp = textures[textureIndex][cur];
+		if (smp.y == 25)
+		{
+			float4 noise = float4(0.0f, 0.0f, 0.0f, 0.0f);
+			/*
+			noise.x = frac(sin(input.pos.x * randomX + input.pos.y * randomY) * 43758.5453);
+			noise.y = frac(sin(noise.x) * 43758.5453);
+			noise.z = frac(sin(noise.y) * 43758.5453);
+			*/
+			noise.x = frac(sin(input.pos.x * randomX + input.pos.y * randomY) * 12345.6789);
+			noise.y = frac(sin(noise.x) * 98765.4321);
+			noise.z = frac(sin(noise.y) * 67892.777);
+			//noise.y = noise.x;
+			//noise.z = noise.x;
+			renderTexture[input.pos.xy] = noise;
+			discard;
+		}
 		color.xyz = color.xyz + color.w * palette[smp.x] * segmentsOpacity[smp.y];
 		color.w = color.w * (1.0f - segmentsOpacity[smp.y]);
 		cur += dir;
 	}
 	renderTexture[input.pos.xy] = color;
 	discard;
-	return float4(0.0f,0.0f,0.0f,0.0f);
+	return (input.texCoord / 255.0f);
 }

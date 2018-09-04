@@ -13,5 +13,5 @@ float4 main(PS_INPUT input) : SV_TARGET
 	texCoord.w = length(input.eyeSpacePos);
 	backCoordTexture[input.pos.xy] = texCoord;
 	discard;
-	return float4(0.0f,0.0f,0.0f,0.0f);
+	return (texCoord / 255.0f);
 }

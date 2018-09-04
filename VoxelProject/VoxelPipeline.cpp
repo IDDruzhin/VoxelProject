@@ -369,6 +369,9 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 		Matrix worldView = voxObj->GetWorld() * camera->GetView();
 		m_renderingCB.worldView = worldView.Transpose();
 		m_renderingCB.worldViewProj = (worldView * camera->GetProjection()).Transpose();
+
+		m_renderingCB.randomX = rand();
+		m_renderingCB.randomY = rand();
 		
 		ID3D12DescriptorHeap* heaps[] = { m_srvUavHeapRender.Get() };
 		commandList->SetDescriptorHeaps(_countof(heaps), heaps);
