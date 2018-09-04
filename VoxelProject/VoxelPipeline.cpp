@@ -373,8 +373,8 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 
 		m_renderingCB.randomX = rand();
 		m_renderingCB.randomY = rand();
-		m_renderingCB.randomMainSegment = rand() % 10;
-		m_renderingCB.randomMiscSegments = rand() % 10;
+		m_renderingCB.randomMainSegment = rand() % 5;
+		m_renderingCB.randomMiscSegments = rand() % 15;
 		
 		ID3D12DescriptorHeap* heaps[] = { m_srvUavHeapRender.Get() };
 		commandList->SetDescriptorHeaps(_countof(heaps), heaps);
@@ -457,7 +457,8 @@ void VoxelPipeline::RenderObject(VoxelObject * voxObj, Camera* camera, int selec
 			}
 			commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::UAV(m_renderTexture.Get()));
 			commandList->CopyResource(m_d3dSyst->GetRenderTarget(), m_renderTexture.Get());
-			if (m_renderBlocks)
+			if (m_renderBlocks && !(rand() % 30))
+			//if (m_renderBlocks)
 			{
 				commandList->SetPipelineState(m_blocksRenderPipelineState.Get());
 				for (int i = 0; i < blocksOrder.size(); i++)
