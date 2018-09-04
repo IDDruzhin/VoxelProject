@@ -63,7 +63,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 				color.w = color.w * (1.0f - segmentsOpacity[smp.y]);
 			}
 		}
-		//else if (!randomMiscSegments || !blockVis)
 		else if (blockVis && randomMiscSegments)
 		{
 			color.xyz = color.xyz + color.w * palette[smp.x] * segmentsOpacity[smp.y];
