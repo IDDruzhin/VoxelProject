@@ -237,9 +237,7 @@ shared_ptr<Bone> Bone::FindPrev(shared_ptr<Bone> prev, int index)
 
 void Bone::Rotate(Vector3 dr)
 {
-	//m_r = Quaternion::CreateFromYawPitchRoll(dr.x, dr.y, dr.z) * m_r;
 	m_r = Quaternion::CreateFromYawPitchRoll(dr.y, dr.x, dr.z) * m_r;
-	//m_r = m_r * Quaternion::CreateFromYawPitchRoll(dr.y, dr.x, dr.z) * m_r;
 }
 
 void Bone::CalculateIndex(int & index)
@@ -277,17 +275,14 @@ void Bone::MirrorRotation(Vector3 axis)
 	if (axis.x == 1)
 	{
 		m_r.x *= -1;
-		//m_r.w *= -1;
 	}
 	if (axis.y == 1)
 	{
 		m_r.y *= -1;
-		//m_r.w *= -1;
 	}
 	if (axis.z == 1)
 	{
 		m_r.z *= -1;
-		//m_r.w *= -1;
 	}
 }
 

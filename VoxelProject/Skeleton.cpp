@@ -166,7 +166,6 @@ int Skeleton::CopyBones(int index)
 		shared_ptr<Bone> cur = Find(index);
 		if ((m_bonesCount + cur->GetBranchBonesCount()) < MAX_BONES)
 		{
-			//shared_ptr<Bone> prev = FindPrev(index);
 			shared_ptr<Bone> mirrCur = make_shared<Bone>(cur);
 			shared_ptr<Bone> curChild = cur->GetChild();
 			if (curChild)
