@@ -1,1 +1,1 @@
-![alt text](https://github.com/IDDruzhin/VoxelProject/blob/master/Samples/Glitch.gif)
+![alt text](https://github.com/IDDruzhin/VoxelProject/blob/glitch/Samples/Glitch.gif)
