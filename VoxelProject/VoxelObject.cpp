@@ -19,19 +19,6 @@ VoxelObject::VoxelObject(string path, LOADING_MODE loadingMode, VoxelPipeline * 
 	}
 	m_paletteRes = voxPipeline->RegisterPalette(m_palette);
 	m_segmentsOpacityRes = voxPipeline->RegisterSegmentsOpacity(m_segmentsOpacity);
-	/*
-	float a = 0.7f;
-	uint distInit = UINT_MAX;
-	float boxVolumeInv = 1.0f / (m_dim.x * m_dim.y * m_dim.z);
-	float weight00 = boxVolumeInv * (0.1f + 0);
-	weight00 = 1.0f / ((1.0f - a) * weight00 + a * weight00 * weight00);
-	weight00 *= weight00;
-	float weight01 = boxVolumeInv * (0.1f + 1);
-	weight01 = 1.0f / ((1.0f - a) * weight01 + a * weight01 * weight01);
-	weight01 *= weight01;
-	weight00 = weight00 / (weight00 + weight01);
-	//dist00[index] = *reinterpret_cast<uint*>(&weight00);
-	*/
 }
 
 VoxelObject::~VoxelObject()
@@ -240,7 +227,6 @@ void VoxelObject::LoadBin(string path)
 	}
 }
 
-//void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlap, int3 min, int3 max)
 void VoxelObject::BlocksDecomposition(VoxelPipeline* voxPipeline, int blockSize, int overlap)
 {
 	int3 min;
